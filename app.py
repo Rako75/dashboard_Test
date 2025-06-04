@@ -367,14 +367,12 @@ if df is not None:
                     x=0.5
                 ),
                 xaxis=dict(
-                    title="Buts attendus (xG)",
-                    titlefont=dict(color='white'),
+                    title=dict(text="Buts attendus (xG)", font=dict(color='white')),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),
                 yaxis=dict(
-                    title="Buts marqués",
-                    titlefont=dict(color='white'),
+                    title=dict(text="Buts marqués", font=dict(color='white')),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),
@@ -413,13 +411,11 @@ if df is not None:
                     x=0.5
                 ),
                 xaxis=dict(
-                    title="Pourcentage (%)",
-                    titlefont=dict(color='white'),
+                    title=dict(text="Pourcentage (%)", font=dict(color='white')),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),
                 yaxis=dict(
-                    titlefont=dict(color='white'),
                     tickfont=dict(color='white')
                 ),
                 paper_bgcolor='rgba(0,0,0,0)',
@@ -482,7 +478,6 @@ if df is not None:
                     tickangle=45
                 ),
                 yaxis=dict(
-                    titlefont=dict(color='white'),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),
@@ -803,14 +798,12 @@ if df is not None:
                     x=0.5
                 ),
                 xaxis=dict(
-                    title='Matchs',
-                    titlefont=dict(color='white'),
+                    title=dict(text='Matchs', font=dict(color='white')),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),
                 yaxis=dict(
-                    title='Cumul',
-                    titlefont=dict(color='white'),
+                    title=dict(text='Cumul', font=dict(color='white')),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),
@@ -887,13 +880,11 @@ if df is not None:
                     x=0.5
                 ),
                 xaxis=dict(
-                    titlefont=dict(color='white'),
                     tickfont=dict(color='white'),
                     tickangle=45
                 ),
                 yaxis=dict(
-                    title='Nombre de tirs',
-                    titlefont=dict(color='white'),
+                    title=dict(text='Nombre de tirs', font=dict(color='white')),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),
@@ -1032,8 +1023,7 @@ if df is not None:
                     tickfont=dict(color='white')
                 ),
                 yaxis=dict(
-                    title='Nombre de touches',
-                    titlefont=dict(color='white'),
+                    title=dict(text='Nombre de touches', font=dict(color='white')),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),

@@ -588,14 +588,21 @@ if df is not None:
     st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Moyennes par 90 minutes</h3>", unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
     
+    # Calcul des métriques par 90 minutes
+    minutes_90 = player_data['Minutes jouées'] / 90 if player_data['Minutes jouées'] > 0 else 1
+    
     with col1:
-        st.metric("Tacles/90min", f"{player_data['Tacles gagnants par 90 minutes']:.2f}")
+        tacles_90 = player_data['Tacles gagnants'] / minutes_90
+        st.metric("Tacles/90min", f"{tacles_90:.2f}")
     with col2:
-        st.metric("Interceptions/90min", f"{player_data['Interceptions par 90 minutes']:.2f}")
+        interceptions_90 = player_data['Interceptions'] / minutes_90
+        st.metric("Interceptions/90min", f"{interceptions_90:.2f}")
     with col3:
-        st.metric("Ballons récupérés/90min", f"{player_data['Ballons récupérés par 90 minutes']:.2f}")
+        ballons_90 = player_data['Ballons récupérés'] / minutes_90
+        st.metric("Ballons récupérés/90min", f"{ballons_90:.2f}")
     with col4:
-        st.metric("Duels aériens/90min", f"{player_data['Duels aériens gagnés par 90 minutes']:.2f}")
+        duels_90 = player_data['Duels aériens gagnés'] / minutes_90
+        st.metric("Duels aériens/90min", f"{duels_90:.2f}")
     
     with tab3:
         st.markdown("<h2 style='color: #FF6B35;'>📈 Statistiques Avancées</h2>", unsafe_allow_html=True)

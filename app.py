@@ -282,7 +282,7 @@ if df is not None:
                 'Minutes jouées': player_data['Minutes jouées'],
                 'Titularisations': player_data['Titularisations'],
                 'Matchs complets': player_data['Matches joués en intégralité'],
-                'Entrées en jeu': player_data["Nombre d’entrées en jeu"]
+                'Entrées en jeu': player_data["Nombre d'entrées en jeu"]
             }
             
             fig_pie = px.pie(
@@ -365,8 +365,11 @@ if df is not None:
                 color=list(zones_touches.values()),
                 color_continuous_scale='Blues'
             )
-            fig_zones.update_xaxis(tickangle=45)
-            fig_zones.update_layout(height=400)
+            # CORRECTION : Utiliser update_layout au lieu de update_xaxis
+            fig_zones.update_layout(
+                xaxis={'tickangle': 45},
+                height=400
+            )
             st.plotly_chart(fig_zones, use_container_width=True)
         
         with col2:

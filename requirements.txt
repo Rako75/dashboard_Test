@@ -1,4 +1,5 @@
 streamlit
+mplsoccer
 matplotlib
 pandas
 seaborn

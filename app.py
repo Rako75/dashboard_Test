@@ -536,7 +536,7 @@ if df is not None:
                 'Minutes jouées': player_data['Minutes jouées'],
                 'Titularisations': player_data['Titularisations'],
                 'Matchs complets': player_data['Matches joués en intégralité'],
-                'Entrées en jeu': player_data["Nombre d’entrées en jeu"]
+                'Entrées en jeu': player_data["Nombre d'entrées en jeu"]
             }
             
             fig_pie = px.pie(

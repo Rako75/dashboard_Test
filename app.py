@@ -426,7 +426,7 @@ if df is not None:
             title='Comparaison multi-joueurs',
             barmode='group',
             height=500,
-            xaxis_tickangle=-45
+            xaxis={'tickangle': -45}
         )
         
         st.plotly_chart(fig_comparison_multi, use_container_width=True)

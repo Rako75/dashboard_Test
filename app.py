@@ -21,7 +21,7 @@ st.markdown("---")
 def load_data():
     """Charge les données depuis le fichier CSV"""
     try:
-        df = pd.read_csv('df_BIG2025.csv')
+        df = pd.read_csv('df_BIG2025.csv', encoding='utf-8')  # ou 'latin1', 'utf-8-sig' si nécessaire
         return df
     except FileNotFoundError:
         st.error("Fichier 'df_BIG2025.csv' non trouvé. Veuillez vous assurer que le fichier est dans le même répertoire.")

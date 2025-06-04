@@ -54,17 +54,26 @@ st.markdown(f"""
 """)
 
 # Graphique 1 : Buts / Passes
+# Graphique 1 : Buts / Passes
 st.subheader("⚽ Répartition Buts / Passes décisives")
-fig1, ax1 = plt.subplots()
-ax1.pie(
-    [safe_get(player_data['Buts']), safe_get(player_data['Passes décisives'])],
-    labels=['Buts', 'Passes décisives'],
-    autopct='%1.1f%%',
-    startangle=90,
-    colors=['#ff9999','#66b3ff']
-)
-ax1.axis('equal')
-st.pyplot(fig1)
+
+buts = safe_get(player_data['Buts'])
+passes = safe_get(player_data['Passes décisives'])
+
+if buts + passes > 0:
+    fig1, ax1 = plt.subplots()
+    ax1.pie(
+        [buts, passes],
+        labels=['Buts', 'Passes décisives'],
+        autopct='%1.1f%%',
+        startangle=90,
+        colors=['#ff9999','#66b3ff']
+    )
+    ax1.axis('equal')
+    st.pyplot(fig1)
+else:
+    st.info("📉 Ce joueur n’a ni buts ni passes décisives enregistrés.")
+
 
 # Graphique 2 : Offensives par 90 min
 st.subheader("📈 Stats offensives par 90 minutes")

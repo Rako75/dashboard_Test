@@ -206,20 +206,21 @@ def get_player_photo(player_name, team_name):
         except:
             pass
         
-        # Option 2: Scraping FBref
-        st.info(f"🔍 Recherche de la photo de {player_name} sur FBref...")
-        
+        # Option 2 : Scraping FBref
         player_url = search_player_on_fbref(player_name, team_name)
-        if player_url:
-            st.info(f"📄 Page trouvée, extraction de la photo...")
-            photo = get_player_photo_from_fbref(player_url)
-            if photo:
-                st.success(f"✅ Photo trouvée pour {player_name}")
-                return photo
-            else:
-                st.warning(f"📷 Page trouvée mais pas de photo pour {player_name}")
-        else:
-            st.warning(f"❌ Aucune page trouvée pour {player_name} sur FBref")
+    if player_url:
+        photo = get_player_photo_from_fbref(player_url)
+    if photo:
+        return photo
+
+        # Option 3 : Recherche image web (Google/Bing fallback)
+        photo = get_player_photo_from_web_search(player_name, team_name)
+    if photo:
+        return photo
+
+# Option 4 : Avatar par défaut
+return create_default_avatar(player_name)
+
         
         # Option 3: Avatar par défaut
         st.info(f"🎨 Génération d'un avatar par défaut pour {player_name}")

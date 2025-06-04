@@ -121,78 +121,79 @@ def search_with_google_fbref(player_name):
     return None
 
 @st.cache_data
+@st.cache_data
 def get_player_photo_from_fbref(player_url):
     """Extrait la photo d'un joueur depuis sa page FBref"""
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': (
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/91.0.4472.124 Safari/537.36'
+            )
         }
-        
+
         response = requests.get(player_url, headers=headers, timeout=10)
-        
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Chercher l'image du joueur - plusieurs sélecteurs possibles
-            photo_selectors = [
-                'img.headshot',  # Sélecteur principal pour les photos de joueurs
-                'div.media-item img',
-                'div.player-headshot img',
-                'img[alt*="Photo"]',
-                'img[src*="headshot"]',
-                'img[src*="player"]'
-            ]
-            
-            for selector in photo_selectors:
-                img_element = soup.select_one(selector)
-                if img_element and img_element.get('src'):
-                    img_url = img_element['src']
-                    
-                    # Construire l'URL complète si nécessaire
-                    if img_url.startswith('//'):
-                        img_url = 'https:' + img_url
-                    elif img_url.startswith('/'):
-                        img_url = 'https://fbref.com' + img_url
-                    
-                    # Télécharger l'image
-                    img_response = requests.get(img_url, headers=headers, timeout=10)
-                    if img_response.status_code == 200:
-                        try:
-                            image = Image.open(io.BytesIO(img_response.content))
-                            # Vérifier que l'image est valide et pas trop petite
-                            if image.size[0] > 50 and image.size[1] > 50:
-                                return image
-                        except Exception:
-                            continue
-            
-            # Si aucune image spécifique trouvée, chercher toutes les images
-            all_images = soup.find_all('img')
-            for img in all_images:
-                src = img.get('src', '')
-                alt = img.get('alt', '').lower()
-                
-                # Filtrer les images qui pourraient être des photos de joueurs
-                if any(keyword in src.lower() for keyword in ['headshot', 'player', 'photo']) or \
-                   any(keyword in alt for keyword in ['photo', 'headshot', 'player']):
-                    
-                    if src.startswith('//'):
-                        src = 'https:' + src
-                    elif src.startswith('/'):
-                        src = 'https://fbref.com' + src
-                    
+        if response.status_code != 200:
+            return None
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Sélecteurs potentiels pour les images de joueur
+        photo_selectors = [
+            'img.headshot',
+            'div.media-item img',
+            'div.player-headshot img',
+            'img[alt*="Photo"]',
+            'img[src*="headshot"]',
+            'img[src*="player"]'
+        ]
+
+        for selector in photo_selectors:
+            img_element = soup.select_one(selector)
+            if img_element and img_element.get('src'):
+                img_url = img_element['src']
+                if img_url.startswith('//'):
+                    img_url = 'https:' + img_url
+                elif img_url.startswith('/'):
+                    img_url = 'https://fbref.com' + img_url
+
+                img_response = requests.get(img_url, headers=headers, timeout=10)
+                if img_response.status_code == 200:
                     try:
-                        img_response = requests.get(src, headers=headers, timeout=5)
-                        if img_response.status_code == 200:
-                            image = Image.open(io.BytesIO(img_response.content))
-                            if image.size[0] > 50 and image.size[1] > 50:
-                                return image
+                        image = Image.open(io.BytesIO(img_response.content))
+                        if image.size[0] > 50 and image.size[1] > 50:
+                            return image
                     except Exception:
                         continue
-                        
+
+        # Fallback : chercher toutes les images pertinentes
+        all_images = soup.find_all('img')
+        for img in all_images:
+            src = img.get('src', '')
+            alt = img.get('alt', '').lower()
+
+            if any(k in src.lower() for k in ['headshot', 'player', 'photo']) or \
+               any(k in alt for k in ['photo', 'headshot', 'player']):
+                if src.startswith('//'):
+                    src = 'https:' + src
+                elif src.startswith('/'):
+                    src = 'https://fbref.com' + src
+
+                try:
+                    img_response = requests.get(src, headers=headers, timeout=5)
+                    if img_response.status_code == 200:
+                        image = Image.open(io.BytesIO(img_response.content))
+                        if image.size[0] > 50 and image.size[1] > 50:
+                            return image
+                except Exception:
+                    continue
+
     except Exception as e:
         print(f"Erreur lors de l'extraction de la photo depuis {player_url}: {e}")
-        
+
     return None
+
 
 @st.cache_data
 def get_player_photo_from_web_search(player_name, team_name=None):
@@ -229,81 +230,39 @@ def get_player_photo_from_web_search(player_name, team_name=None):
 
 @st.cache_data
 def get_player_photo(player_name, team_name):
-    """Tente de récupérer la photo d'un joueur depuis FBref puis d'autres sources"""
+    """Tente de récupérer la photo d'un joueur depuis FBref, web search, ou génère un avatar"""
     try:
-        # Option 1: Photo locale si disponible
+        # Option 1 : Photo locale si disponible
         local_path = f"photos/{player_name.replace(' ', '_')}.jpg"
         try:
             image = Image.open(local_path)
             return image
         except:
             pass
-        
+
         # Option 2 : Scraping FBref
         player_url = search_player_on_fbref(player_name, team_name)
         if player_url:
-        photo = get_player_photo_from_fbref(player_url)
-        if photo:
-        return photo
+            photo = get_player_photo_from_fbref(player_url)
+            if photo:
+                return photo
 
-        # Option 3 : Recherche image web (Google/Bing fallback)
-        photo = get_player_photo_from_web_search(player_name, team_name)
-        if photo:
-        return photo
+        # Option 3 : Recherche image web (à condition d'avoir implémenté cette fonction)
+        try:
+            photo = get_player_photo_from_web_search(player_name, team_name)
+            if photo:
+                return photo
+        except:
+            pass
 
-# Option 4 : Avatar par défaut
-return create_default_avatar(player_name)
-
-        
-        # Option 3: Avatar par défaut
+        # Option 4 : Avatar par défaut
         st.info(f"🎨 Génération d'un avatar par défaut pour {player_name}")
         return create_default_avatar(player_name)
-        
+
     except Exception as e:
-        st.error(f"Erreur lors de la récupération de la photo de {player_name}: {str(e)}")
+        st.error(f"Erreur lors de la récupération de la photo de {player_name} : {str(e)}")
         return create_default_avatar(player_name)
 
-def create_default_avatar(player_name):
-    """Crée un avatar par défaut avec les initiales du joueur"""
-    try:
-        from PIL import Image, ImageDraw, ImageFont
-        
-        # Créer une image 200x200 avec fond coloré
-        img = Image.new('RGB', (200, 200), color='#4CAF50')
-        draw = ImageDraw.Draw(img)
-        
-        # Obtenir les initiales
-        names = player_name.split()
-        if len(names) >= 2:
-            initials = names[0][0] + names[-1][0]
-        else:
-            initials = names[0][:2] if len(names[0]) >= 2 else names[0][0]
-        
-        initials = initials.upper()
-        
-        # Dessiner les initiales
-        try:
-            # Essayer d'utiliser une police par défaut
-            font = ImageFont.truetype("arial.ttf", 80)
-        except:
-            font = ImageFont.load_default()
-        
-        # Centrer le texte
-        bbox = draw.textbbox((0, 0), initials, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        
-        x = (200 - text_width) // 2
-        y = (200 - text_height) // 2
-        
-        draw.text((x, y), initials, fill='white', font=font)
-        
-        return img
-        
-    except Exception:
-        # En cas d'erreur, créer une image simple
-        img = Image.new('RGB', (200, 200), color='#2196F3')
-        return img
 
 # Chargement des données
 df = load_data()

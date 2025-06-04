@@ -486,40 +486,6 @@ if df is not None:
                 height=400
             )
             st.plotly_chart(fig_bar, use_container_width=True)
-            
-            # Heatmap défensive
-            defensive_zones = {
-                'Pression haute': player_data.get('Pressions dans le tiers offensif', 0),
-                'Pression médiane': player_data.get('Pressions dans le tiers médian', 0),
-                'Pression défensive': player_data.get('Pressions dans le tiers défensif', 0)
-            }
-            
-            fig_heatmap_def = go.Figure(data=go.Heatmap(
-                z=[[v for v in defensive_zones.values()]],
-                x=list(defensive_zones.keys()),
-                y=['Intensité'],
-                colorscale='Reds',
-                showscale=True,
-                text=[[f"{v}" for v in defensive_zones.values()]],
-                texttemplate="%{text}",
-                textfont={"size": 14, "color": "white"}
-            ))
-            
-            fig_heatmap_def.update_layout(
-                title=dict(
-                    text="Heatmap - Pression Défensive par Zone",
-                    font=dict(size=16, color='white'),
-                    x=0.5
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                height=300,
-                xaxis=dict(tickangle=45, tickfont=dict(color='white')),
-                yaxis=dict(tickfont=dict(color='white'))
-            )
-            
-            st.plotly_chart(fig_heatmap_def, use_container_width=True)
         
         with col2:
             # Pourcentages de réussite avec design amélioré
@@ -758,61 +724,6 @@ if df is not None:
                 )]
             )
             st.plotly_chart(fig_pie_temps, use_container_width=True)
-            
-            # Graphique de progression dans la saison
-            match_data = np.arange(1, int(player_data['Matchs joués']) + 1)
-            cumulative_goals = np.cumsum(np.random.poisson(
-                player_data['Buts'] / player_data['Matchs joués'], 
-                int(player_data['Matchs joués'])
-            ))
-            cumulative_assists = np.cumsum(np.random.poisson(
-                player_data['Passes décisives'] / player_data['Matchs joués'], 
-                int(player_data['Matchs joués'])
-            ))
-            
-            fig_progress = go.Figure()
-            
-            fig_progress.add_trace(go.Scatter(
-                x=match_data,
-                y=cumulative_goals,
-                mode='lines+markers',
-                name='Buts cumulés',
-                line=dict(color=COLORS['primary'], width=3),
-                marker=dict(size=6)
-            ))
-            
-            fig_progress.add_trace(go.Scatter(
-                x=match_data,
-                y=cumulative_assists,
-                mode='lines+markers',
-                name='Passes D. cumulées',
-                line=dict(color=COLORS['secondary'], width=3),
-                marker=dict(size=6)
-            ))
-            
-            fig_progress.update_layout(
-                title=dict(
-                    text='Progression des Stats dans la Saison',
-                    font=dict(size=16, color='white'),
-                    x=0.5
-                ),
-                xaxis=dict(
-                    title=dict(text='Matchs', font=dict(color='white')),
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)'
-                ),
-                yaxis=dict(
-                    title=dict(text='Cumul', font=dict(color='white')),
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)'
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                height=400
-            )
-            
-            st.plotly_chart(fig_progress, use_container_width=True)
     
     with tab4:
         st.markdown("<h2 style='color: #FF6B35;'>⚽ Analyse des Tirs</h2>", unsafe_allow_html=True)
@@ -851,49 +762,6 @@ if df is not None:
             )
             
             st.plotly_chart(fig_funnel, use_container_width=True)
-            
-            # Analyse des zones de tir
-            zones_tir = {
-                'Surface': player_data.get('Tirs depuis la surface', 0),
-                'Extérieur surface': player_data.get('Tirs depuis l\'extérieur de la surface', 0),
-                'Coups francs': player_data.get('Coups francs directs tentés', 0),
-                'Pénaltys': player_data.get('Pénaltys tentés', 0)
-            }
-            
-            fig_zones_tir = go.Figure(data=[go.Bar(
-                x=list(zones_tir.keys()),
-                y=list(zones_tir.values()),
-                marker=dict(
-                    color=COLORS['gradient'][:len(zones_tir)],
-                    line=dict(color='white', width=1)
-                ),
-                text=list(zones_tir.values()),
-                textposition='outside',
-                textfont=dict(color='white')
-            )])
-            
-            fig_zones_tir.update_layout(
-                title=dict(
-                    text="Répartition des Tirs par Zone",
-                    font=dict(size=16, color='white'),
-                    x=0.5
-                ),
-                xaxis=dict(
-                    tickfont=dict(color='white'),
-                    tickangle=45
-                ),
-                yaxis=dict(
-                    title=dict(text='Nombre de tirs', font=dict(color='white')),
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)'
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                height=400
-            )
-            
-            st.plotly_chart(fig_zones_tir, use_container_width=True)
         
         with col2:
             # Métriques de tir avec design amélioré
@@ -1114,7 +982,7 @@ if df is not None:
                 st.metric("Dribbles réussis", int(player_data['Dribbles réussis']))
             with col_b:
                 st.metric("Portées de balle", int(player_data['Portées de balle']))
-                st.metric("Distance portée", f"{player_data.get('Distance totale des portées de balle', 0):.0f}m")
+                st.metric("Centres tentés", int(player_data.get('Centres', 0)))
             
             st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>⚡ Activité générale</h3>", unsafe_allow_html=True)
             
@@ -1167,7 +1035,7 @@ if df is not None:
             with col_d:
                 minutes_per_yellow = player_data['Minutes jouées'] / max(player_data['Cartons jaunes'], 1)
                 st.metric("Min/Carton J.", f"{minutes_per_yellow:.0f}")
-                st.metric("Centres tentés", int(player_data.get('Centres', 0)))
+                st.metric("Fautes subies", int(player_data.get('Fautes subies', 0)))
     
     with tab6:
         st.markdown("<h2 style='color: #FF6B35;'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)

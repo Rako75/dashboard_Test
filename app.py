@@ -241,14 +241,14 @@ def get_player_photo(player_name, team_name):
         
         # Option 2 : Scraping FBref
         player_url = search_player_on_fbref(player_name, team_name)
-    if player_url:
+        if player_url:
         photo = get_player_photo_from_fbref(player_url)
-    if photo:
+        if photo:
         return photo
 
         # Option 3 : Recherche image web (Google/Bing fallback)
         photo = get_player_photo_from_web_search(player_name, team_name)
-    if photo:
+        if photo:
         return photo
 
 # Option 4 : Avatar par défaut

@@ -4,6 +4,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+from mplsoccer import PyPizza, FontManager
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 # Configuration de la page
 st.set_page_config(
@@ -17,11 +20,82 @@ st.set_page_config(
 st.title("⚽ Dashboard Analyse Joueur Football")
 st.markdown("---")
 
+# ---------------------- PARAMÈTRES DU RADAR ----------------------
+
+RAW_STATS = {
+    "Buts\nsans pénalty": "Buts (sans penalty)",
+    "Passes déc.": "Passes décisives",
+    "Buts +\nPasses déc.": "Buts + Passes D",
+    "Cartons\njaunes": "Cartons jaunes",
+    "Cartons\nrouges": "Cartons rouges",
+    "Passes\ntentées": "Passes tentées",
+    "Passes\nclés": "Passes clés",
+    "Passes\nprogressives": "Passes progressives",
+    "Passes\ndernier 1/3": "Passes dans le dernier tiers",
+    "Passes\ndans la surface": "Passes dans la surface",
+    "Touches": "Touches de balle",
+    "Dribbles\ntentés": "Dribbles tentés",
+    "Dribbles\nréussis": "Dribbles réussis",
+    "Ballons perdus\nsous pression": "Ballons perdus sous la pression d'un adversaire",
+    "Ballons perdus\nen conduite": "Ballons perdus en conduite",
+    "Tacles\ngagnants": "Tacles gagnants",
+    "Tirs\nbloqués": "Tirs bloqués",
+    "Duels\ngagnés": "Duels défensifs gagnés",
+    "Interceptions": "Interceptions",
+    "Dégagements": "Dégagements"
+}
+
+COLOR_1 = "#1A78CF"
+COLOR_2 = "#FF9300"
+SLICE_COLORS = [COLOR_1] * len(RAW_STATS)
+
+def calculate_percentiles(player_name, df):
+    """Calcule les percentiles pour le pizza chart"""
+    player = df[df["Joueur"] == player_name].iloc[0]
+    percentiles = []
+
+    for label, col in RAW_STATS.items():
+        try:
+            if col not in df.columns or pd.isna(player[col]):
+                percentile = 0
+            elif "par 90 minutes" in col or "%" in col:
+                val = player[col]
+                dist = df[col]
+                if pd.isna(val) or dist.dropna().empty:
+                    percentile = 0
+                else:
+                    percentile = round((dist < val).mean() * 100)
+            else:
+                if player.get("Matchs en 90 min", 0) == 0:
+                    # Utiliser les matchs joués si "Matchs en 90 min" n'existe pas
+                    matches = player.get("Matchs joués", 1)
+                    if matches == 0:
+                        percentile = 0
+                    else:
+                        val = player[col] / matches
+                        dist = df[col] / df.get("Matchs joués", 1)
+                        if pd.isna(val) or dist.dropna().empty:
+                            percentile = 0
+                        else:
+                            percentile = round((dist < val).mean() * 100)
+                else:
+                    val = player[col] / player["Matchs en 90 min"]
+                    dist = df[col] / df["Matchs en 90 min"]
+                    if pd.isna(val) or dist.dropna().empty:
+                        percentile = 0
+                    else:
+                        percentile = round((dist < val).mean() * 100)
+        except Exception as e:
+            percentile = 0
+        percentiles.append(percentile)
+
+    return percentiles
+
 @st.cache_data
 def load_data():
     """Charge les données depuis le fichier CSV"""
     try:
-        df = pd.read_csv('df_BIG2025.csv', encoding='utf-8')  # ou 'latin1', 'utf-8-sig' si nécessaire
+        df = pd.read_csv('df_BIG2025.csv', encoding='utf-8')
         return df
     except FileNotFoundError:
         st.error("Fichier 'df_BIG2025.csv' non trouvé. Veuillez vous assurer que le fichier est dans le même répertoire.")
@@ -78,7 +152,7 @@ if df is not None:
     st.markdown("---")
     
     # Graphiques principaux
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "📈 Statistiques Avancées", "⚽ Détails Tirs", "🏃 Activité"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "📈 Statistiques Avancées", "⚽ Détails Tirs", "🏃 Activité", "🔄 Comparer Joueurs"])
     
     with tab1:
         st.subheader("Performance Offensive")
@@ -86,39 +160,63 @@ if df is not None:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Graphique radar des performances offensives
-            categories = ['Buts', 'Passes décisives', 'Buts attendus (xG)', 'Passes décisives attendues (xAG)', 'Passes clés']
-            values = [
-                player_data['Buts'],
-                player_data['Passes décisives'],
-                player_data['Buts attendus (xG)'],
-                player_data['Passes décisives attendues (xAG)'],
-                player_data['Passes clés']
-            ]
+            # Graphique heatmap des contributions offensives
+            contribution_data = {
+                'Buts': player_data['Buts'],
+                'Passes décisives': player_data['Passes décisives'],
+                'Passes clés': player_data['Passes clés'],
+                'Actions → Tir': player_data.get('Actions menant à un tir', 0),
+                'Passes dernier tiers': player_data.get('Passes dans le dernier tiers', 0)
+            }
             
-            fig_radar = go.Figure()
-            fig_radar.add_trace(go.Scatterpolar(
-                r=values,
-                theta=categories,
-                fill='toself',
-                name=selected_player,
-                line_color='rgb(50, 171, 96)'
+            # Normaliser les valeurs pour créer une heatmap
+            max_val = max(contribution_data.values()) if max(contribution_data.values()) > 0 else 1
+            normalized_values = [v/max_val for v in contribution_data.values()]
+            
+            fig_heatmap = go.Figure(data=go.Heatmap(
+                z=[normalized_values],
+                x=list(contribution_data.keys()),
+                y=['Contribution'],
+                colorscale='Viridis',
+                showscale=True,
+                text=[[f"{v}" for v in contribution_data.values()]],
+                texttemplate="%{text}",
+                textfont={"size": 14, "color": "white"}
             ))
             
-            fig_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True,
-                        range=[0, max(values) * 1.2]
-                    )),
-                title="Radar - Performance Offensive",
-                height=400
+            fig_heatmap.update_layout(
+                title="Heatmap - Contributions Offensives",
+                height=300,
+                xaxis=dict(tickangle=45)
             )
             
-            st.plotly_chart(fig_radar, use_container_width=True)
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+            
+            # Graphique en aires empilées pour l'évolution offensive
+            offensive_metrics = ['Buts', 'Passes décisives', 'Passes clés']
+            fig_area = go.Figure()
+            
+            for i, metric in enumerate(offensive_metrics):
+                fig_area.add_trace(go.Scatter(
+                    x=[0, 1],
+                    y=[0, player_data[metric]],
+                    fill='tonexty' if i > 0 else 'tozeroy',
+                    mode='lines',
+                    name=metric,
+                    line=dict(width=0.5),
+                ))
+            
+            fig_area.update_layout(
+                title="Répartition des Contributions Offensives",
+                xaxis=dict(showticklabels=False),
+                yaxis_title="Valeurs",
+                height=300
+            )
+            
+            st.plotly_chart(fig_area, use_container_width=True)
         
         with col2:
-            # Graphique buts vs buts attendus
+            # Graphique buts vs buts attendus (conservé)
             fig_scatter = go.Figure()
             
             # Tous les joueurs de la compétition
@@ -365,7 +463,6 @@ if df is not None:
                 color=list(zones_touches.values()),
                 color_continuous_scale='Blues'
             )
-            # CORRECTION : Utiliser update_layout au lieu de update_xaxis
             fig_zones.update_layout(
                 xaxis={'tickangle': 45},
                 height=400
@@ -392,44 +489,134 @@ if df is not None:
                 st.metric("Fautes subies", int(player_data['Fautes subies']))
                 st.metric("Cartons jaunes", int(player_data['Cartons jaunes']))
     
-    # Section de comparaison avec d'autres joueurs
-    st.markdown("---")
-    st.header("🔄 Comparaison avec d'autres joueurs")
-    
-    # Sélection de joueurs à comparer
-    autres_joueurs = st.multiselect(
-        "Sélectionner des joueurs à comparer :",
-        [j for j in joueurs if j != selected_player],
-        max_selections=3
-    )
-    
-    if autres_joueurs:
-        # Créer un dataframe de comparaison
-        comparison_players = [selected_player] + autres_joueurs
-        comparison_data = df_filtered[df_filtered['Joueur'].isin(comparison_players)]
+    with tab6:
+        st.subheader("🔄 Comparaison Pizza Chart")
         
-        metrics_to_compare = ['Buts', 'Passes décisives', 'Buts attendus (xG)', 
-                             'Passes décisives attendues (xAG)', 'Minutes jouées']
+        # Choix du mode
+        mode = st.radio("Mode de visualisation", ["Radar individuel", "Radar comparatif"], horizontal=True)
         
-        fig_comparison_multi = go.Figure()
+        font_normal = FontManager()
+        font_bold = FontManager()
+        font_italic = FontManager()
         
-        for metric in metrics_to_compare:
-            fig_comparison_multi.add_trace(go.Bar(
-                name=metric,
-                x=comparison_data['Joueur'],
-                y=comparison_data[metric],
-                text=comparison_data[metric].round(2),
-                textposition='auto'
-            ))
+        if mode == "Radar individuel":
+            st.subheader(f"🎯 Radar individuel : {selected_player}")
+            
+            try:
+                values1 = calculate_percentiles(selected_player, df_filtered)
+                
+                baker = PyPizza(
+                    params=list(RAW_STATS.keys()),
+                    background_color="#132257",
+                    straight_line_color="#000000",
+                    straight_line_lw=1,
+                    last_circle_color="#000000",
+                    last_circle_lw=1,
+                    other_circle_lw=0,
+                    inner_circle_size=11
+                )
+                
+                fig, ax = baker.make_pizza(
+                    values1,
+                    figsize=(10, 12),
+                    param_location=110,
+                    color_blank_space="same",
+                    slice_colors=SLICE_COLORS,
+                    value_colors=["#ffffff"] * len(values1),
+                    value_bck_colors=SLICE_COLORS,
+                    kwargs_slices=dict(edgecolor="#000000", zorder=2, linewidth=1),
+                    kwargs_params=dict(color="#ffffff", fontsize=13, fontproperties=font_bold.prop),
+                    kwargs_values=dict(color="#ffffff", fontsize=11, fontproperties=font_normal.prop,
+                                       bbox=dict(edgecolor="#000000", facecolor=COLOR_1, boxstyle="round,pad=0.2", lw=1))
+                )
+                
+                fig.text(0.515, 0.95, selected_player, size=24, ha="center", fontproperties=font_bold.prop, color="#ffffff")
+                fig.text(0.515, 0.925, "Radar Individuel | Percentile | Saison 2024-25", size=13,
+                         ha="center", fontproperties=font_bold.prop, color="#ffffff")
+                st.pyplot(fig)
+                
+            except Exception as e:
+                st.error(f"Erreur lors de la création du radar individuel : {str(e)}")
         
-        fig_comparison_multi.update_layout(
-            title='Comparaison multi-joueurs',
-            barmode='group',
-            height=500,
-            xaxis={'tickangle': -45}
-        )
-        
-        st.plotly_chart(fig_comparison_multi, use_container_width=True)
+        elif mode == "Radar comparatif":
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                ligue1 = st.selectbox("Ligue Joueur 1", competitions, 
+                                     index=competitions.index(selected_competition), key="ligue1_comp")
+                df_j1 = df[df['Compétition'] == ligue1]
+                joueur1 = st.selectbox("Joueur 1", df_j1['Joueur'].sort_values(), 
+                                      index=list(df_j1['Joueur'].sort_values()).index(selected_player), key="joueur1_comp")
+            
+            with col2:
+                ligue2 = st.selectbox("Ligue Joueur 2", competitions, key="ligue2_comp")
+                df_j2 = df[df['Compétition'] == ligue2]
+                joueur2 = st.selectbox("Joueur 2", df_j2['Joueur'].sort_values(), key="joueur2_comp")
+            
+            if joueur1 and joueur2:
+                st.subheader(f"⚔️ Radar comparatif : {joueur1} vs {joueur2}")
+                
+                try:
+                    values1 = calculate_percentiles(joueur1, df_j1)
+                    values2 = calculate_percentiles(joueur2, df_j2)
+                    
+                    params_offset = [False] * len(RAW_STATS)
+                    if len(params_offset) > 9:
+                        params_offset[9] = True
+                    if len(params_offset) > 10:
+                        params_offset[10] = True
+                    
+                    baker = PyPizza(
+                        params=list(RAW_STATS.keys()),
+                        background_color="#132257",
+                        straight_line_color="#000000",
+                        straight_line_lw=1,
+                        last_circle_color="#000000",
+                        last_circle_lw=1,
+                        other_circle_ls="-.",
+                        other_circle_lw=1
+                    )
+                    
+                    fig, ax = baker.make_pizza(
+                        values1,
+                        compare_values=values2,
+                        figsize=(10, 10),
+                        kwargs_slices=dict(facecolor=COLOR_1, edgecolor="#222222", linewidth=1, zorder=2),
+                        kwargs_compare=dict(facecolor=COLOR_2, edgecolor="#222222", linewidth=1, zorder=2),
+                        kwargs_params=dict(color="#ffffff", fontsize=13, fontproperties=font_bold.prop),
+                        kwargs_values=dict(
+                            color="#ffffff", fontsize=11, fontproperties=font_normal.prop, zorder=3,
+                            bbox=dict(edgecolor="#000000", facecolor=COLOR_1, boxstyle="round,pad=0.2", lw=1)
+                        ),
+                        kwargs_compare_values=dict(
+                            color="#ffffff", fontsize=11, fontproperties=font_normal.prop, zorder=3,
+                            bbox=dict(edgecolor="#000000", facecolor=COLOR_2, boxstyle="round,pad=0.2", lw=1)
+                        )
+                    )
+                    
+                    try:
+                        baker.adjust_texts(params_offset, offset=-0.17, adj_comp_values=True)
+                    except:
+                        pass  # Si la méthode n'existe pas, on continue sans ajustement
+                    
+                    fig.text(0.515, 0.99, f"{joueur1} vs {joueur2}", size=24, ha="center",
+                             fontproperties=font_bold.prop, color="#ffffff")
+                    
+                    fig.text(0.515, 0.955, "Radar comparatif | Percentile | Saison 2024-25",
+                             size=13, ha="center", fontproperties=font_bold.prop, color="#ffffff")
+                    
+                    legend_p1 = mpatches.Patch(color=COLOR_1, label=joueur1)
+                    legend_p2 = mpatches.Patch(color=COLOR_2, label=joueur2)
+                    ax.legend(handles=[legend_p1, legend_p2], loc="upper right", bbox_to_anchor=(1.3, 1.0))
+                    
+                    fig.text(0.99, 0.01, "Réalisé par : @AlexRakotomalala \nSource: FBRef\nInspiration: @Worville, @FootballSlices",
+                             size=8, ha="right", fontproperties=font_italic.prop, color="#dddddd")
+                    
+                    st.pyplot(fig)
+                    
+                except Exception as e:
+                    st.error(f"Erreur lors de la création du radar comparatif : {str(e)}")
+                    st.info("Vérifiez que les colonnes nécessaires sont présentes dans vos données.")
 
 else:
     st.error("Impossible de charger les données. Veuillez vérifier que le fichier 'df_BIG2025.csv' est présent.")

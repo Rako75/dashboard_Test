@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
+from math import pi
 
 # Chargement des données
 @st.cache_data
@@ -12,7 +13,16 @@ def load_data():
 
 df = load_data()
 
-# Titre du dashboard
+# Fonction de sécurité contre les NaN
+def safe_get(value, default=0):
+    try:
+        if pd.isna(value):
+            return default
+        return float(value)
+    except:
+        return default
+
+# Titre
 st.title("📊 Dashboard Interactif - Analyse d'un Joueur")
 
 # Sélection de la compétition
@@ -29,21 +39,25 @@ selected_player = st.selectbox("Choisir un joueur :", sorted(players))
 # Filtrage par joueur
 player_data = df_league[df_league["Joueur"] == selected_player].iloc[0]
 
-# Affichage de quelques stats clés
+# Avertissement si données manquantes
+if player_data.isnull().sum() > 50:
+    st.warning("⚠️ De nombreuses statistiques sont manquantes pour ce joueur.")
+
+# Statistiques principales
 st.subheader("📌 Statistiques principales")
 st.markdown(f"""
-- **Âge** : {player_data['Âge']}
+- **Âge** : {safe_get(player_data['Âge'])}
 - **Position** : {player_data['Position']}
 - **Équipe** : {player_data['Équipe']}
-- **Matchs joués** : {player_data['Matchs joués']}
-- **Minutes jouées** : {player_data['Minutes jouées']}
+- **Matchs joués** : {safe_get(player_data['Matchs joués'])}
+- **Minutes jouées** : {safe_get(player_data['Minutes jouées'])}
 """)
 
-# Graphique 1 : Répartition buts / passes décisives
+# Graphique 1 : Buts / Passes
 st.subheader("⚽ Répartition Buts / Passes décisives")
 fig1, ax1 = plt.subplots()
 ax1.pie(
-    [player_data['Buts'], player_data['Passes décisives']],
+    [safe_get(player_data['Buts']), safe_get(player_data['Passes décisives'])],
     labels=['Buts', 'Passes décisives'],
     autopct='%1.1f%%',
     startangle=90,
@@ -52,43 +66,44 @@ ax1.pie(
 ax1.axis('equal')
 st.pyplot(fig1)
 
-# Graphique 2 : Comparaison stats offensives par 90 min
+# Graphique 2 : Offensives par 90 min
 st.subheader("📈 Stats offensives par 90 minutes")
 stats_off = {
-    "Buts/90": player_data["Buts par 90 minutes"],
-    "Passes D/90": player_data["Passes décisives par 90 minutes"],
-    "xG/90": player_data["Buts attendus par 90 minutes"],
-    "xA/90": player_data["Passes décisives attendues par 90 minutes"],
+    "Buts/90": safe_get(player_data["Buts par 90 minutes"]),
+    "Passes D/90": safe_get(player_data["Passes décisives par 90 minutes"]),
+    "xG/90": safe_get(player_data["Buts attendus par 90 minutes"]),
+    "xA/90": safe_get(player_data["Passes décisives attendues par 90 minutes"]),
 }
-fig2 = px.bar(x=list(stats_off.keys()), y=list(stats_off.values()), labels={"x": "Stat", "y": "Valeur"}, color=list(stats_off.keys()))
+fig2 = px.bar(x=list(stats_off.keys()), y=list(stats_off.values()),
+              labels={"x": "Stat", "y": "Valeur"},
+              color=list(stats_off.keys()))
 st.plotly_chart(fig2)
 
-# Graphique 3 : Activité défensive
+# Graphique 3 : Défensives
 st.subheader("🛡️ Activité défensive")
 defense_stats = {
-    "Tacles réussis": player_data["Tacles réussis"],
-    "Interceptions": player_data["Interceptions"],
-    "Duels gagnés": player_data["Duels défensifs gagnés"],
-    "Tirs bloqués": player_data["Tirs bloqués"]
+    "Tacles réussis": safe_get(player_data["Tacles réussis"]),
+    "Interceptions": safe_get(player_data["Interceptions"]),
+    "Duels gagnés": safe_get(player_data["Duels défensifs gagnés"]),
+    "Tirs bloqués": safe_get(player_data["Tirs bloqués"])
 }
-fig3 = px.bar(x=list(defense_stats.keys()), y=list(defense_stats.values()), labels={"x": "Stat", "y": "Valeur"}, color=list(defense_stats.keys()))
+fig3 = px.bar(x=list(defense_stats.keys()), y=list(defense_stats.values()),
+              labels={"x": "Stat", "y": "Valeur"},
+              color=list(defense_stats.keys()))
 st.plotly_chart(fig3)
 
 # Graphique 4 : Radar offensif
 st.subheader("🎯 Radar offensif")
-from math import pi
-
 categories = ['Buts/90', 'Passes D/90', 'xG/90', 'xA/90', 'Tirs/90', 'Dribbles réussis']
 values = [
-    player_data["Buts par 90 minutes"],
-    player_data["Passes décisives par 90 minutes"],
-    player_data["Buts attendus par 90 minutes"],
-    player_data["Passes décisives attendues par 90 minutes"],
-    player_data["Tirs par 90 minutes"],
-    player_data["Dribbles réussis"]
+    safe_get(player_data["Buts par 90 minutes"]),
+    safe_get(player_data["Passes décisives par 90 minutes"]),
+    safe_get(player_data["Buts attendus par 90 minutes"]),
+    safe_get(player_data["Passes décisives attendues par 90 minutes"]),
+    safe_get(player_data["Tirs par 90 minutes"]),
+    safe_get(player_data["Dribbles réussis"])
 ]
-
-values += values[:1]  # Boucle pour le radar
+values += values[:1]
 angles = [n / float(len(categories)) * 2 * pi for n in range(len(categories))]
 angles += angles[:1]
 

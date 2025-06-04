@@ -228,6 +228,47 @@ def get_player_photo_from_web_search(player_name, team_name=None):
     return None
 
 
+from PIL import Image, ImageDraw, ImageFont
+
+def create_default_avatar(player_name):
+    """Crée une image par défaut avec les initiales du joueur"""
+    try:
+        # Créer une image 200x200 avec une couleur de fond
+        img = Image.new('RGB', (200, 200), color='#4CAF50')
+        draw = ImageDraw.Draw(img)
+
+        # Extraire les initiales
+        names = player_name.strip().split()
+        if len(names) >= 2:
+            initials = names[0][0] + names[1][0]
+        else:
+            initials = names[0][:2]
+        initials = initials.upper()
+
+        # Charger une police
+        try:
+            font = ImageFont.truetype("arial.ttf", 80)
+        except:
+            font = ImageFont.load_default()
+
+        # Centrer le texte
+        bbox = draw.textbbox((0, 0), initials, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        x = (img.width - text_width) // 2
+        y = (img.height - text_height) // 2
+
+        draw.text((x, y), initials, fill='white', font=font)
+
+        return img
+
+    except Exception as e:
+        print(f"Erreur dans create_default_avatar : {e}")
+        # Fallback en cas d'erreur
+        return Image.new('RGB', (200, 200), color='#2196F3')
+
+
+
 @st.cache_data
 def get_player_photo(player_name, team_name):
     """Tente de récupérer la photo d'un joueur depuis FBref, web search, ou génère un avatar"""

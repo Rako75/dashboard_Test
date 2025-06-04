@@ -473,7 +473,6 @@ if df is not None:
                     x=0.5
                 ),
                 xaxis=dict(
-                    titlefont=dict(color='white'),
                     tickfont=dict(color='white'),
                     tickangle=45
                 ),
@@ -1150,7 +1149,6 @@ if df is not None:
                     tickfont=dict(color='white')
                 ),
                 yaxis=dict(
-                    titlefont=dict(color='white'),
                     tickfont=dict(color='white'),
                     gridcolor='rgba(255,255,255,0.2)'
                 ),

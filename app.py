@@ -195,6 +195,39 @@ def get_player_photo_from_fbref(player_url):
     return None
 
 @st.cache_data
+def get_player_photo_from_web_search(player_name, team_name=None):
+    """Recherche une photo récente du joueur via une requête web (Google/Bing)"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+
+        search_query = f"{player_name} {team_name or ''} 2025 site:commons.wikimedia.org OR site:transfermarkt.com"
+        search_url = f"https://www.bing.com/images/search?q={quote(search_query)}"
+
+        response = requests.get(search_url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            img_tags = soup.find_all('img')
+
+            for img in img_tags:
+                src = img.get('src') or img.get('data-src')
+                if src and any(host in src for host in ['wikimedia', 'tmssl', 'transfermarkt']):
+                    try:
+                        img_response = requests.get(src, headers=headers, timeout=5)
+                        if img_response.status_code == 200:
+                            image = Image.open(io.BytesIO(img_response.content))
+                            if image.size[0] > 50 and image.size[1] > 50:
+                                return image
+                    except:
+                        continue
+    except Exception as e:
+        print(f"Erreur lors de la recherche web d'image pour {player_name}: {e}")
+    
+    return None
+
+
+@st.cache_data
 def get_player_photo(player_name, team_name):
     """Tente de récupérer la photo d'un joueur depuis FBref puis d'autres sources"""
     try:

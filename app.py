@@ -760,14 +760,14 @@ if df is not None:
             st.plotly_chart(fig_pie_temps, use_container_width=True)
             
             # Graphique de progression dans la saison
-            match_data = np.arange(1, player_data['Matchs joués'] + 1)
-            cumulative_goals = np.random.cumsum(np.random.poisson(
+            match_data = np.arange(1, int(player_data['Matchs joués']) + 1)
+            cumulative_goals = np.cumsum(np.random.poisson(
                 player_data['Buts'] / player_data['Matchs joués'], 
-                player_data['Matchs joués']
+                int(player_data['Matchs joués'])
             ))
-            cumulative_assists = np.random.cumsum(np.random.poisson(
+            cumulative_assists = np.cumsum(np.random.poisson(
                 player_data['Passes décisives'] / player_data['Matchs joués'], 
-                player_data['Matchs joués']
+                int(player_data['Matchs joués'])
             ))
             
             fig_progress = go.Figure()

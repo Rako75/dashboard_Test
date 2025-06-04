@@ -4,6 +4,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+import requests
+from PIL import Image
+import io
+from bs4 import BeautifulSoup
+import time
+import re
+from urllib.parse import urljoin, quote
 
 # Configuration de la page
 st.set_page_config(
@@ -29,6 +36,240 @@ def load_data():
     except Exception as e:
         st.error(f"Erreur lors du chargement des données : {str(e)}")
         return None
+
+@st.cache_data
+def search_player_on_fbref(player_name, team_name=None):
+    """Recherche un joueur sur FBref et retourne l'URL de sa page"""
+    try:
+        # Nettoyer le nom du joueur pour la recherche
+        clean_name = player_name.strip()
+        search_query = quote(clean_name)
+        
+        # URL de recherche FBref
+        search_url = f"https://fbref.com/fr/search/search.fcgi?search={search_query}"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(search_url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Chercher les résultats de recherche
+            search_results = soup.find_all('div', class_='search-item')
+            
+            if not search_results:
+                # Essayer une autre structure de page
+                search_results = soup.find_all('a', href=re.compile(r'/fr/joueurs/'))
+            
+            for result in search_results[:3]:  # Limiter aux 3 premiers résultats
+                if isinstance(result, dict):
+                    continue
+                    
+                # Extraire le lien vers la page du joueur
+                link = result.find('a') if result.name != 'a' else result
+                if link and link.get('href'):
+                    href = link.get('href')
+                    if '/joueurs/' in href:
+                        full_url = urljoin('https://fbref.com', href)
+                        
+                        # Vérifier si c'est le bon joueur (optionnel avec équipe)
+                        result_text = result.get_text().lower()
+                        if clean_name.lower() in result_text:
+                            return full_url
+            
+            # Si pas de résultat direct, essayer avec une recherche Google sur FBref
+            return search_with_google_fbref(player_name)
+            
+    except Exception as e:
+        print(f"Erreur lors de la recherche FBref pour {player_name}: {e}")
+        return None
+    
+    return None
+
+@st.cache_data
+def search_with_google_fbref(player_name):
+    """Recherche alternative via Google pour trouver la page FBref du joueur"""
+    try:
+        # Construire une requête Google spécifique à FBref
+        google_query = f"site:fbref.com {player_name} joueur"
+        google_url = f"https://www.google.com/search?q={quote(google_query)}"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        
+        response = requests.get(google_url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Chercher les liens vers FBref dans les résultats Google
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                if 'fbref.com/fr/joueurs/' in href and '/url?q=' in href:
+                    # Extraire l'URL réelle depuis Google
+                    real_url = href.split('/url?q=')[1].split('&')[0]
+                    if 'fbref.com' in real_url:
+                        return real_url
+                        
+    except Exception as e:
+        print(f"Erreur recherche Google pour {player_name}: {e}")
+        
+    return None
+
+@st.cache_data
+def get_player_photo_from_fbref(player_url):
+    """Extrait la photo d'un joueur depuis sa page FBref"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(player_url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Chercher l'image du joueur - plusieurs sélecteurs possibles
+            photo_selectors = [
+                'img.headshot',  # Sélecteur principal pour les photos de joueurs
+                'div.media-item img',
+                'div.player-headshot img',
+                'img[alt*="Photo"]',
+                'img[src*="headshot"]',
+                'img[src*="player"]'
+            ]
+            
+            for selector in photo_selectors:
+                img_element = soup.select_one(selector)
+                if img_element and img_element.get('src'):
+                    img_url = img_element['src']
+                    
+                    # Construire l'URL complète si nécessaire
+                    if img_url.startswith('//'):
+                        img_url = 'https:' + img_url
+                    elif img_url.startswith('/'):
+                        img_url = 'https://fbref.com' + img_url
+                    
+                    # Télécharger l'image
+                    img_response = requests.get(img_url, headers=headers, timeout=10)
+                    if img_response.status_code == 200:
+                        try:
+                            image = Image.open(io.BytesIO(img_response.content))
+                            # Vérifier que l'image est valide et pas trop petite
+                            if image.size[0] > 50 and image.size[1] > 50:
+                                return image
+                        except Exception:
+                            continue
+            
+            # Si aucune image spécifique trouvée, chercher toutes les images
+            all_images = soup.find_all('img')
+            for img in all_images:
+                src = img.get('src', '')
+                alt = img.get('alt', '').lower()
+                
+                # Filtrer les images qui pourraient être des photos de joueurs
+                if any(keyword in src.lower() for keyword in ['headshot', 'player', 'photo']) or \
+                   any(keyword in alt for keyword in ['photo', 'headshot', 'player']):
+                    
+                    if src.startswith('//'):
+                        src = 'https:' + src
+                    elif src.startswith('/'):
+                        src = 'https://fbref.com' + src
+                    
+                    try:
+                        img_response = requests.get(src, headers=headers, timeout=5)
+                        if img_response.status_code == 200:
+                            image = Image.open(io.BytesIO(img_response.content))
+                            if image.size[0] > 50 and image.size[1] > 50:
+                                return image
+                    except Exception:
+                        continue
+                        
+    except Exception as e:
+        print(f"Erreur lors de l'extraction de la photo depuis {player_url}: {e}")
+        
+    return None
+
+@st.cache_data
+def get_player_photo(player_name, team_name):
+    """Tente de récupérer la photo d'un joueur depuis FBref puis d'autres sources"""
+    try:
+        # Option 1: Photo locale si disponible
+        local_path = f"photos/{player_name.replace(' ', '_')}.jpg"
+        try:
+            image = Image.open(local_path)
+            return image
+        except:
+            pass
+        
+        # Option 2: Scraping FBref
+        st.info(f"🔍 Recherche de la photo de {player_name} sur FBref...")
+        
+        player_url = search_player_on_fbref(player_name, team_name)
+        if player_url:
+            st.info(f"📄 Page trouvée, extraction de la photo...")
+            photo = get_player_photo_from_fbref(player_url)
+            if photo:
+                st.success(f"✅ Photo trouvée pour {player_name}")
+                return photo
+            else:
+                st.warning(f"📷 Page trouvée mais pas de photo pour {player_name}")
+        else:
+            st.warning(f"❌ Aucune page trouvée pour {player_name} sur FBref")
+        
+        # Option 3: Avatar par défaut
+        st.info(f"🎨 Génération d'un avatar par défaut pour {player_name}")
+        return create_default_avatar(player_name)
+        
+    except Exception as e:
+        st.error(f"Erreur lors de la récupération de la photo de {player_name}: {str(e)}")
+        return create_default_avatar(player_name)
+
+def create_default_avatar(player_name):
+    """Crée un avatar par défaut avec les initiales du joueur"""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        
+        # Créer une image 200x200 avec fond coloré
+        img = Image.new('RGB', (200, 200), color='#4CAF50')
+        draw = ImageDraw.Draw(img)
+        
+        # Obtenir les initiales
+        names = player_name.split()
+        if len(names) >= 2:
+            initials = names[0][0] + names[-1][0]
+        else:
+            initials = names[0][:2] if len(names[0]) >= 2 else names[0][0]
+        
+        initials = initials.upper()
+        
+        # Dessiner les initiales
+        try:
+            # Essayer d'utiliser une police par défaut
+            font = ImageFont.truetype("arial.ttf", 80)
+        except:
+            font = ImageFont.load_default()
+        
+        # Centrer le texte
+        bbox = draw.textbbox((0, 0), initials, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = (200 - text_width) // 2
+        y = (200 - text_height) // 2
+        
+        draw.text((x, y), initials, fill='white', font=font)
+        
+        return img
+        
+    except Exception:
+        # En cas d'erreur, créer une image simple
+        img = Image.new('RGB', (200, 200), color='#2196F3')
+        return img
 
 # Chargement des données
 df = load_data()
@@ -62,18 +303,31 @@ if df is not None:
     # Affichage des informations générales du joueur
     st.header(f"📊 Profil de {selected_player}")
     
-    col1, col2, col3, col4, col5 = st.columns(5)
+    # Créer deux colonnes : une pour la photo, une pour les infos
+    col_photo, col_info = st.columns([1, 3])
     
-    with col1:
-        st.metric("Âge", f"{player_data['Âge']} ans")
-    with col2:
-        st.metric("Position", player_data['Position'])
-    with col3:
-        st.metric("Équipe", player_data['Équipe'])
-    with col4:
-        st.metric("Nationalité", player_data['Nationalité'])
-    with col5:
-        st.metric("Matchs joués", int(player_data['Matchs joués']))
+    with col_photo:
+        # Afficher la photo du joueur avec indicateur de chargement
+        with st.spinner("Chargement de la photo..."):
+            player_image = get_player_photo(selected_player, player_data['Équipe'])
+            st.image(player_image, width=200, caption=selected_player)
+    
+    with col_info:
+        # Informations du joueur en grille
+        info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+        
+        with info_col1:
+            st.metric("Âge", f"{player_data['Âge']} ans")
+            st.metric("Position", player_data['Position'])
+        with info_col2:
+            st.metric("Équipe", player_data['Équipe'])
+            st.metric("Nationalité", player_data['Nationalité'])
+        with info_col3:
+            st.metric("Matchs joués", int(player_data['Matchs joués']))
+            st.metric("Titularisations", int(player_data['Titularisations']))
+        with info_col4:
+            st.metric("Minutes jouées", f"{int(player_data['Minutes jouées'])} min")
+            st.metric("Buts", int(player_data['Buts']))
     
     st.markdown("---")
     
@@ -431,3 +685,24 @@ if df is not None:
 else:
     st.error("Impossible de charger les données. Veuillez vérifier que le fichier 'df_BIG2025.csv' est présent.")
     st.info("Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies.")
+
+# Instructions pour les photos
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📸 Sources des photos")
+st.sidebar.info("""
+**Le système recherche automatiquement :**
+
+1. **📁 Photos locales** (dossier `photos/`)
+2. **🌐 FBref.com** (scraping automatique)
+3. **🎨 Avatar généré** (initiales)
+
+**Performance :** Le scraping peut prendre quelques secondes la première fois, puis les photos sont mises en cache.
+""")
+
+# Bouton pour vider le cache des photos
+if st.sidebar.button("🔄 Actualiser les photos"):
+    st.cache_data.clear()
+    st.experimental_rerun()
+
+# Note sur les performances
+st.sidebar.success("✅ Scraping FBref activé - Photos haute qualité")

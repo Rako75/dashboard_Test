@@ -1,57 +1,154 @@
-elif metric == 'Passes D./90':
-                    best_idx = df_filtered_reliable['Passes décisives par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives par 90 minutes']
-                elif metric == 'xG/90':
-                    best_idx = df_filtered_reliable['Buts attendus par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Buts attendus par 90 minutes']
-                elif metric == 'xA/90':
-                    best_idx = df_filtered_reliable['Passes décisives attendues par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives attendues par 90 minutes']
-                elif metric == 'Tirs/90':
-                    best_idx = df_filtered_reliable['Tirs par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Tirs par 90 minutes']
-                elif metric == 'Actions → Tir/90':
-                    best_idx = df_filtered_reliable['Actions menant à un tir par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Actions menant à un tir par 90 minutes']
-                elif metric == 'Passes dernier tiers/90':
-                    temp_series = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                    best_idx = temp_series.idxmax()
-                    best_value = temp_series.loc[best_idx]
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import numpy as np
+from mplsoccer import PyPizza, FontManager
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
+# Configuration de la page avec thème sombre professionnel
+st.set_page_config(
+    page_title="Dashboard Joueur Football",
+    page_icon="⚽",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# CSS personnalisé pour un look professionnel
+st.markdown("""
+<style>
+    .main {
+        background-color: #0E1117;
+    }
+    .stApp {
+        background: linear-gradient(135deg, #0E1117 0%, #1E2640 100%);
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #1E2640;
+        border-radius: 10px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: transparent;
+        color: #FFFFFF;
+        border-radius: 8px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #FF6B35;
+        color: #FFFFFF;
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #4A5568;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    .stMetric {
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #718096;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Couleurs professionnelles
+COLORS = {
+    'primary': '#FF6B35',
+    'secondary': '#004E89', 
+    'accent': '#1A759F',
+    'success': '#00C896',
+    'warning': '#F7B801',
+    'danger': '#D62828',
+    'dark': '#1E2640',
+    'light': '#F8F9FA',
+    'gradient': ['#FF6B35', '#004E89', '#1A759F', '#00C896', '#F7B801']
+}
+
+# ---------------------- PARAMÈTRES DU RADAR ----------------------
+
+RAW_STATS = {
+    "Buts\nsans pénalty": "Buts (sans penalty)",
+    "Passes déc.": "Passes décisives",
+    "Buts +\nPasses déc.": "Buts + Passes D",
+    "Cartons\njaunes": "Cartons jaunes",
+    "Cartons\nrouges": "Cartons rouges",
+    "Passes\ntentées": "Passes tentées",
+    "Passes\nclés": "Passes clés",
+    "Passes\nprogressives": "Passes progressives",
+    "Passes\ndernier 1/3": "Passes dans le dernier tiers",
+    "Passes\ndans la surface": "Passes dans la surface",
+    "Touches": "Touches de balle",
+    "Dribbles\ntentés": "Dribbles tentés",
+    "Dribbles\nréussis": "Dribbles réussis",
+    "Ballons perdus\nsous pression": "Ballons perdus sous la pression d'un adversaire",
+    "Ballons perdus\nen conduite": "Ballons perdus en conduite",
+    "Tacles\ngagnants": "Tacles gagnants",
+    "Tirs\nbloqués": "Tirs bloqués",
+    "Duels\ngagnés": "Duels défensifs gagnés",
+    "Interceptions": "Interceptions",
+    "Dégagements": "Dégagements"
+}
+
+COLOR_1 = COLORS['primary']
+COLOR_2 = COLORS['secondary']
+SLICE_COLORS = [COLORS['accent']] * len(RAW_STATS)
+
+def calculate_percentiles(player_name, df):
+    """Calcule les percentiles pour le pizza chart"""
+    player = df[df["Joueur"] == player_name].iloc[0]
+    percentiles = []
+
+    for label, col in RAW_STATS.items():
+        try:
+            if col not in df.columns or pd.isna(player[col]):
+                percentile = 0
+            elif "par 90 minutes" in col or "%" in col:
+                val = player[col]
+                dist = df[col]
+                if pd.isna(val) or dist.dropna().empty:
+                    percentile = 0
                 else:
-                    base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                    temp_series = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
-                    best_idx = temp_series.idxmax()
-                    best_value = temp_series.loc[best_idx]()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives par 90 minutes']
-                elif metric == 'xG/90':
-                    best_idx = df_filtered_reliable['Buts attendus par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Buts attendus par 90 minutes']
-                elif metric == 'xA/90':
-                    best_idx = df_filtered_reliable['Passes décisives attendues par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives attendues par 90 minutes']
-                elif metric == 'Tirs/90':
-                    best_idx = df_filtered_reliable['Tirs par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Tirs par 90 minutes']
-                elif metric == 'Actions → Tir/90':
-                    best_idx = df_filtered_reliable['Actions menant à un tir par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Actions menant à un tir par 90 minutes']
-                elif metric == 'Passes dernier tiers/90':
-                    temp_series = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                    best_idx = temp_series.idxmax()
-                    best_value = temp_series.loc[best_idx]
+                    percentile = round((dist < val).mean() * 100)
+            else:
+                if player.get("Matchs en 90 min", 0) == 0:
+                    matches = player.get("Matchs joués", 1)
+                    if matches == 0:
+                        percentile = 0
+                    else:
+                        val = player[col] / matches
+                        dist = df[col] / df.get("Matchs joués", 1)
+                        if pd.isna(val) or dist.dropna().empty:
+                            percentile = 0
+                        else:
+                            percentile = round((dist < val).mean() * 100)
                 else:
-                    base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                    temp_series = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
-                    best_idx = temp_series.idxmax()
-                    best_value = temp_series.loc[best_idx]
-            
-            best_player_name = df_filtered_reliable.loc[best_idx, 'Joueur']
-            best_player_matches = df_filtered_reliable.loc[best_idx, 'Matchs joués']
-            best_players[metric] = {'name': best_player_name, 'value': best_value, 'matches': best_player_matches}
-        except:
-            best_players[metric] = {'name': 'N/A', 'value': 0, 'matches': 0}
-    
-    return best_players
+                    val = player[col] / player["Matchs en 90 min"]
+                    dist = df[col] / df["Matchs en 90 min"]
+                    if pd.isna(val) or dist.dropna().empty:
+                        percentile = 0
+                    else:
+                        percentile = round((dist < val).mean() * 100)
+        except Exception as e:
+            percentile = 0
+        percentiles.append(percentile)
+
+    return percentiles
+
+@st.cache_data
+def load_data():
+    """Charge les données depuis le fichier CSV"""
+    try:
+        df = pd.read_csv('df_BIG2025.csv', encoding='utf-8')
+        return df
+    except FileNotFoundError:
+        st.error("Fichier 'df_BIG2025.csv' non trouvé. Veuillez vous assurer que le fichier est dans le même répertoire.")
+        return None
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des données : {str(e)}")
+        return None
 
 # Chargement des données
 df = load_data()
@@ -169,37 +266,186 @@ if df is not None:
             
             st.plotly_chart(fig_pie, use_container_width=True)
             
-            # Radar professionnel des actions offensives
-            fig_radar, offensive_metrics, percentile_values, avg_values, df_filtered_reliable = create_offensive_radar(
-                player_data, df_filtered, selected_player, selected_competition
+            # Radar professionnel des actions offensives avec plus de variables
+            offensive_metrics = {
+                'Buts/90': player_data['Buts par 90 minutes'],
+                'Passes D./90': player_data['Passes décisives par 90 minutes'],
+                'xG/90': player_data['Buts attendus par 90 minutes'],
+                'xA/90': player_data['Passes décisives attendues par 90 minutes'],
+                'Tirs/90': player_data['Tirs par 90 minutes'],
+                'Passes clés/90': player_data['Passes clés'] / (player_data['Minutes jouées'] / 90),
+                'Dribbles réussis/90': player_data['Dribbles réussis'] / (player_data['Minutes jouées'] / 90),
+                'Actions → Tir/90': player_data['Actions menant à un tir par 90 minutes'],
+                'Passes dernier tiers/90': player_data.get('Passes dans le dernier tiers', 0) / (player_data['Minutes jouées'] / 90),
+                'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90)
+            }
+            
+            # Calculer les percentiles par rapport à la compétition pour une meilleure lisibilité
+            percentile_values = []
+            avg_values = []
+            for metric, value in offensive_metrics.items():
+                if metric.endswith('/90'):
+                    # Métriques déjà par 90 minutes
+                    if metric == 'Buts/90':
+                        distribution = df_filtered['Buts par 90 minutes']
+                    elif metric == 'Passes D./90':
+                        distribution = df_filtered['Passes décisives par 90 minutes']
+                    elif metric == 'xG/90':
+                        distribution = df_filtered['Buts attendus par 90 minutes']
+                    elif metric == 'xA/90':
+                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                    elif metric == 'Tirs/90':
+                        distribution = df_filtered['Tirs par 90 minutes']
+                    elif metric == 'Actions → Tir/90':
+                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                    elif metric == 'Passes dernier tiers/90':
+                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                    else:
+                        # Calculer pour les autres métriques
+                        base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
+                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                    
+                    # Calculer le percentile et la moyenne
+                    percentile = (distribution < value).mean() * 100
+                    avg_comp = distribution.mean()
+                    percentile_values.append(min(percentile, 100))  # Cap à 100
+                    avg_values.append(avg_comp)
+                else:
+                    percentile_values.append(50)  # Valeur par défaut si problème
+                    avg_values.append(0)
+            
+            # Créer le radar avec les moyennes de la compétition comme référence
+            fig_radar = go.Figure()
+            
+            # Ajouter la performance du joueur
+            fig_radar.add_trace(go.Scatterpolar(
+                r=percentile_values,
+                theta=list(offensive_metrics.keys()),
+                fill='toself',
+                fillcolor='rgba(255, 107, 53, 0.3)',
+                line=dict(color=COLORS['primary'], width=3),
+                marker=dict(color=COLORS['primary'], size=8, symbol='circle'),
+                name=f'{selected_player}',
+                hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
+                customdata=list(offensive_metrics.values())
+            ))
+            
+            # Calculer les percentiles des moyennes de la compétition (seront autour de 50)
+            avg_percentiles = []
+            for i, avg_val in enumerate(avg_values):
+                if avg_val > 0:
+                    metric_name = list(offensive_metrics.keys())[i]
+                    if metric_name == 'Buts/90':
+                        distribution = df_filtered['Buts par 90 minutes']
+                    elif metric_name == 'Passes D./90':
+                        distribution = df_filtered['Passes décisives par 90 minutes']
+                    elif metric_name == 'xG/90':
+                        distribution = df_filtered['Buts attendus par 90 minutes']
+                    elif metric_name == 'xA/90':
+                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                    elif metric_name == 'Tirs/90':
+                        distribution = df_filtered['Tirs par 90 minutes']
+                    elif metric_name == 'Actions → Tir/90':
+                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                    elif metric_name == 'Passes dernier tiers/90':
+                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                    else:
+                        base_column = metric_name.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
+                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                    
+                    avg_percentile = (distribution < avg_val).mean() * 100
+                    avg_percentiles.append(avg_percentile)
+                else:
+                    avg_percentiles.append(50)
+            
+            # Ajouter une ligne de référence pour la moyenne de la compétition
+            fig_radar.add_trace(go.Scatterpolar(
+                r=avg_percentiles,
+                theta=list(offensive_metrics.keys()),
+                mode='lines',
+                line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
+                name=f'Moyenne {selected_competition}',
+                showlegend=True,
+                hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
+                customdata=avg_values
+            ))
+            
+            fig_radar.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 100],
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=10),
+                        showticklabels=True,
+                        tickmode='linear',
+                        tick0=0,
+                        dtick=20
+                    ),
+                    angularaxis=dict(
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=11, family='Arial Black'),
+                        linecolor='rgba(255,255,255,0.5)'
+                    ),
+                    bgcolor='rgba(30, 38, 64, 0.8)'
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                title=dict(
+                    text="Radar Offensif Professionnel (Percentiles)",
+                    font=dict(size=16, color='white', family='Arial Black'),
+                    x=0.5,
+                    y=0.95
+                ),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.2,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color='white', size=10)
+                ),
+                height=450,
+                annotations=[
+                    dict(
+                        text=f"Performance vs Moyenne {selected_competition}",
+                        showarrow=False,
+                        x=0.5,
+                        y=-0.15,
+                        xref="paper",
+                        yref="paper",
+                        font=dict(color='white', size=12, family='Arial'),
+                        bgcolor='rgba(255, 107, 53, 0.8)',
+                        bordercolor='white',
+                        borderwidth=1
+                    )
+                ]
             )
             
             st.plotly_chart(fig_radar, use_container_width=True)
             
             # Afficher les valeurs détaillées sous le radar
-            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques offensives vs joueurs fiables (15+ matchs)</h4>", unsafe_allow_html=True)
-            
-            # Trouver les meilleurs joueurs pour chaque métrique offensive
-            best_players_off = find_best_players(offensive_metrics, df_filtered_reliable, is_defensive=False)
+            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques offensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
             
             col_a, col_b = st.columns(2)
             with col_a:
                 for i, (metric, value) in enumerate(list(offensive_metrics.items())[:5]):
                     percentile = percentile_values[i]
                     avg_comp = avg_values[i]
-                    best_player = best_players_off[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f}) - {best_player['matches']} matchs</small>", unsafe_allow_html=True)
+                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
             
             with col_b:
                 for i, (metric, value) in enumerate(list(offensive_metrics.items())[5:], 5):
                     percentile = percentile_values[i]
                     avg_comp = avg_values[i]
-                    best_player = best_players_off[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f}) - {best_player['matches']} matchs</small>", unsafe_allow_html=True)
+                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
         
         with col2:
             # Graphique buts vs buts attendus amélioré
@@ -470,45 +716,213 @@ if df is not None:
             
             st.plotly_chart(fig_def_comp, use_container_width=True)
             
-            # Radar professionnel des actions défensives
+            # Radar professionnel des actions défensives avec plus de variables
             st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🛡️ Radar Défensif Professionnel</h3>", unsafe_allow_html=True)
             
-            fig_def_radar, defensive_metrics, def_percentile_values, def_avg_values, df_filtered_reliable_def = create_defensive_radar(
-                player_data, df_filtered, selected_player, selected_competition
+            defensive_metrics = {
+                'Tacles/90': player_data['Tacles gagnants'] / (player_data['Minutes jouées'] / 90),
+                'Interceptions/90': player_data['Interceptions'] / (player_data['Minutes jouées'] / 90),
+                'Ballons récupérés/90': player_data['Ballons récupérés'] / (player_data['Minutes jouées'] / 90),
+                'Duels défensifs/90': player_data.get('Duels défensifs gagnés', 0) / (player_data['Minutes jouées'] / 90),
+                'Duels aériens/90': player_data['Duels aériens gagnés'] / (player_data['Minutes jouées'] / 90),
+                'Dégagements/90': player_data['Dégagements'] / (player_data['Minutes jouées'] / 90),
+                'Tirs bloqués/90': player_data.get('Tirs bloqués', 0) / (player_data['Minutes jouées'] / 90),
+                '% Duels gagnés': player_data.get('Pourcentage de duels gagnés', 0),
+                '% Duels aériens': player_data['Pourcentage de duels aériens gagnés'],
+                'Total Blocs/90': player_data.get('Total de blocs (tirs et passes)', 0) / (player_data['Minutes jouées'] / 90)
+            }
+            
+            # Calculer les percentiles et moyennes par rapport à la compétition
+            def_percentile_values = []
+            def_avg_values = []
+            for metric, value in defensive_metrics.items():
+                try:
+                    if metric == 'Tacles/90':
+                        distribution = df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Interceptions/90':
+                        distribution = df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Ballons récupérés/90':
+                        distribution = df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Duels défensifs/90':
+                        distribution = df_filtered.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Duels aériens/90':
+                        distribution = df_filtered['Duels aériens gagnés'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Dégagements/90':
+                        distribution = df_filtered['Dégagements'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Tirs bloqués/90':
+                        distribution = df_filtered.get('Tirs bloqués', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == '% Duels gagnés':
+                        distribution = df_filtered.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered)))
+                    elif metric == '% Duels aériens':
+                        distribution = df_filtered['Pourcentage de duels aériens gagnés']
+                    elif metric == 'Total Blocs/90':
+                        distribution = df_filtered.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    
+                    # Nettoyer les valeurs NaN et infinies
+                    distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+                    value = value if not np.isnan(value) and not np.isinf(value) else 0
+                    
+                    if len(distribution) > 0:
+                        percentile = (distribution < value).mean() * 100
+                        avg_comp = distribution.mean()
+                    else:
+                        percentile = 50
+                        avg_comp = 0
+                    
+                    def_percentile_values.append(min(percentile, 100))
+                    def_avg_values.append(avg_comp)
+                except:
+                    def_percentile_values.append(50)
+                    def_avg_values.append(0)
+            
+            # Créer le radar défensif
+            fig_def_radar = go.Figure()
+            
+            # Ajouter la performance du joueur
+            fig_def_radar.add_trace(go.Scatterpolar(
+                r=def_percentile_values,
+                theta=list(defensive_metrics.keys()),
+                fill='toself',
+                fillcolor='rgba(26, 117, 159, 0.3)',
+                line=dict(color=COLORS['accent'], width=3),
+                marker=dict(color=COLORS['accent'], size=8, symbol='circle'),
+                name=f'{selected_player}',
+                hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
+                customdata=list(defensive_metrics.values())
+            ))
+            
+            # Calculer les percentiles des moyennes de la compétition
+            def_avg_percentiles = []
+            for i, avg_val in enumerate(def_avg_values):
+                try:
+                    if avg_val > 0:
+                        metric_name = list(defensive_metrics.keys())[i]
+                        if metric_name == 'Tacles/90':
+                            distribution = df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Interceptions/90':
+                            distribution = df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Ballons récupérés/90':
+                            distribution = df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Duels défensifs/90':
+                            distribution = df_filtered.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Duels aériens/90':
+                            distribution = df_filtered['Duels aériens gagnés'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Dégagements/90':
+                            distribution = df_filtered['Dégagements'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Tirs bloqués/90':
+                            distribution = df_filtered.get('Tirs bloqués', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == '% Duels gagnés':
+                            distribution = df_filtered.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered)))
+                        elif metric_name == '% Duels aériens':
+                            distribution = df_filtered['Pourcentage de duels aériens gagnés']
+                        elif metric_name == 'Total Blocs/90':
+                            distribution = df_filtered.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        
+                        distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+                        if len(distribution) > 0:
+                            avg_percentile = (distribution < avg_val).mean() * 100
+                            def_avg_percentiles.append(avg_percentile)
+                        else:
+                            def_avg_percentiles.append(50)
+                    else:
+                        def_avg_percentiles.append(50)
+                except:
+                    def_avg_percentiles.append(50)
+            
+            # Ajouter une ligne de référence pour la moyenne de la compétition
+            fig_def_radar.add_trace(go.Scatterpolar(
+                r=def_avg_percentiles,
+                theta=list(defensive_metrics.keys()),
+                mode='lines',
+                line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
+                name=f'Moyenne {selected_competition}',
+                showlegend=True,
+                hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
+                customdata=def_avg_values
+            ))
+            
+            fig_def_radar.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 100],
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=10),
+                        showticklabels=True,
+                        tickmode='linear',
+                        tick0=0,
+                        dtick=20
+                    ),
+                    angularaxis=dict(
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=11, family='Arial Black'),
+                        linecolor='rgba(255,255,255,0.5)'
+                    ),
+                    bgcolor='rgba(30, 38, 64, 0.8)'
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                title=dict(
+                    text="Radar Défensif Professionnel (Percentiles)",
+                    font=dict(size=16, color='white', family='Arial Black'),
+                    x=0.5,
+                    y=0.95
+                ),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.2,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color='white', size=10)
+                ),
+                height=450,
+                annotations=[
+                    dict(
+                        text=f"Performance Défensive vs Moyenne {selected_competition}",
+                        showarrow=False,
+                        x=0.5,
+                        y=-0.15,
+                        xref="paper",
+                        yref="paper",
+                        font=dict(color='white', size=12, family='Arial'),
+                        bgcolor='rgba(26, 117, 159, 0.8)',
+                        bordercolor='white',
+                        borderwidth=1
+                    )
+                ]
             )
             
             st.plotly_chart(fig_def_radar, use_container_width=True)
             
             # Afficher les valeurs détaillées sous le radar défensif
-            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques défensives vs joueurs fiables (15+ matchs)</h4>", unsafe_allow_html=True)
-            
-            # Trouver les meilleurs joueurs pour chaque métrique défensive
-            best_players_def = find_best_players(defensive_metrics, df_filtered_reliable_def, is_defensive=True)
+            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques défensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
             
             col_a, col_b = st.columns(2)
             with col_a:
                 for i, (metric, value) in enumerate(list(defensive_metrics.items())[:5]):
                     percentile = def_percentile_values[i]
                     avg_comp = def_avg_values[i]
-                    best_player = best_players_def[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
                     if '/' in metric:
-                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f}) - {best_player['matches']} matchs</small>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
                     else:
-                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.1f}%) - {best_player['matches']} matchs</small>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
             
             with col_b:
                 for i, (metric, value) in enumerate(list(defensive_metrics.items())[5:], 5):
                     percentile = def_percentile_values[i]
                     avg_comp = def_avg_values[i]
-                    best_player = best_players_def[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
                     if '/' in metric:
-                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f}) - {best_player['matches']} matchs</small>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
                     else:
-                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.1f}%) - {best_player['matches']} matchs</small>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
         
         # Métriques défensives par 90 minutes avec design amélioré - UNIQUEMENT DANS CET ONGLET
         st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques défensives par 90 min</h3>", unsafe_allow_html=True)
@@ -1139,575 +1553,4 @@ else:
     </div>
     """, unsafe_allow_html=True)
     
-    st.info("💡 Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies.")import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import numpy as np
-from mplsoccer import PyPizza, FontManager
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-
-# Configuration de la page avec thème sombre professionnel
-st.set_page_config(
-    page_title="Dashboard Joueur Football",
-    page_icon="⚽",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# CSS personnalisé pour un look professionnel
-st.markdown("""
-<style>
-    .main {
-        background-color: #0E1117;
-    }
-    .stApp {
-        background: linear-gradient(135deg, #0E1117 0%, #1E2640 100%);
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: #1E2640;
-        border-radius: 10px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background-color: transparent;
-        color: #FFFFFF;
-        border-radius: 8px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #FF6B35;
-        color: #FFFFFF;
-    }
-    .metric-card {
-        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px solid #4A5568;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    }
-    .stMetric {
-        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #718096;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Couleurs professionnelles
-COLORS = {
-    'primary': '#FF6B35',
-    'secondary': '#004E89', 
-    'accent': '#1A759F',
-    'success': '#00C896',
-    'warning': '#F7B801',
-    'danger': '#D62828',
-    'dark': '#1E2640',
-    'light': '#F8F9FA',
-    'gradient': ['#FF6B35', '#004E89', '#1A759F', '#00C896', '#F7B801']
-}
-
-# ---------------------- PARAMÈTRES DU RADAR ----------------------
-
-RAW_STATS = {
-    "Buts\nsans pénalty": "Buts (sans penalty)",
-    "Passes déc.": "Passes décisives",
-    "Buts +\nPasses déc.": "Buts + Passes D",
-    "Cartons\njaunes": "Cartons jaunes",
-    "Cartons\nrouges": "Cartons rouges",
-    "Passes\ntentées": "Passes tentées",
-    "Passes\nclés": "Passes clés",
-    "Passes\nprogressives": "Passes progressives",
-    "Passes\ndernier 1/3": "Passes dans le dernier tiers",
-    "Passes\ndans la surface": "Passes dans la surface",
-    "Touches": "Touches de balle",
-    "Dribbles\ntentés": "Dribbles tentés",
-    "Dribbles\nréussis": "Dribbles réussis",
-    "Ballons perdus\nsous pression": "Ballons perdus sous la pression d'un adversaire",
-    "Ballons perdus\nen conduite": "Ballons perdus en conduite",
-    "Tacles\ngagnants": "Tacles gagnants",
-    "Tirs\nbloqués": "Tirs bloqués",
-    "Duels\ngagnés": "Duels défensifs gagnés",
-    "Interceptions": "Interceptions",
-    "Dégagements": "Dégagements"
-}
-
-COLOR_1 = COLORS['primary']
-COLOR_2 = COLORS['secondary']
-SLICE_COLORS = [COLORS['accent']] * len(RAW_STATS)
-
-def calculate_percentiles(player_name, df):
-    """Calcule les percentiles pour le pizza chart"""
-    player = df[df["Joueur"] == player_name].iloc[0]
-    percentiles = []
-
-    for label, col in RAW_STATS.items():
-        try:
-            if col not in df.columns or pd.isna(player[col]):
-                percentile = 0
-            elif "par 90 minutes" in col or "%" in col:
-                val = player[col]
-                dist = df[col]
-                if pd.isna(val) or dist.dropna().empty:
-                    percentile = 0
-                else:
-                    percentile = round((dist < val).mean() * 100)
-            else:
-                if player.get("Matchs en 90 min", 0) == 0:
-                    matches = player.get("Matchs joués", 1)
-                    if matches == 0:
-                        percentile = 0
-                    else:
-                        val = player[col] / matches
-                        dist = df[col] / df.get("Matchs joués", 1)
-                        if pd.isna(val) or dist.dropna().empty:
-                            percentile = 0
-                        else:
-                            percentile = round((dist < val).mean() * 100)
-                else:
-                    val = player[col] / player["Matchs en 90 min"]
-                    dist = df[col] / df["Matchs en 90 min"]
-                    if pd.isna(val) or dist.dropna().empty:
-                        percentile = 0
-                    else:
-                        percentile = round((dist < val).mean() * 100)
-        except Exception as e:
-            percentile = 0
-        percentiles.append(percentile)
-
-    return percentiles
-
-@st.cache_data
-def load_data():
-    """Charge les données depuis le fichier CSV"""
-    try:
-        df = pd.read_csv('df_BIG2025.csv', encoding='utf-8')
-        return df
-    except FileNotFoundError:
-        st.error("Fichier 'df_BIG2025.csv' non trouvé. Veuillez vous assurer que le fichier est dans le même répertoire.")
-        return None
-    except Exception as e:
-        st.error(f"Erreur lors du chargement des données : {str(e)}")
-        return None
-
-def create_offensive_radar(player_data, df_filtered, selected_player, selected_competition):
-    """Crée le radar offensif professionnel"""
-    
-    # Filtrer les joueurs avec minimum 15 matchs pour tous les calculs
-    df_filtered_reliable = df_filtered[df_filtered['Matchs joués'] >= 15]
-    
-    # Définir les métriques offensives
-    offensive_metrics = {
-        'Buts/90': player_data['Buts par 90 minutes'],
-        'Passes D./90': player_data['Passes décisives par 90 minutes'],
-        'xG/90': player_data['Buts attendus par 90 minutes'],
-        'xA/90': player_data['Passes décisives attendues par 90 minutes'],
-        'Tirs/90': player_data['Tirs par 90 minutes'],
-        'Passes clés/90': player_data['Passes clés'] / (player_data['Minutes jouées'] / 90),
-        'Dribbles réussis/90': player_data['Dribbles réussis'] / (player_data['Minutes jouées'] / 90),
-        'Actions → Tir/90': player_data['Actions menant à un tir par 90 minutes'],
-        'Passes dernier tiers/90': player_data.get('Passes dans le dernier tiers', 0) / (player_data['Minutes jouées'] / 90),
-        'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90)
-    }
-    
-    # Calculer les percentiles par rapport aux joueurs fiables (15+ matchs)
-    percentile_values = []
-    avg_values = []
-    
-    for metric, value in offensive_metrics.items():
-        if len(df_filtered_reliable) == 0:
-            percentile_values.append(50)
-            avg_values.append(0)
-            continue
-            
-        try:
-            if metric == 'Buts/90':
-                distribution = df_filtered_reliable['Buts par 90 minutes']
-            elif metric == 'Passes D./90':
-                distribution = df_filtered_reliable['Passes décisives par 90 minutes']
-            elif metric == 'xG/90':
-                distribution = df_filtered_reliable['Buts attendus par 90 minutes']
-            elif metric == 'xA/90':
-                distribution = df_filtered_reliable['Passes décisives attendues par 90 minutes']
-            elif metric == 'Tirs/90':
-                distribution = df_filtered_reliable['Tirs par 90 minutes']
-            elif metric == 'Actions → Tir/90':
-                distribution = df_filtered_reliable['Actions menant à un tir par 90 minutes']
-            elif metric == 'Passes dernier tiers/90':
-                distribution = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
-            else:
-                base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                distribution = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
-            
-            # Calculer le percentile et la moyenne
-            distribution = distribution.dropna()
-            if len(distribution) > 0:
-                percentile = (distribution < value).mean() * 100
-                avg_comp = distribution.mean()
-            else:
-                percentile = 50
-                avg_comp = 0
-                
-            percentile_values.append(min(percentile, 100))
-            avg_values.append(avg_comp)
-        except:
-            percentile_values.append(50)
-            avg_values.append(0)
-    
-    # Créer le radar avec les moyennes des joueurs fiables comme référence
-    fig_radar = go.Figure()
-    
-    # Ajouter la performance du joueur
-    fig_radar.add_trace(go.Scatterpolar(
-        r=percentile_values,
-        theta=list(offensive_metrics.keys()),
-        fill='toself',
-        fillcolor='rgba(255, 107, 53, 0.3)',
-        line=dict(color=COLORS['primary'], width=3),
-        marker=dict(color=COLORS['primary'], size=8, symbol='circle'),
-        name=f'{selected_player}',
-        hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
-        customdata=list(offensive_metrics.values())
-    ))
-    
-    # Calculer les percentiles des moyennes de la compétition
-    avg_percentiles = []
-    for i, avg_val in enumerate(avg_values):
-        if avg_val > 0 and len(df_filtered_reliable) > 0:
-            try:
-                metric_name = list(offensive_metrics.keys())[i]
-                if metric_name == 'Buts/90':
-                    distribution = df_filtered_reliable['Buts par 90 minutes']
-                elif metric_name == 'Passes D./90':
-                    distribution = df_filtered_reliable['Passes décisives par 90 minutes']
-                elif metric_name == 'xG/90':
-                    distribution = df_filtered_reliable['Buts attendus par 90 minutes']
-                elif metric_name == 'xA/90':
-                    distribution = df_filtered_reliable['Passes décisives attendues par 90 minutes']
-                elif metric_name == 'Tirs/90':
-                    distribution = df_filtered_reliable['Tirs par 90 minutes']
-                elif metric_name == 'Actions → Tir/90':
-                    distribution = df_filtered_reliable['Actions menant à un tir par 90 minutes']
-                elif metric_name == 'Passes dernier tiers/90':
-                    distribution = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                else:
-                    base_column = metric_name.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                    distribution = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
-                
-                distribution = distribution.dropna()
-                if len(distribution) > 0:
-                    avg_percentile = (distribution < avg_val).mean() * 100
-                    avg_percentiles.append(avg_percentile)
-                else:
-                    avg_percentiles.append(50)
-            except:
-                avg_percentiles.append(50)
-        else:
-            avg_percentiles.append(50)
-    
-    # Ajouter une ligne de référence pour la moyenne des joueurs fiables
-    fig_radar.add_trace(go.Scatterpolar(
-        r=avg_percentiles,
-        theta=list(offensive_metrics.keys()),
-        mode='lines',
-        line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
-        name=f'Moyenne {selected_competition} (15+ matchs)',
-        showlegend=True,
-        hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
-        customdata=avg_values
-    ))
-    
-    fig_radar.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                gridcolor='rgba(255,255,255,0.3)',
-                tickcolor='white',
-                tickfont=dict(color='white', size=10),
-                showticklabels=True,
-                tickmode='linear',
-                tick0=0,
-                dtick=20
-            ),
-            angularaxis=dict(
-                gridcolor='rgba(255,255,255,0.3)',
-                tickcolor='white',
-                tickfont=dict(color='white', size=11, family='Arial Black'),
-                linecolor='rgba(255,255,255,0.5)'
-            ),
-            bgcolor='rgba(30, 38, 64, 0.8)'
-        ),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white'),
-        title=dict(
-            text="Radar Offensif Professionnel (Percentiles)",
-            font=dict(size=16, color='white', family='Arial Black'),
-            x=0.5,
-            y=0.95
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.2,
-            xanchor="center",
-            x=0.5,
-            font=dict(color='white', size=10)
-        ),
-        height=450,
-        annotations=[
-            dict(
-                text=f"Performance vs Moyenne {selected_competition} (15+ matchs)",
-                showarrow=False,
-                x=0.5,
-                y=-0.15,
-                xref="paper",
-                yref="paper",
-                font=dict(color='white', size=12, family='Arial'),
-                bgcolor='rgba(255, 107, 53, 0.8)',
-                bordercolor='white',
-                borderwidth=1
-            )
-        ]
-    )
-    
-    return fig_radar, offensive_metrics, percentile_values, avg_values, df_filtered_reliable
-
-def create_defensive_radar(player_data, df_filtered, selected_player, selected_competition):
-    """Crée le radar défensif professionnel"""
-    
-    # Filtrer les joueurs avec minimum 15 matchs pour tous les calculs
-    df_filtered_reliable = df_filtered[df_filtered['Matchs joués'] >= 15]
-    
-    # Définir les métriques défensives
-    defensive_metrics = {
-        'Tacles/90': player_data['Tacles gagnants'] / (player_data['Minutes jouées'] / 90),
-        'Interceptions/90': player_data['Interceptions'] / (player_data['Minutes jouées'] / 90),
-        'Ballons récupérés/90': player_data['Ballons récupérés'] / (player_data['Minutes jouées'] / 90),
-        'Duels défensifs/90': player_data.get('Duels défensifs gagnés', 0) / (player_data['Minutes jouées'] / 90),
-        'Duels aériens/90': player_data['Duels aériens gagnés'] / (player_data['Minutes jouées'] / 90),
-        'Dégagements/90': player_data['Dégagements'] / (player_data['Minutes jouées'] / 90),
-        'Tirs bloqués/90': player_data.get('Tirs bloqués', 0) / (player_data['Minutes jouées'] / 90),
-        '% Duels gagnés': player_data.get('Pourcentage de duels gagnés', 0),
-        '% Duels aériens': player_data['Pourcentage de duels aériens gagnés'],
-        'Total Blocs/90': player_data.get('Total de blocs (tirs et passes)', 0) / (player_data['Minutes jouées'] / 90)
-    }
-    
-    # Calculer les percentiles et moyennes par rapport aux joueurs fiables (15+ matchs)
-    def_percentile_values = []
-    def_avg_values = []
-    
-    for metric, value in defensive_metrics.items():
-        if len(df_filtered_reliable) == 0:
-            def_percentile_values.append(50)
-            def_avg_values.append(0)
-            continue
-            
-        try:
-            if metric == 'Tacles/90':
-                distribution = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
-            elif metric == 'Interceptions/90':
-                distribution = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
-            elif metric == 'Ballons récupérés/90':
-                distribution = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-            elif metric == 'Duels défensifs/90':
-                distribution = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-            elif metric == 'Duels aériens/90':
-                distribution = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-            elif metric == 'Dégagements/90':
-                distribution = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
-            elif metric == 'Tirs bloqués/90':
-                distribution = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-            elif metric == '% Duels gagnés':
-                distribution = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable)))
-            elif metric == '% Duels aériens':
-                distribution = df_filtered_reliable['Pourcentage de duels aériens gagnés']
-            elif metric == 'Total Blocs/90':
-                distribution = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-            
-            # Nettoyer les valeurs NaN et infinies
-            distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
-            value = value if not np.isnan(value) and not np.isinf(value) else 0
-            
-            if len(distribution) > 0:
-                percentile = (distribution < value).mean() * 100
-                avg_comp = distribution.mean()
-            else:
-                percentile = 50
-                avg_comp = 0
-            
-            def_percentile_values.append(min(percentile, 100))
-            def_avg_values.append(avg_comp)
-        except:
-            def_percentile_values.append(50)
-            def_avg_values.append(0)
-    
-    # Créer le radar défensif
-    fig_def_radar = go.Figure()
-    
-    # Ajouter la performance du joueur
-    fig_def_radar.add_trace(go.Scatterpolar(
-        r=def_percentile_values,
-        theta=list(defensive_metrics.keys()),
-        fill='toself',
-        fillcolor='rgba(26, 117, 159, 0.3)',
-        line=dict(color=COLORS['accent'], width=3),
-        marker=dict(color=COLORS['accent'], size=8, symbol='circle'),
-        name=f'{selected_player}',
-        hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
-        customdata=list(defensive_metrics.values())
-    ))
-    
-    # Calculer les percentiles des moyennes des joueurs fiables
-    def_avg_percentiles = []
-    for i, avg_val in enumerate(def_avg_values):
-        if avg_val > 0 and len(df_filtered_reliable) > 0:
-            try:
-                metric_name = list(defensive_metrics.keys())[i]
-                if metric_name == 'Tacles/90':
-                    distribution = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric_name == 'Interceptions/90':
-                    distribution = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric_name == 'Ballons récupérés/90':
-                    distribution = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric_name == 'Duels défensifs/90':
-                    distribution = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric_name == 'Duels aériens/90':
-                    distribution = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric_name == 'Dégagements/90':
-                    distribution = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric_name == 'Tirs bloqués/90':
-                    distribution = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric_name == '% Duels gagnés':
-                    distribution = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable)))
-                elif metric_name == '% Duels aériens':
-                    distribution = df_filtered_reliable['Pourcentage de duels aériens gagnés']
-                elif metric_name == 'Total Blocs/90':
-                    distribution = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                
-                distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
-                if len(distribution) > 0:
-                    avg_percentile = (distribution < avg_val).mean() * 100
-                    def_avg_percentiles.append(avg_percentile)
-                else:
-                    def_avg_percentiles.append(50)
-            except:
-                def_avg_percentiles.append(50)
-        else:
-            def_avg_percentiles.append(50)
-    
-    # Ajouter une ligne de référence pour la moyenne des joueurs fiables
-    fig_def_radar.add_trace(go.Scatterpolar(
-        r=def_avg_percentiles,
-        theta=list(defensive_metrics.keys()),
-        mode='lines',
-        line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
-        name=f'Moyenne {selected_competition} (15+ matchs)',
-        showlegend=True,
-        hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
-        customdata=def_avg_values
-    ))
-    
-    fig_def_radar.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                gridcolor='rgba(255,255,255,0.3)',
-                tickcolor='white',
-                tickfont=dict(color='white', size=10),
-                showticklabels=True,
-                tickmode='linear',
-                tick0=0,
-                dtick=20
-            ),
-            angularaxis=dict(
-                gridcolor='rgba(255,255,255,0.3)',
-                tickcolor='white',
-                tickfont=dict(color='white', size=11, family='Arial Black'),
-                linecolor='rgba(255,255,255,0.5)'
-            ),
-            bgcolor='rgba(30, 38, 64, 0.8)'
-        ),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white'),
-        title=dict(
-            text="Radar Défensif Professionnel (Percentiles)",
-            font=dict(size=16, color='white', family='Arial Black'),
-            x=0.5,
-            y=0.95
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.2,
-            xanchor="center",
-            x=0.5,
-            font=dict(color='white', size=10)
-        ),
-        height=450,
-        annotations=[
-            dict(
-                text=f"Performance Défensive vs Moyenne {selected_competition} (15+ matchs)",
-                showarrow=False,
-                x=0.5,
-                y=-0.15,
-                xref="paper",
-                yref="paper",
-                font=dict(color='white', size=12, family='Arial'),
-                bgcolor='rgba(26, 117, 159, 0.8)',
-                bordercolor='white',
-                borderwidth=1
-            )
-        ]
-    )
-    
-    return fig_def_radar, defensive_metrics, def_percentile_values, def_avg_values, df_filtered_reliable
-
-def find_best_players(metrics, df_filtered_reliable, is_defensive=False):
-    """Trouve les meilleurs joueurs pour chaque métrique"""
-    best_players = {}
-    
-    for metric, value in metrics.items():
-        try:
-            if len(df_filtered_reliable) == 0:
-                best_players[metric] = {'name': 'N/A (min 15 matchs)', 'value': 0, 'matches': 0}
-                continue
-            
-            if is_defensive:
-                # Métriques défensives
-                if metric == 'Tacles/90':
-                    temp_series = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric == 'Interceptions/90':
-                    temp_series = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric == 'Ballons récupérés/90':
-                    temp_series = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric == 'Duels défensifs/90':
-                    temp_series = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric == 'Duels aériens/90':
-                    temp_series = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric == 'Dégagements/90':
-                    temp_series = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric == 'Tirs bloqués/90':
-                    temp_series = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                elif metric == '% Duels gagnés':
-                    temp_series = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable)))
-                elif metric == '% Duels aériens':
-                    temp_series = df_filtered_reliable['Pourcentage de duels aériens gagnés']
-                elif metric == 'Total Blocs/90':
-                    temp_series = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                else:
-                    continue
-                    
-                best_idx = temp_series.idxmax()
-                best_value = temp_series.loc[best_idx]
-            else:
-                # Métriques offensives
-                if metric == 'Buts/90':
-                    best_idx = df_filtered_reliable['Buts par 90 minutes'].idxmax()
-                    best_value = df_filtered_reliable.loc[best_idx, 'Buts par 90 minutes']
-                elif metric == 'Passes D./90':
-                    best_idx = df_filtered_reliable['Passes décisives par 90 minutes'].idxmax
+    st.info("💡 Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies.")

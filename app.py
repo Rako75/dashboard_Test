@@ -276,7 +276,7 @@ if df is not None:
                 'Passes clés/90': player_data['Passes clés'] / (player_data['Minutes jouées'] / 90),
                 'Dribbles réussis/90': player_data['Dribbles réussis'] / (player_data['Minutes jouées'] / 90),
                 'Actions → Tir/90': player_data['Actions menant à un tir par 90 minutes'],
-                'Centres/90': player_data.get('Centres', 0) / (player_data['Minutes jouées'] / 90),
+                'Passes dernier tiers/90': player_data.get('Passes dans le dernier tiers', 0) / (player_data['Minutes jouées'] / 90),
                 'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90)
             }
             
@@ -297,6 +297,8 @@ if df is not None:
                         distribution = df_filtered['Tirs par 90 minutes']
                     elif metric == 'Actions → Tir/90':
                         distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                    elif metric == 'Passes dernier tiers/90':
+                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
                     else:
                         # Calculer pour les autres métriques
                         base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')

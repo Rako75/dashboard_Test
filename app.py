@@ -266,27 +266,73 @@ if df is not None:
             
             st.plotly_chart(fig_pie, use_container_width=True)
             
-            # Graphique radar des actions offensives
-            offensive_actions = {
-                'Tirs': player_data.get('Tirs', 0),
-                'Tirs cadrés': player_data.get('Tirs cadrés', 0),
-                'Dribbles réussis': player_data.get('Dribbles réussis', 0),
-                'Passes clés': player_data.get('Passes clés', 0),
-                'Centres': player_data.get('Centres', 0)
+            # Radar professionnel des actions offensives avec plus de variables
+            offensive_metrics = {
+                'Buts/90': player_data['Buts par 90 minutes'],
+                'Passes D./90': player_data['Passes décisives par 90 minutes'],
+                'xG/90': player_data['Buts attendus par 90 minutes'],
+                'xA/90': player_data['Passes décisives attendues par 90 minutes'],
+                'Tirs/90': player_data['Tirs par 90 minutes'],
+                'Passes clés/90': player_data['Passes clés'] / (player_data['Minutes jouées'] / 90),
+                'Dribbles réussis/90': player_data['Dribbles réussis'] / (player_data['Minutes jouées'] / 90),
+                'Actions → Tir/90': player_data['Actions menant à un tir par 90 minutes'],
+                'Centres/90': player_data.get('Centres', 0) / (player_data['Minutes jouées'] / 90),
+                'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90)
             }
             
-            # Normaliser les valeurs pour le radar
-            max_val = max(offensive_actions.values()) if max(offensive_actions.values()) > 0 else 1
-            normalized_values = [v/max_val * 100 for v in offensive_actions.values()]
+            # Calculer les percentiles par rapport à la compétition pour une meilleure lisibilité
+            percentile_values = []
+            for metric, value in offensive_metrics.items():
+                if metric.endswith('/90'):
+                    # Métriques déjà par 90 minutes
+                    if metric == 'Buts/90':
+                        distribution = df_filtered['Buts par 90 minutes']
+                    elif metric == 'Passes D./90':
+                        distribution = df_filtered['Passes décisives par 90 minutes']
+                    elif metric == 'xG/90':
+                        distribution = df_filtered['Buts attendus par 90 minutes']
+                    elif metric == 'xA/90':
+                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                    elif metric == 'Tirs/90':
+                        distribution = df_filtered['Tirs par 90 minutes']
+                    elif metric == 'Actions → Tir/90':
+                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                    else:
+                        # Calculer pour les autres métriques
+                        base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
+                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                    
+                    # Calculer le percentile
+                    percentile = (distribution < value).mean() * 100
+                    percentile_values.append(min(percentile, 100))  # Cap à 100
+                else:
+                    percentile_values.append(50)  # Valeur par défaut si problème
             
+            # Créer le radar avec les moyennes de la compétition comme référence
             fig_radar = go.Figure()
+            
+            # Ajouter la performance du joueur
             fig_radar.add_trace(go.Scatterpolar(
-                r=normalized_values,
-                theta=list(offensive_actions.keys()),
+                r=percentile_values,
+                theta=list(offensive_metrics.keys()),
                 fill='toself',
-                fillcolor=f'rgba(255, 107, 53, 0.3)',
+                fillcolor='rgba(255, 107, 53, 0.3)',
                 line=dict(color=COLORS['primary'], width=3),
-                name='Actions Offensives'
+                marker=dict(color=COLORS['primary'], size=8, symbol='circle'),
+                name=f'{selected_player}',
+                hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
+                customdata=list(offensive_metrics.values())
+            ))
+            
+            # Ajouter une ligne de référence à 50% (médiane)
+            reference_line = [50] * len(offensive_metrics)
+            fig_radar.add_trace(go.Scatterpolar(
+                r=reference_line,
+                theta=list(offensive_metrics.keys()),
+                mode='lines',
+                line=dict(color='rgba(255,255,255,0.5)', width=2, dash='dash'),
+                name='Médiane (50e percentile)',
+                showlegend=True
             ))
             
             fig_radar.update_layout(
@@ -294,26 +340,73 @@ if df is not None:
                     radialaxis=dict(
                         visible=True,
                         range=[0, 100],
-                        gridcolor='rgba(255,255,255,0.2)',
-                        tickcolor='white'
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=10),
+                        showticklabels=True,
+                        tickmode='linear',
+                        tick0=0,
+                        dtick=20
                     ),
                     angularaxis=dict(
-                        gridcolor='rgba(255,255,255,0.2)',
-                        tickcolor='white'
-                    )
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=11, family='Arial Black'),
+                        linecolor='rgba(255,255,255,0.5)'
+                    ),
+                    bgcolor='rgba(30, 38, 64, 0.8)'
                 ),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font=dict(color='white'),
                 title=dict(
-                    text="Radar des Actions Offensives",
-                    font=dict(size=16, color='white'),
-                    x=0.5
+                    text="Radar Offensif Professionnel (Percentiles)",
+                    font=dict(size=16, color='white', family='Arial Black'),
+                    x=0.5,
+                    y=0.95
                 ),
-                height=400
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.2,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color='white', size=10)
+                ),
+                height=450,
+                annotations=[
+                    dict(
+                        text=f"Moyenne: {sum(percentile_values)/len(percentile_values):.0f}e percentile",
+                        showarrow=False,
+                        x=0.5,
+                        y=-0.15,
+                        xref="paper",
+                        yref="paper",
+                        font=dict(color='white', size=12, family='Arial'),
+                        bgcolor='rgba(255, 107, 53, 0.8)',
+                        bordercolor='white',
+                        borderwidth=1
+                    )
+                ]
             )
             
             st.plotly_chart(fig_radar, use_container_width=True)
+            
+            # Afficher les valeurs détaillées sous le radar
+            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques offensives</h4>", unsafe_allow_html=True)
+            
+            col_a, col_b = st.columns(2)
+            with col_a:
+                for i, (metric, value) in enumerate(list(offensive_metrics.items())[:5]):
+                    percentile = percentile_values[i]
+                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
+                    st.markdown(f"**{metric}**: {value:.2f} <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+            
+            with col_b:
+                for i, (metric, value) in enumerate(list(offensive_metrics.items())[5:], 5):
+                    percentile = percentile_values[i]
+                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
+                    st.markdown(f"**{metric}**: {value:.2f} <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
         
         with col2:
             # Graphique buts vs buts attendus amélioré

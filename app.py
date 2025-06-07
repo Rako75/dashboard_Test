@@ -1,5 +1,5 @@
 # Calculer les percentiles des moyennes des joueurs fiables
-            def_avg_percentiles = []
+def_avg_percentiles = []
             for i, avg_val in enumerate(def_avg_values):
                 try:
                     if avg_val > 0 and len(df_filtered_reliable) > 0:

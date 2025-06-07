@@ -1004,51 +1004,216 @@ if df is not None:
             
             st.plotly_chart(fig_comparison, use_container_width=True)
             
-            # Graphique de performance globale (radar)
-            performance_metrics = {
-                'Offensive': (player_data['Buts par 90 minutes'] + player_data['Passes décisives par 90 minutes']) * 10,
-                'Créativité': player_data['Passes clés'] / player_data['Matchs joués'] * 10,
-                'Efficacité': (player_data['Buts'] / player_data['Tirs'] * 100) if player_data['Tirs'] > 0 else 0,
-                'Défensive': (player_data['Tacles gagnants'] + player_data['Interceptions']) / player_data['Matchs joués'] * 10,
-                'Physique': player_data['Duels aériens gagnés'] / player_data['Matchs joués'] * 10
+            # Nouveau Radar de Performance Globale amélioré avec percentiles
+            st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🌟 Radar de Performance Globale Professionnel</h3>", unsafe_allow_html=True)
+            
+            # Métriques globales avec plus de dimensions
+            global_metrics = {
+                'Offensive/90': (player_data['Buts par 90 minutes'] + player_data['Passes décisives par 90 minutes']),
+                'Créativité/90': player_data['Passes clés'] / (player_data['Minutes jouées'] / 90),
+                'Efficacité Tirs': (player_data['Buts'] / player_data['Tirs'] * 100) if player_data['Tirs'] > 0 else 0,
+                'Défensive/90': (player_data['Tacles gagnants'] + player_data['Interceptions']) / (player_data['Minutes jouées'] / 90),
+                'Duels Physiques': player_data['Pourcentage de duels aériens gagnés'] if pd.notna(player_data['Pourcentage de duels aériens gagnés']) else 0,
+                'Activité/90': player_data['Touches de balle'] / (player_data['Minutes jouées'] / 90),
+                'Précision Passes': player_data['Pourcentage de passes réussies'] if pd.notna(player_data['Pourcentage de passes réussies']) else 0,
+                'Dribbles/90': player_data['Dribbles réussis'] / (player_data['Minutes jouées'] / 90),
+                'Actions → Tir/90': player_data['Actions menant à un tir par 90 minutes'],
+                'xG+xA/90': player_data['Buts attendus par 90 minutes'] + player_data['Passes décisives attendues par 90 minutes']
             }
             
-            fig_perf_radar = go.Figure()
-            fig_perf_radar.add_trace(go.Scatterpolar(
-                r=list(performance_metrics.values()),
-                theta=list(performance_metrics.keys()),
+            # Calculer les percentiles et moyennes par rapport à la compétition
+            global_percentile_values = []
+            global_avg_values = []
+            for metric, value in global_metrics.items():
+                try:
+                    if metric == 'Offensive/90':
+                        distribution = df_filtered['Buts par 90 minutes'] + df_filtered['Passes décisives par 90 minutes']
+                    elif metric == 'Créativité/90':
+                        distribution = df_filtered['Passes clés'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Efficacité Tirs':
+                        # Calculer le pourcentage de conversion pour tous les joueurs
+                        distribution = (df_filtered['Buts'] / df_filtered['Tirs'] * 100).replace([np.inf, -np.inf], 0)
+                        distribution = distribution.fillna(0)
+                    elif metric == 'Défensive/90':
+                        distribution = (df_filtered['Tacles gagnants'] + df_filtered['Interceptions']) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Duels Physiques':
+                        distribution = df_filtered['Pourcentage de duels aériens gagnés'].fillna(0)
+                    elif metric == 'Activité/90':
+                        distribution = df_filtered['Touches de balle'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Précision Passes':
+                        distribution = df_filtered['Pourcentage de passes réussies'].fillna(0)
+                    elif metric == 'Dribbles/90':
+                        distribution = df_filtered['Dribbles réussis'] / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Actions → Tir/90':
+                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                    elif metric == 'xG+xA/90':
+                        distribution = df_filtered['Buts attendus par 90 minutes'] + df_filtered['Passes décisives attendues par 90 minutes']
+                    
+                    # Nettoyer les valeurs NaN et infinies
+                    distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+                    value = value if not np.isnan(value) and not np.isinf(value) else 0
+                    
+                    if len(distribution) > 0:
+                        percentile = (distribution < value).mean() * 100
+                        avg_comp = distribution.mean()
+                    else:
+                        percentile = 50
+                        avg_comp = 0
+                    
+                    global_percentile_values.append(min(percentile, 100))
+                    global_avg_values.append(avg_comp)
+                except:
+                    global_percentile_values.append(50)
+                    global_avg_values.append(0)
+            
+            # Créer le radar de performance globale
+            fig_global_radar = go.Figure()
+            
+            # Ajouter la performance du joueur
+            fig_global_radar.add_trace(go.Scatterpolar(
+                r=global_percentile_values,
+                theta=list(global_metrics.keys()),
                 fill='toself',
-                fillcolor=f'rgba(255, 107, 53, 0.3)',
-                line=dict(color=COLORS['primary'], width=3),
-                marker=dict(color=COLORS['primary'], size=8),
-                name='Performance Globale'
+                fillcolor='rgba(0, 200, 150, 0.3)',
+                line=dict(color=COLORS['success'], width=3),
+                marker=dict(color=COLORS['success'], size=8, symbol='circle'),
+                name=f'{selected_player}',
+                hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
+                customdata=list(global_metrics.values())
             ))
             
-            fig_perf_radar.update_layout(
+            # Calculer les percentiles des moyennes de la compétition
+            global_avg_percentiles = []
+            for i, avg_val in enumerate(global_avg_values):
+                try:
+                    if avg_val > 0:
+                        metric_name = list(global_metrics.keys())[i]
+                        if metric_name == 'Offensive/90':
+                            distribution = df_filtered['Buts par 90 minutes'] + df_filtered['Passes décisives par 90 minutes']
+                        elif metric_name == 'Créativité/90':
+                            distribution = df_filtered['Passes clés'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Efficacité Tirs':
+                            distribution = (df_filtered['Buts'] / df_filtered['Tirs'] * 100).replace([np.inf, -np.inf], 0).fillna(0)
+                        elif metric_name == 'Défensive/90':
+                            distribution = (df_filtered['Tacles gagnants'] + df_filtered['Interceptions']) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Duels Physiques':
+                            distribution = df_filtered['Pourcentage de duels aériens gagnés'].fillna(0)
+                        elif metric_name == 'Activité/90':
+                            distribution = df_filtered['Touches de balle'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Précision Passes':
+                            distribution = df_filtered['Pourcentage de passes réussies'].fillna(0)
+                        elif metric_name == 'Dribbles/90':
+                            distribution = df_filtered['Dribbles réussis'] / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Actions → Tir/90':
+                            distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                        elif metric_name == 'xG+xA/90':
+                            distribution = df_filtered['Buts attendus par 90 minutes'] + df_filtered['Passes décisives attendues par 90 minutes']
+                        
+                        distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+                        if len(distribution) > 0:
+                            avg_percentile = (distribution < avg_val).mean() * 100
+                            global_avg_percentiles.append(avg_percentile)
+                        else:
+                            global_avg_percentiles.append(50)
+                    else:
+                        global_avg_percentiles.append(50)
+                except:
+                    global_avg_percentiles.append(50)
+            
+            # Ajouter une ligne de référence pour la moyenne de la compétition
+            fig_global_radar.add_trace(go.Scatterpolar(
+                r=global_avg_percentiles,
+                theta=list(global_metrics.keys()),
+                mode='lines',
+                line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
+                name=f'Moyenne {selected_competition}',
+                showlegend=True,
+                hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
+                customdata=global_avg_values
+            ))
+            
+            fig_global_radar.update_layout(
                 polar=dict(
                     radialaxis=dict(
                         visible=True,
-                        range=[0, max(performance_metrics.values()) * 1.1],
-                        gridcolor='rgba(255,255,255,0.2)',
-                        tickcolor='white'
+                        range=[0, 100],
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=10),
+                        showticklabels=True,
+                        tickmode='linear',
+                        tick0=0,
+                        dtick=20
                     ),
                     angularaxis=dict(
-                        gridcolor='rgba(255,255,255,0.2)',
-                        tickcolor='white'
-                    )
+                        gridcolor='rgba(255,255,255,0.3)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=11, family='Arial Black'),
+                        linecolor='rgba(255,255,255,0.5)'
+                    ),
+                    bgcolor='rgba(30, 38, 64, 0.8)'
                 ),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font=dict(color='white'),
                 title=dict(
-                    text="Radar de Performance Globale",
-                    font=dict(size=16, color='white'),
-                    x=0.5
+                    text="Radar de Performance Globale Professionnel (Percentiles)",
+                    font=dict(size=16, color='white', family='Arial Black'),
+                    x=0.5,
+                    y=0.95
                 ),
-                height=400
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.2,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color='white', size=10)
+                ),
+                height=450,
+                annotations=[
+                    dict(
+                        text=f"Performance Globale vs Moyenne {selected_competition}",
+                        showarrow=False,
+                        x=0.5,
+                        y=-0.15,
+                        xref="paper",
+                        yref="paper",
+                        font=dict(color='white', size=12, family='Arial'),
+                        bgcolor='rgba(0, 200, 150, 0.8)',
+                        bordercolor='white',
+                        borderwidth=1
+                    )
+                ]
             )
             
-            st.plotly_chart(fig_perf_radar, use_container_width=True)
+            st.plotly_chart(fig_global_radar, use_container_width=True)
+            
+            # Afficher les valeurs détaillées sous le radar global
+            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques globales vs moyenne de la compétition</h4>", unsafe_allow_html=True)
+            
+            col_a, col_b = st.columns(2)
+            with col_a:
+                for i, (metric, value) in enumerate(list(global_metrics.items())[:5]):
+                    percentile = global_percentile_values[i]
+                    avg_comp = global_avg_values[i]
+                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
+                    comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
+                    if 'Efficacité' in metric or 'Duels Physiques' in metric or 'Précision' in metric:
+                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+            
+            with col_b:
+                for i, (metric, value) in enumerate(list(global_metrics.items())[5:], 5):
+                    percentile = global_percentile_values[i]
+                    avg_comp = global_avg_values[i]
+                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
+                    comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
+                    if 'Efficacité' in metric or 'Duels Physiques' in metric or 'Précision' in metric:
+                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
         
         with col2:
             # Temps de jeu et efficacité amélioré

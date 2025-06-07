@@ -215,7 +215,7 @@ if df is not None:
     st.markdown("---")
     
     # Graphiques principaux
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "📈 Statistiques Avancées", "⚽ Détails Tirs", "🏃 Activité", "🔄 Comparer Joueurs"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "🎨 Performance Technique", "⚽ Détails Tirs", "🏃 Activité", "🔄 Comparer Joueurs"])
     
     with tab1:
         st.markdown("<h2 style='color: #FF6B35;'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
@@ -945,116 +945,15 @@ if df is not None:
             st.metric("Duels aériens/90min", f"{duels_90:.2f}")
     
     with tab3:
-        st.markdown("<h2 style='color: #FF6B35;'>📈 Statistiques Avancées</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #FF6B35;'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
         with col1:
-            # Comparaison avec la moyenne de la compétition améliorée
-            metrics_comparison = ['Buts par 90 minutes', 'Passes décisives par 90 minutes', 
-                                'Buts attendus par 90 minutes', 'Passes décisives attendues par 90 minutes']
-            
-            player_values = [player_data[metric] for metric in metrics_comparison]
-            avg_values = [df_filtered[metric].mean() for metric in metrics_comparison]
-            
-            fig_comparison = go.Figure()
-            
-            x_labels = ['Buts/90', 'PD/90', 'xG/90', 'xA/90']
-            
-            fig_comparison.add_trace(go.Bar(
-                name=selected_player,
-                x=x_labels,
-                y=player_values,
-                marker=dict(
-                    color=COLORS['primary'],
-                    line=dict(color='white', width=1)
-                ),
-                text=[f"{v:.2f}" for v in player_values],
-                textposition='outside',
-                textfont=dict(color='white')
-            ))
-            
-            fig_comparison.add_trace(go.Bar(
-                name='Moyenne compétition',
-                x=x_labels,
-                y=avg_values,
-                marker=dict(
-                    color=COLORS['secondary'],
-                    line=dict(color='white', width=1)
-                ),
-                text=[f"{v:.2f}" for v in avg_values],
-                textposition='outside',
-                textfont=dict(color='white')
-            ))
-            
-            fig_comparison.update_layout(
-                title=dict(
-                    text='Comparaison avec la moyenne de la compétition',
-                    font=dict(size=16, color='white'),
-                    x=0.5
-                ),
-                barmode='group',
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                xaxis=dict(tickfont=dict(color='white')),
-                yaxis=dict(tickfont=dict(color='white'), gridcolor='rgba(255,255,255,0.2)'),
-                height=400
-            )
-            
-            st.plotly_chart(fig_comparison, use_container_width=True)
-            
-            # Graphique de performance globale (radar)
-            performance_metrics = {
-                'Offensive': (player_data['Buts par 90 minutes'] + player_data['Passes décisives par 90 minutes']) * 10,
-                'Créativité': player_data['Passes clés'] / player_data['Matchs joués'] * 10,
-                'Efficacité': (player_data['Buts'] / player_data['Tirs'] * 100) if player_data['Tirs'] > 0 else 0,
-                'Défensive': (player_data['Tacles gagnants'] + player_data['Interceptions']) / player_data['Matchs joués'] * 10,
-                'Physique': player_data['Duels aériens gagnés'] / player_data['Matchs joués'] * 10
-            }
-            
-            fig_perf_radar = go.Figure()
-            fig_perf_radar.add_trace(go.Scatterpolar(
-                r=list(performance_metrics.values()),
-                theta=list(performance_metrics.keys()),
-                fill='toself',
-                fillcolor=f'rgba(255, 107, 53, 0.3)',
-                line=dict(color=COLORS['primary'], width=3),
-                marker=dict(color=COLORS['primary'], size=8),
-                name='Performance Globale'
-            ))
-            
-            fig_perf_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True,
-                        range=[0, max(performance_metrics.values()) * 1.1],
-                        gridcolor='rgba(255,255,255,0.2)',
-                        tickcolor='white'
-                    ),
-                    angularaxis=dict(
-                        gridcolor='rgba(255,255,255,0.2)',
-                        tickcolor='white'
-                    )
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                title=dict(
-                    text="Radar de Performance Globale",
-                    font=dict(size=16, color='white'),
-                    x=0.5
-                ),
-                height=400
-            )
-            
-            st.plotly_chart(fig_perf_radar, use_container_width=True)
-        
-        with col2:
-            # Temps de jeu et efficacité amélioré
+            # Répartition du temps de jeu possible (conservé)
             temps_jeu = {
                 'Minutes jouées': player_data['Minutes jouées'],
-                'Minutes possibles': (player_data['Matchs joués'] * 90) - player_data['Minutes jouées']
+                'Minutes non jouées': (player_data['Matchs joués'] * 90) - player_data['Minutes jouées']
             }
             
             fig_pie_temps = go.Figure(data=[go.Pie(
@@ -1084,6 +983,332 @@ if df is not None:
                 )]
             )
             st.plotly_chart(fig_pie_temps, use_container_width=True)
+            
+            # Graphique des qualités techniques - Passes par distance
+            pass_types = {
+                'Passes courtes': player_data.get('Passes courtes réussies', 0),
+                'Passes moyennes': player_data.get('Passes moyennes réussies', 0),
+                'Passes longues': player_data.get('Passes longues réussies', 0)
+            }
+            
+            fig_pass_types = go.Figure(data=[go.Bar(
+                x=list(pass_types.keys()),
+                y=list(pass_types.values()),
+                marker=dict(
+                    color=[COLORS['success'], COLORS['warning'], COLORS['accent']],
+                    line=dict(color='white', width=1)
+                ),
+                text=list(pass_types.values()),
+                textposition='outside',
+                textfont=dict(color='white', size=12)
+            )])
+            
+            fig_pass_types.update_layout(
+                title=dict(
+                    text="Répartition des Passes par Distance",
+                    font=dict(size=16, color='white'),
+                    x=0.5
+                ),
+                xaxis=dict(
+                    tickfont=dict(color='white')
+                ),
+                yaxis=dict(
+                    title=dict(text='Nombre de passes réussies', font=dict(color='white')),
+                    tickfont=dict(color='white'),
+                    gridcolor='rgba(255,255,255,0.2)'
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                height=400
+            )
+            st.plotly_chart(fig_pass_types, use_container_width=True)
+        
+        with col2:
+            # Analyse de la progression du ballon
+            progression_data = {
+                'Courses progressives': player_data.get('Courses progressives', 0),
+                'Passes progressives': player_data.get('Passes progressives', 0),
+                'Réceptions progressives': player_data.get('Réceptions progressives', 0),
+                'Portées progressives': player_data.get('Portées de balle progressives', 0)
+            }
+            
+            fig_progression = go.Figure()
+            
+            # Graphique radar pour la progression
+            fig_progression.add_trace(go.Scatterpolar(
+                r=list(progression_data.values()),
+                theta=list(progression_data.keys()),
+                fill='toself',
+                fillcolor='rgba(0, 200, 150, 0.3)',
+                line=dict(color=COLORS['success'], width=3),
+                marker=dict(color=COLORS['success'], size=8),
+                name='Progression du ballon'
+            ))
+            
+            fig_progression.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, max(progression_data.values()) * 1.1] if max(progression_data.values()) > 0 else [0, 10],
+                        gridcolor='rgba(255,255,255,0.2)',
+                        tickcolor='white',
+                        tickfont=dict(color='white')
+                    ),
+                    angularaxis=dict(
+                        gridcolor='rgba(255,255,255,0.2)',
+                        tickcolor='white',
+                        tickfont=dict(color='white', size=10)
+                    )
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                title=dict(
+                    text="Capacité de Progression du Ballon",
+                    font=dict(size=16, color='white'),
+                    x=0.5
+                ),
+                height=400
+            )
+            
+            st.plotly_chart(fig_progression, use_container_width=True)
+            
+            # Pourcentages de précision technique
+            st.markdown("<h3 style='color: #00C896; margin-top: 20px;'>📐 Précision Technique</h3>", unsafe_allow_html=True)
+            
+            precision_metrics = {
+                'Passes courtes (%)': player_data.get('Pourcentage de passes courtes réussies', 0),
+                'Passes moyennes (%)': player_data.get('Pourcentage de passes moyennes réussies', 0),
+                'Passes longues (%)': player_data.get('Pourcentage de passes longues réussies', 0),
+                'Dribbles (%)': player_data.get('Pourcentage de dribbles réussis', 0)
+            }
+            
+            fig_precision = go.Figure()
+            
+            fig_precision.add_trace(go.Bar(
+                x=list(precision_metrics.keys()),
+                y=list(precision_metrics.values()),
+                marker=dict(
+                    color=COLORS['gradient'][:len(precision_metrics)],
+                    line=dict(color='white', width=1)
+                ),
+                text=[f"{v:.1f}%" for v in precision_metrics.values()],
+                textposition='outside',
+                textfont=dict(color='white', size=12)
+            ))
+            
+            fig_precision.update_layout(
+                title=dict(
+                    text="Pourcentages de Réussite Technique",
+                    font=dict(size=16, color='white'),
+                    x=0.5
+                ),
+                xaxis=dict(
+                    tickfont=dict(color='white'),
+                    tickangle=45
+                ),
+                yaxis=dict(
+                    title=dict(text='Pourcentage (%)', font=dict(color='white')),
+                    tickfont=dict(color='white'),
+                    gridcolor='rgba(255,255,255,0.2)',
+                    range=[0, 100]
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                height=350
+            )
+            
+            st.plotly_chart(fig_precision, use_container_width=True)
+        
+        # Métriques techniques détaillées
+        st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques Techniques Détaillées</h3>", unsafe_allow_html=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Distance passes", f"{player_data.get('Distance totale des passes', 0):.0f}m")
+            st.metric("Distance progressive", f"{player_data.get('Distance progressive des passes', 0):.0f}m")
+        
+        with col2:
+            st.metric("Passes tentées", f"{player_data.get('Passes tentées', 0):.0f}")
+            st.metric("% Réussite passes", f"{player_data.get('Pourcentage de passes réussies', 0):.1f}%")
+        
+        with col3:
+            touches_90 = player_data['Touches de balle'] / (player_data['Minutes jouées'] / 90)
+            st.metric("Touches/90min", f"{touches_90:.1f}")
+            st.metric("Passes clés", f"{player_data.get('Passes clés', 0):.0f}")
+        
+        with col4:
+            distance_portee = player_data.get('Distance totale parcourue avec le ballon (en mètres)', 0)
+            st.metric("Distance portée", f"{distance_portee:.0f}m")
+            st.metric("Centres dans surface", f"{player_data.get('Centres dans la surface', 0):.0f}")
+        
+        # Heatmap des zones d'activité technique
+        st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🗺️ Zones d'Activité Technique</h3>", unsafe_allow_html=True)
+        
+        # Données pour la heatmap technique
+        zones_technique = {
+            'Tiers défensif': [
+                player_data.get('Touches de balle dans le tiers défensif', 0),
+                player_data.get('Passes dans le tiers défensif', 0),
+                player_data.get('Tacles réussis dans le tiers défensif', 0)
+            ],
+            'Tiers médian': [
+                player_data.get('Touches de balle dans le tiers médian', 0),
+                player_data.get('Passes progressives', 0) * 0.6,  # Estimation
+                player_data.get('Tacles réussis dans le tiers médian', 0)
+            ],
+            'Tiers offensif': [
+                player_data.get('Touches de balle dans le tiers offensif', 0),
+                player_data.get('Passes dans le dernier tiers', 0),
+                player_data.get('Tacles réussis dans le tiers offensif', 0)
+            ]
+        }
+        
+        # Créer la heatmap
+        zones_names = list(zones_technique.keys())
+        activity_types = ['Touches de balle', 'Passes', 'Actions défensives']
+        
+        # Normaliser les valeurs pour la heatmap
+        all_values = [val for zone_vals in zones_technique.values() for val in zone_vals]
+        max_val = max(all_values) if all_values else 1
+        
+        heatmap_data = []
+        for zone_vals in zones_technique.values():
+            normalized_vals = [val/max_val for val in zone_vals]
+            heatmap_data.append(normalized_vals)
+        
+        fig_heatmap = go.Figure(data=go.Heatmap(
+            z=heatmap_data,
+            x=activity_types,
+            y=zones_names,
+            colorscale='Viridis',
+            showscale=True,
+            text=[[f"{zones_technique[zone][i]}" for i in range(len(activity_types))] for zone in zones_names],
+            texttemplate="%{text}",
+            textfont={"size": 12, "color": "white"},
+            hoverongaps=False,
+            hovertemplate='<b>%{y}</b><br>%{x}: %{text}<extra></extra>'
+        ))
+        
+        fig_heatmap.update_layout(
+            title=dict(
+                text="Heatmap - Activité Technique par Zone",
+                font=dict(size=16, color='white'),
+                x=0.5
+            ),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white'),
+            height=300,
+            xaxis=dict(tickfont=dict(color='white')),
+            yaxis=dict(tickfont=dict(color='white'))
+        )
+        
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+        
+        # Comparaison technique avec la moyenne de la compétition
+        col_a, col_b = st.columns(2)
+        
+        with col_a:
+            st.markdown("<h4 style='color: #F7B801;'>🎯 Qualité vs Quantité</h4>", unsafe_allow_html=True)
+            
+            # Graphique scatter qualité vs quantité
+            quality_vs_quantity = {
+                'x': [player_data.get('Passes tentées', 0), player_data.get('Dribbles tentés', 0), player_data.get('Tirs', 0)],
+                'y': [player_data.get('Pourcentage de passes réussies', 0), player_data.get('Pourcentage de dribbles réussis', 0), player_data.get('Pourcentage de tirs cadrés', 0)],
+                'labels': ['Passes', 'Dribbles', 'Tirs'],
+                'colors': [COLORS['primary'], COLORS['success'], COLORS['warning']]
+            }
+            
+            fig_quality = go.Figure()
+            
+            for i, label in enumerate(quality_vs_quantity['labels']):
+                fig_quality.add_trace(go.Scatter(
+                    x=[quality_vs_quantity['x'][i]],
+                    y=[quality_vs_quantity['y'][i]],
+                    mode='markers',
+                    name=label,
+                    marker=dict(
+                        color=quality_vs_quantity['colors'][i],
+                        size=15,
+                        line=dict(color='white', width=2)
+                    ),
+                    hovertemplate=f'<b>{label}</b><br>Quantité: %{{x}}<br>Qualité: %{{y:.1f}}%<extra></extra>'
+                ))
+            
+            fig_quality.update_layout(
+                title=dict(
+                    text="Qualité vs Quantité des Actions",
+                    font=dict(size=14, color='white'),
+                    x=0.5
+                ),
+                xaxis=dict(
+                    title=dict(text="Quantité (tentatives)", font=dict(color='white')),
+                    tickfont=dict(color='white'),
+                    gridcolor='rgba(255,255,255,0.2)'
+                ),
+                yaxis=dict(
+                    title=dict(text="Qualité (%)", font=dict(color='white')),
+                    tickfont=dict(color='white'),
+                    gridcolor='rgba(255,255,255,0.2)'
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                height=350
+            )
+            
+            st.plotly_chart(fig_quality, use_container_width=True)
+        
+        with col_b:
+            st.markdown("<h4 style='color: #F7B801;'>⚡ Intensité de Jeu</h4>", unsafe_allow_html=True)
+            
+            # Indicateur d'intensité de jeu
+            intensite_data = {
+                'Fautes commises': player_data.get('Fautes commises', 0),
+                'Fautes subies': player_data.get('Fautes subies', 0),
+                'Cartons': player_data.get('Cartons jaunes', 0) + player_data.get('Cartons rouges', 0) * 2,
+                'Duels disputés': player_data.get('Duels défensifs disputés', 0)
+            }
+            
+            fig_intensite = go.Figure()
+            
+            fig_intensite.add_trace(go.Bar(
+                x=list(intensite_data.keys()),
+                y=list(intensite_data.values()),
+                marker=dict(
+                    color=[COLORS['danger'], COLORS['warning'], COLORS['accent'], COLORS['secondary']],
+                    line=dict(color='white', width=1)
+                ),
+                text=list(intensite_data.values()),
+                textposition='outside',
+                textfont=dict(color='white', size=12)
+            ))
+            
+            fig_intensite.update_layout(
+                title=dict(
+                    text="Indicateurs d'Intensité de Jeu",
+                    font=dict(size=14, color='white'),
+                    x=0.5
+                ),
+                xaxis=dict(
+                    tickfont=dict(color='white'),
+                    tickangle=45
+                ),
+                yaxis=dict(
+                    tickfont=dict(color='white'),
+                    gridcolor='rgba(255,255,255,0.2)'
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                height=350
+            )
+            
+            st.plotly_chart(fig_intensite, use_container_width=True)
     
     with tab4:
         st.markdown("<h2 style='color: #FF6B35;'>⚽ Analyse des Tirs</h2>", unsafe_allow_html=True)

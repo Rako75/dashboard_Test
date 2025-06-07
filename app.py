@@ -40,11 +40,13 @@ for i, avg_val in enumerate(def_avg_values):
         def_avg_percentiles.append(50)
             
             # Ajouter une ligne de référence pour la moyenne des joueurs fiables
-            fig_def_radar.add_trace(go.Scatterpolar(
-                r=def_avg_percentiles,
-                theta=list(defensive_metrics.keys()),
-                mode='lines',
-                line=dict(color='rgbaimport streamlit as st
+fig_def_radar.add_trace(go.Scatterpolar(
+r=def_avg_percentiles,
+theta=list(defensive_metrics.keys()),
+mode='lines',
+line=dict(color='rgba)
+
+import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go

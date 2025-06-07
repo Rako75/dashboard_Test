@@ -21,6 +21,28 @@ elif metric == 'Passes D./90':
                     base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
                     temp_series = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
                     best_idx = temp_series.idxmax()
+                    best_value = temp_series.loc[best_idx]()
+                    best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives par 90 minutes']
+                elif metric == 'xG/90':
+                    best_idx = df_filtered_reliable['Buts attendus par 90 minutes'].idxmax()
+                    best_value = df_filtered_reliable.loc[best_idx, 'Buts attendus par 90 minutes']
+                elif metric == 'xA/90':
+                    best_idx = df_filtered_reliable['Passes décisives attendues par 90 minutes'].idxmax()
+                    best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives attendues par 90 minutes']
+                elif metric == 'Tirs/90':
+                    best_idx = df_filtered_reliable['Tirs par 90 minutes'].idxmax()
+                    best_value = df_filtered_reliable.loc[best_idx, 'Tirs par 90 minutes']
+                elif metric == 'Actions → Tir/90':
+                    best_idx = df_filtered_reliable['Actions menant à un tir par 90 minutes'].idxmax()
+                    best_value = df_filtered_reliable.loc[best_idx, 'Actions menant à un tir par 90 minutes']
+                elif metric == 'Passes dernier tiers/90':
+                    temp_series = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
+                    best_idx = temp_series.idxmax()
+                    best_value = temp_series.loc[best_idx]
+                else:
+                    base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
+                    temp_series = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
+                    best_idx = temp_series.idxmax()
                     best_value = temp_series.loc[best_idx]
             
             best_player_name = df_filtered_reliable.loc[best_idx, 'Joueur']

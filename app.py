@@ -1,4 +1,47 @@
-import streamlit as st
+# Calculer les percentiles des moyennes des joueurs fiables
+            def_avg_percentiles = []
+            for i, avg_val in enumerate(def_avg_values):
+                try:
+                    if avg_val > 0 and len(df_filtered_reliable) > 0:
+                        metric_name = list(defensive_metrics.keys())[i]
+                        if metric_name == 'Tacles/90':
+                            distribution = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
+                        elif metric_name == 'Interceptions/90':
+                            distribution = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
+                        elif metric_name == 'Ballons récupérés/90':
+                            distribution = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
+                        elif metric_name == 'Duels défensifs/90':
+                            distribution = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
+                        elif metric_name == 'Duels aériens/90':
+                            distribution = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
+                        elif metric_name == 'Dégagements/90':
+                            distribution = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
+                        elif metric_name == 'Tirs bloqués/90':
+                            distribution = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
+                        elif metric_name == '% Duels gagnés':
+                            distribution = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable)))
+                        elif metric_name == '% Duels aériens':
+                            distribution = df_filtered_reliable['Pourcentage de duels aériens gagnés']
+                        elif metric_name == 'Total Blocs/90':
+                            distribution = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
+                        
+                        distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+                        if len(distribution) > 0:
+                            avg_percentile = (distribution < avg_val).mean() * 100
+                            def_avg_percentiles.append(avg_percentile)
+                        else:
+                            def_avg_percentiles.append(50)
+                    else:
+                        def_avg_percentiles.append(50)
+                except:
+                    def_avg_percentiles.append(50)
+            
+            # Ajouter une ligne de référence pour la moyenne des joueurs fiables
+            fig_def_radar.add_trace(go.Scatterpolar(
+                r=def_avg_percentiles,
+                theta=list(defensive_metrics.keys()),
+                mode='lines',
+                line=dict(color='rgbaimport streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -280,41 +323,48 @@ if df is not None:
                 'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90)
             }
             
-            # Calculer les percentiles par rapport à la compétition pour une meilleure lisibilité
+            # Filtrer les joueurs avec minimum 15 matchs pour tous les calculs
+            df_filtered_reliable = df_filtered[df_filtered['Matchs joués'] >= 15]
+            
+            # Calculer les percentiles par rapport aux joueurs fiables (15+ matchs)
             percentile_values = []
             avg_values = []
             for metric, value in offensive_metrics.items():
                 if metric.endswith('/90'):
                     # Métriques déjà par 90 minutes
                     if metric == 'Buts/90':
-                        distribution = df_filtered['Buts par 90 minutes']
+                        distribution = df_filtered_reliable['Buts par 90 minutes']
                     elif metric == 'Passes D./90':
-                        distribution = df_filtered['Passes décisives par 90 minutes']
+                        distribution = df_filtered_reliable['Passes décisives par 90 minutes']
                     elif metric == 'xG/90':
-                        distribution = df_filtered['Buts attendus par 90 minutes']
+                        distribution = df_filtered_reliable['Buts attendus par 90 minutes']
                     elif metric == 'xA/90':
-                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                        distribution = df_filtered_reliable['Passes décisives attendues par 90 minutes']
                     elif metric == 'Tirs/90':
-                        distribution = df_filtered['Tirs par 90 minutes']
+                        distribution = df_filtered_reliable['Tirs par 90 minutes']
                     elif metric == 'Actions → Tir/90':
-                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                        distribution = df_filtered_reliable['Actions menant à un tir par 90 minutes']
                     elif metric == 'Passes dernier tiers/90':
-                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
                     else:
                         # Calculer pour les autres métriques
                         base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
                     
                     # Calculer le percentile et la moyenne
-                    percentile = (distribution < value).mean() * 100
-                    avg_comp = distribution.mean()
+                    if len(distribution) > 0:
+                        percentile = (distribution < value).mean() * 100
+                        avg_comp = distribution.mean()
+                    else:
+                        percentile = 50
+                        avg_comp = 0
                     percentile_values.append(min(percentile, 100))  # Cap à 100
                     avg_values.append(avg_comp)
                 else:
                     percentile_values.append(50)  # Valeur par défaut si problème
                     avg_values.append(0)
             
-            # Créer le radar avec les moyennes de la compétition comme référence
+            # Créer le radar avec les moyennes des joueurs fiables comme référence
             fig_radar = go.Figure()
             
             # Ajouter la performance du joueur
@@ -333,38 +383,38 @@ if df is not None:
             # Calculer les percentiles des moyennes de la compétition (seront autour de 50)
             avg_percentiles = []
             for i, avg_val in enumerate(avg_values):
-                if avg_val > 0:
+                if avg_val > 0 and len(df_filtered_reliable) > 0:
                     metric_name = list(offensive_metrics.keys())[i]
                     if metric_name == 'Buts/90':
-                        distribution = df_filtered['Buts par 90 minutes']
+                        distribution = df_filtered_reliable['Buts par 90 minutes']
                     elif metric_name == 'Passes D./90':
-                        distribution = df_filtered['Passes décisives par 90 minutes']
+                        distribution = df_filtered_reliable['Passes décisives par 90 minutes']
                     elif metric_name == 'xG/90':
-                        distribution = df_filtered['Buts attendus par 90 minutes']
+                        distribution = df_filtered_reliable['Buts attendus par 90 minutes']
                     elif metric_name == 'xA/90':
-                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                        distribution = df_filtered_reliable['Passes décisives attendues par 90 minutes']
                     elif metric_name == 'Tirs/90':
-                        distribution = df_filtered['Tirs par 90 minutes']
+                        distribution = df_filtered_reliable['Tirs par 90 minutes']
                     elif metric_name == 'Actions → Tir/90':
-                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                        distribution = df_filtered_reliable['Actions menant à un tir par 90 minutes']
                     elif metric_name == 'Passes dernier tiers/90':
-                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
                     else:
                         base_column = metric_name.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
                     
                     avg_percentile = (distribution < avg_val).mean() * 100
                     avg_percentiles.append(avg_percentile)
                 else:
                     avg_percentiles.append(50)
             
-            # Ajouter une ligne de référence pour la moyenne de la compétition
+            # Ajouter une ligne de référence pour la moyenne des joueurs fiables
             fig_radar.add_trace(go.Scatterpolar(
                 r=avg_percentiles,
                 theta=list(offensive_metrics.keys()),
                 mode='lines',
                 line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
-                name=f'Moyenne {selected_competition}',
+                name=f'Moyenne {selected_competition} (15+ matchs)',
                 showlegend=True,
                 hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
                 customdata=avg_values
@@ -411,7 +461,7 @@ if df is not None:
                 height=450,
                 annotations=[
                     dict(
-                        text=f"Performance vs Moyenne {selected_competition}",
+                        text=f"Performance vs Moyenne {selected_competition} (15+ matchs)",
                         showarrow=False,
                         x=0.5,
                         y=-0.15,
@@ -428,48 +478,47 @@ if df is not None:
             st.plotly_chart(fig_radar, use_container_width=True)
             
             # Afficher les valeurs détaillées sous le radar
-            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques offensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques offensives vs joueurs fiables (15+ matchs)</h4>", unsafe_allow_html=True)
             
             # Trouver les meilleurs joueurs pour chaque métrique offensive (minimum 15 matchs)
             best_players_off = {}
-            df_filtered_min_matches = df_filtered[df_filtered['Matchs joués'] >= 15]
             
             for i, (metric, value) in enumerate(offensive_metrics.items()):
                 try:
-                    if len(df_filtered_min_matches) == 0:
-                        best_players_off[metric] = {'name': 'N/A (min 15 matchs)', 'value': 0}
+                    if len(df_filtered_reliable) == 0:
+                        best_players_off[metric] = {'name': 'N/A (min 15 matchs)', 'value': 0, 'matches': 0}
                         continue
                         
                     if metric == 'Buts/90':
-                        best_idx = df_filtered_min_matches['Buts par 90 minutes'].idxmax()
-                        best_value = df_filtered_min_matches.loc[best_idx, 'Buts par 90 minutes']
+                        best_idx = df_filtered_reliable['Buts par 90 minutes'].idxmax()
+                        best_value = df_filtered_reliable.loc[best_idx, 'Buts par 90 minutes']
                     elif metric == 'Passes D./90':
-                        best_idx = df_filtered_min_matches['Passes décisives par 90 minutes'].idxmax()
-                        best_value = df_filtered_min_matches.loc[best_idx, 'Passes décisives par 90 minutes']
+                        best_idx = df_filtered_reliable['Passes décisives par 90 minutes'].idxmax()
+                        best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives par 90 minutes']
                     elif metric == 'xG/90':
-                        best_idx = df_filtered_min_matches['Buts attendus par 90 minutes'].idxmax()
-                        best_value = df_filtered_min_matches.loc[best_idx, 'Buts attendus par 90 minutes']
+                        best_idx = df_filtered_reliable['Buts attendus par 90 minutes'].idxmax()
+                        best_value = df_filtered_reliable.loc[best_idx, 'Buts attendus par 90 minutes']
                     elif metric == 'xA/90':
-                        best_idx = df_filtered_min_matches['Passes décisives attendues par 90 minutes'].idxmax()
-                        best_value = df_filtered_min_matches.loc[best_idx, 'Passes décisives attendues par 90 minutes']
+                        best_idx = df_filtered_reliable['Passes décisives attendues par 90 minutes'].idxmax()
+                        best_value = df_filtered_reliable.loc[best_idx, 'Passes décisives attendues par 90 minutes']
                     elif metric == 'Tirs/90':
-                        best_idx = df_filtered_min_matches['Tirs par 90 minutes'].idxmax()
-                        best_value = df_filtered_min_matches.loc[best_idx, 'Tirs par 90 minutes']
+                        best_idx = df_filtered_reliable['Tirs par 90 minutes'].idxmax()
+                        best_value = df_filtered_reliable.loc[best_idx, 'Tirs par 90 minutes']
                     elif metric == 'Actions → Tir/90':
-                        best_idx = df_filtered_min_matches['Actions menant à un tir par 90 minutes'].idxmax()
-                        best_value = df_filtered_min_matches.loc[best_idx, 'Actions menant à un tir par 90 minutes']
+                        best_idx = df_filtered_reliable['Actions menant à un tir par 90 minutes'].idxmax()
+                        best_value = df_filtered_reliable.loc[best_idx, 'Actions menant à un tir par 90 minutes']
                     elif metric == 'Passes dernier tiers/90':
-                        temp_series = df_filtered_min_matches['Passes dans le dernier tiers'] / (df_filtered_min_matches['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable['Passes dans le dernier tiers'] / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     else:
                         base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                        temp_series = df_filtered_min_matches[base_column] / (df_filtered_min_matches['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable[base_column] / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     
-                    best_player_name = df_filtered_min_matches.loc[best_idx, 'Joueur']
-                    best_player_matches = df_filtered_min_matches.loc[best_idx, 'Matchs joués']
+                    best_player_name = df_filtered_reliable.loc[best_idx, 'Joueur']
+                    best_player_matches = df_filtered_reliable.loc[best_idx, 'Matchs joués']
                     best_players_off[metric] = {'name': best_player_name, 'value': best_value, 'matches': best_player_matches}
                 except:
                     best_players_off[metric] = {'name': 'N/A', 'value': 0, 'matches': 0}
@@ -778,31 +827,31 @@ if df is not None:
                 'Total Blocs/90': player_data.get('Total de blocs (tirs et passes)', 0) / (player_data['Minutes jouées'] / 90)
             }
             
-            # Calculer les percentiles et moyennes par rapport à la compétition
+            # Calculer les percentiles et moyennes par rapport aux joueurs fiables (15+ matchs)
             def_percentile_values = []
             def_avg_values = []
             for metric, value in defensive_metrics.items():
                 try:
                     if metric == 'Tacles/90':
-                        distribution = df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
                     elif metric == 'Interceptions/90':
-                        distribution = df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
                     elif metric == 'Ballons récupérés/90':
-                        distribution = df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
                     elif metric == 'Duels défensifs/90':
-                        distribution = df_filtered.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
                     elif metric == 'Duels aériens/90':
-                        distribution = df_filtered['Duels aériens gagnés'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
                     elif metric == 'Dégagements/90':
-                        distribution = df_filtered['Dégagements'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
                     elif metric == 'Tirs bloqués/90':
-                        distribution = df_filtered.get('Tirs bloqués', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
                     elif metric == '% Duels gagnés':
-                        distribution = df_filtered.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered)))
+                        distribution = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable)))
                     elif metric == '% Duels aériens':
-                        distribution = df_filtered['Pourcentage de duels aériens gagnés']
+                        distribution = df_filtered_reliable['Pourcentage de duels aériens gagnés']
                     elif metric == 'Total Blocs/90':
-                        distribution = df_filtered.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
                     
                     # Nettoyer les valeurs NaN et infinies
                     distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
@@ -928,7 +977,7 @@ if df is not None:
                 height=450,
                 annotations=[
                     dict(
-                        text=f"Performance Défensive vs Moyenne {selected_competition}",
+                        text=f"Performance Défensive vs Moyenne {selected_competition} (15+ matchs)",
                         showarrow=False,
                         x=0.5,
                         y=-0.15,
@@ -945,59 +994,58 @@ if df is not None:
             st.plotly_chart(fig_def_radar, use_container_width=True)
             
             # Afficher les valeurs détaillées sous le radar défensif
-            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques défensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques défensives vs joueurs fiables (15+ matchs)</h4>", unsafe_allow_html=True)
             
             # Trouver les meilleurs joueurs pour chaque métrique défensive (minimum 15 matchs)
             best_players_def = {}
-            df_filtered_min_matches_def = df_filtered[df_filtered['Matchs joués'] >= 15]
             
             for i, (metric, value) in enumerate(defensive_metrics.items()):
                 try:
-                    if len(df_filtered_min_matches_def) == 0:
+                    if len(df_filtered_reliable) == 0:
                         best_players_def[metric] = {'name': 'N/A (min 15 matchs)', 'value': 0, 'matches': 0}
                         continue
                         
                     if metric == 'Tacles/90':
-                        temp_series = df_filtered_min_matches_def['Tacles gagnants'] / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     elif metric == 'Interceptions/90':
-                        temp_series = df_filtered_min_matches_def['Interceptions'] / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     elif metric == 'Ballons récupérés/90':
-                        temp_series = df_filtered_min_matches_def['Ballons récupérés'] / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     elif metric == 'Duels défensifs/90':
-                        temp_series = df_filtered_min_matches_def.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_min_matches_def))) / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     elif metric == 'Duels aériens/90':
-                        temp_series = df_filtered_min_matches_def['Duels aériens gagnés'] / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     elif metric == 'Dégagements/90':
-                        temp_series = df_filtered_min_matches_def['Dégagements'] / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     elif metric == 'Tirs bloqués/90':
-                        temp_series = df_filtered_min_matches_def.get('Tirs bloqués', pd.Series([0]*len(df_filtered_min_matches_def))) / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     elif metric == '% Duels gagnés':
-                        best_idx = df_filtered_min_matches_def.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_min_matches_def))).idxmax()
-                        best_value = df_filtered_min_matches_def.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_min_matches_def))).loc[best_idx]
+                        best_idx = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable))).idxmax()
+                        best_value = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable))).loc[best_idx]
                     elif metric == '% Duels aériens':
-                        best_idx = df_filtered_min_matches_def['Pourcentage de duels aériens gagnés'].idxmax()
-                        best_value = df_filtered_min_matches_def.loc[best_idx, 'Pourcentage de duels aériens gagnés']
+                        best_idx = df_filtered_reliable['Pourcentage de duels aériens gagnés'].idxmax()
+                        best_value = df_filtered_reliable.loc[best_idx, 'Pourcentage de duels aériens gagnés']
                     elif metric == 'Total Blocs/90':
-                        temp_series = df_filtered_min_matches_def.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_min_matches_def))) / (df_filtered_min_matches_def['Minutes jouées'] / 90)
+                        temp_series = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
                         best_idx = temp_series.idxmax()
                         best_value = temp_series.loc[best_idx]
                     
-                    best_player_name = df_filtered_min_matches_def.loc[best_idx, 'Joueur']
-                    best_player_matches = df_filtered_min_matches_def.loc[best_idx, 'Matchs joués']
+                    best_player_name = df_filtered_reliable.loc[best_idx, 'Joueur']
+                    best_player_matches = df_filtered_reliable.loc[best_idx, 'Matchs joués']
                     best_players_def[metric] = {'name': best_player_name, 'value': best_value, 'matches': best_player_matches}
                 except:
                     best_players_def[metric] = {'name': 'N/A', 'value': 0, 'matches': 0}

@@ -1,40 +1,43 @@
 # Calculer les percentiles des moyennes des joueurs fiables
-            def_avg_percentiles = []
-            for i, avg_val in enumerate(def_avg_values):
-                try:
-                    if avg_val > 0 and len(df_filtered_reliable) > 0:
-                        metric_name = list(defensive_metrics.keys())[i]
-                        if metric_name == 'Tacles/90':
-                            distribution = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                        elif metric_name == 'Interceptions/90':
-                            distribution = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                        elif metric_name == 'Ballons récupérés/90':
-                            distribution = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                        elif metric_name == 'Duels défensifs/90':
-                            distribution = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                        elif metric_name == 'Duels aériens/90':
-                            distribution = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                        elif metric_name == 'Dégagements/90':
-                            distribution = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
-                        elif metric_name == 'Tirs bloqués/90':
-                            distribution = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                        elif metric_name == '% Duels gagnés':
-                            distribution = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable)))
-                        elif metric_name == '% Duels aériens':
-                            distribution = df_filtered_reliable['Pourcentage de duels aériens gagnés']
-                        elif metric_name == 'Total Blocs/90':
-                            distribution = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
-                        
-                        distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
-                        if len(distribution) > 0:
-                            avg_percentile = (distribution < avg_val).mean() * 100
-                            def_avg_percentiles.append(avg_percentile)
-                        else:
-                            def_avg_percentiles.append(50)
-                    else:
-                        def_avg_percentiles.append(50)
-                except:
-                    def_avg_percentiles.append(50)
+def_avg_percentiles = []
+
+for i, avg_val in enumerate(def_avg_values):
+    try:
+        if avg_val > 0 and len(df_filtered_reliable) > 0:
+            metric_name = list(defensive_metrics.keys())[i]
+
+            if metric_name == 'Tacles/90':
+                distribution = df_filtered_reliable['Tacles gagnants'] / (df_filtered_reliable['Minutes jouées'] / 90)
+            elif metric_name == 'Interceptions/90':
+                distribution = df_filtered_reliable['Interceptions'] / (df_filtered_reliable['Minutes jouées'] / 90)
+            elif metric_name == 'Ballons récupérés/90':
+                distribution = df_filtered_reliable['Ballons récupérés'] / (df_filtered_reliable['Minutes jouées'] / 90)
+            elif metric_name == 'Duels défensifs/90':
+                distribution = df_filtered_reliable.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
+            elif metric_name == 'Duels aériens/90':
+                distribution = df_filtered_reliable['Duels aériens gagnés'] / (df_filtered_reliable['Minutes jouées'] / 90)
+            elif metric_name == 'Dégagements/90':
+                distribution = df_filtered_reliable['Dégagements'] / (df_filtered_reliable['Minutes jouées'] / 90)
+            elif metric_name == 'Tirs bloqués/90':
+                distribution = df_filtered_reliable.get('Tirs bloqués', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
+            elif metric_name == '% Duels gagnés':
+                distribution = df_filtered_reliable.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered_reliable)))
+            elif metric_name == '% Duels aériens':
+                distribution = df_filtered_reliable['Pourcentage de duels aériens gagnés']
+            elif metric_name == 'Total Blocs/90':
+                distribution = df_filtered_reliable.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered_reliable))) / (df_filtered_reliable['Minutes jouées'] / 90)
+
+            distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+
+            if len(distribution) > 0:
+                avg_percentile = (distribution < avg_val).mean() * 100
+                def_avg_percentiles.append(avg_percentile)
+            else:
+                def_avg_percentiles.append(50)
+        else:
+            def_avg_percentiles.append(50)
+    except:
+        def_avg_percentiles.append(50)
             
             # Ajouter une ligne de référence pour la moyenne des joueurs fiables
             fig_def_radar.add_trace(go.Scatterpolar(

@@ -559,7 +559,7 @@ if df is not None:
             st.plotly_chart(fig_efficiency, use_container_width=True)
         
         # Métriques offensives par 90 minutes avec design amélioré
-        st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Moyennes par 90 minutes</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques Offensives par 90 minutes</h3>", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:

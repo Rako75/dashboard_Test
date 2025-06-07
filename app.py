@@ -430,22 +430,61 @@ if df is not None:
             # Afficher les valeurs détaillées sous le radar
             st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques offensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
             
+            # Trouver les meilleurs joueurs pour chaque métrique offensive
+            best_players_off = {}
+            for i, (metric, value) in enumerate(offensive_metrics.items()):
+                try:
+                    if metric == 'Buts/90':
+                        best_idx = df_filtered['Buts par 90 minutes'].idxmax()
+                        best_value = df_filtered.loc[best_idx, 'Buts par 90 minutes']
+                    elif metric == 'Passes D./90':
+                        best_idx = df_filtered['Passes décisives par 90 minutes'].idxmax()
+                        best_value = df_filtered.loc[best_idx, 'Passes décisives par 90 minutes']
+                    elif metric == 'xG/90':
+                        best_idx = df_filtered['Buts attendus par 90 minutes'].idxmax()
+                        best_value = df_filtered.loc[best_idx, 'Buts attendus par 90 minutes']
+                    elif metric == 'xA/90':
+                        best_idx = df_filtered['Passes décisives attendues par 90 minutes'].idxmax()
+                        best_value = df_filtered.loc[best_idx, 'Passes décisives attendues par 90 minutes']
+                    elif metric == 'Tirs/90':
+                        best_idx = df_filtered['Tirs par 90 minutes'].idxmax()
+                        best_value = df_filtered.loc[best_idx, 'Tirs par 90 minutes']
+                    elif metric == 'Actions → Tir/90':
+                        best_idx = df_filtered['Actions menant à un tir par 90 minutes'].idxmax()
+                        best_value = df_filtered.loc[best_idx, 'Actions menant à un tir par 90 minutes']
+                    elif metric == 'Passes dernier tiers/90':
+                        temp_series = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    else:
+                        base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
+                        temp_series = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    
+                    best_player_name = df_filtered.loc[best_idx, 'Joueur']
+                    best_players_off[metric] = {'name': best_player_name, 'value': best_value}
+                except:
+                    best_players_off[metric] = {'name': 'N/A', 'value': 0}
+            
             col_a, col_b = st.columns(2)
             with col_a:
                 for i, (metric, value) in enumerate(list(offensive_metrics.items())[:5]):
                     percentile = percentile_values[i]
                     avg_comp = avg_values[i]
+                    best_player = best_players_off[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f})</small>", unsafe_allow_html=True)
             
             with col_b:
                 for i, (metric, value) in enumerate(list(offensive_metrics.items())[5:], 5):
                     percentile = percentile_values[i]
                     avg_comp = avg_values[i]
+                    best_player = best_players_off[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f})</small>", unsafe_allow_html=True)
         
         with col2:
             # Graphique buts vs buts attendus amélioré
@@ -901,28 +940,78 @@ if df is not None:
             # Afficher les valeurs détaillées sous le radar défensif
             st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques défensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
             
+            # Trouver les meilleurs joueurs pour chaque métrique défensive
+            best_players_def = {}
+            for i, (metric, value) in enumerate(defensive_metrics.items()):
+                try:
+                    if metric == 'Tacles/90':
+                        temp_series = df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    elif metric == 'Interceptions/90':
+                        temp_series = df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    elif metric == 'Ballons récupérés/90':
+                        temp_series = df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    elif metric == 'Duels défensifs/90':
+                        temp_series = df_filtered.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    elif metric == 'Duels aériens/90':
+                        temp_series = df_filtered['Duels aériens gagnés'] / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    elif metric == 'Dégagements/90':
+                        temp_series = df_filtered['Dégagements'] / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    elif metric == 'Tirs bloqués/90':
+                        temp_series = df_filtered.get('Tirs bloqués', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    elif metric == '% Duels gagnés':
+                        best_idx = df_filtered.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered))).idxmax()
+                        best_value = df_filtered.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered))).loc[best_idx]
+                    elif metric == '% Duels aériens':
+                        best_idx = df_filtered['Pourcentage de duels aériens gagnés'].idxmax()
+                        best_value = df_filtered.loc[best_idx, 'Pourcentage de duels aériens gagnés']
+                    elif metric == 'Total Blocs/90':
+                        temp_series = df_filtered.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        best_idx = temp_series.idxmax()
+                        best_value = temp_series.loc[best_idx]
+                    
+                    best_player_name = df_filtered.loc[best_idx, 'Joueur']
+                    best_players_def[metric] = {'name': best_player_name, 'value': best_value}
+                except:
+                    best_players_def[metric] = {'name': 'N/A', 'value': 0}
+            
             col_a, col_b = st.columns(2)
             with col_a:
                 for i, (metric, value) in enumerate(list(defensive_metrics.items())[:5]):
                     percentile = def_percentile_values[i]
                     avg_comp = def_avg_values[i]
+                    best_player = best_players_def[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
                     if '/' in metric:
-                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f})</small>", unsafe_allow_html=True)
                     else:
-                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.1f}%)</small>", unsafe_allow_html=True)
             
             with col_b:
                 for i, (metric, value) in enumerate(list(defensive_metrics.items())[5:], 5):
                     percentile = def_percentile_values[i]
                     avg_comp = def_avg_values[i]
+                    best_player = best_players_def[metric]
                     color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
                     comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
                     if '/' in metric:
-                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.2f})</small>", unsafe_allow_html=True)
                     else:
-                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
+                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span><br><small>🏆 Meilleur: {best_player['name']} ({best_player['value']:.1f}%)</small>", unsafe_allow_html=True)
         
         # Métriques défensives par 90 minutes avec design amélioré - UNIQUEMENT DANS CET ONGLET
         st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques défensives par 90 min</h3>", unsafe_allow_html=True)

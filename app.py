@@ -44,7 +44,7 @@ fig_def_radar.add_trace(go.Scatterpolar(
 r=def_avg_percentiles,
 theta=list(defensive_metrics.keys()),
 mode='lines',
-line=dict(color='rgba)
+line=dict(color='rgba')
 
 import streamlit as st
 import pandas as pd

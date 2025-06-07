@@ -282,6 +282,7 @@ if df is not None:
             
             # Calculer les percentiles par rapport à la compétition pour une meilleure lisibilité
             percentile_values = []
+            avg_values = []
             for metric, value in offensive_metrics.items():
                 if metric.endswith('/90'):
                     # Métriques déjà par 90 minutes
@@ -304,11 +305,14 @@ if df is not None:
                         base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
                         distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
                     
-                    # Calculer le percentile
+                    # Calculer le percentile et la moyenne
                     percentile = (distribution < value).mean() * 100
+                    avg_comp = distribution.mean()
                     percentile_values.append(min(percentile, 100))  # Cap à 100
+                    avg_values.append(avg_comp)
                 else:
                     percentile_values.append(50)  # Valeur par défaut si problème
+                    avg_values.append(0)
             
             # Créer le radar avec les moyennes de la compétition comme référence
             fig_radar = go.Figure()
@@ -326,15 +330,44 @@ if df is not None:
                 customdata=list(offensive_metrics.values())
             ))
             
-            # Ajouter une ligne de référence à 50% (médiane)
-            reference_line = [50] * len(offensive_metrics)
+            # Calculer les percentiles des moyennes de la compétition (seront autour de 50)
+            avg_percentiles = []
+            for i, avg_val in enumerate(avg_values):
+                if avg_val > 0:
+                    metric_name = list(offensive_metrics.keys())[i]
+                    if metric_name == 'Buts/90':
+                        distribution = df_filtered['Buts par 90 minutes']
+                    elif metric_name == 'Passes D./90':
+                        distribution = df_filtered['Passes décisives par 90 minutes']
+                    elif metric_name == 'xG/90':
+                        distribution = df_filtered['Buts attendus par 90 minutes']
+                    elif metric_name == 'xA/90':
+                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                    elif metric_name == 'Tirs/90':
+                        distribution = df_filtered['Tirs par 90 minutes']
+                    elif metric_name == 'Actions → Tir/90':
+                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                    elif metric_name == 'Passes dernier tiers/90':
+                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                    else:
+                        base_column = metric_name.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
+                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                    
+                    avg_percentile = (distribution < avg_val).mean() * 100
+                    avg_percentiles.append(avg_percentile)
+                else:
+                    avg_percentiles.append(50)
+            
+            # Ajouter une ligne de référence pour la moyenne de la compétition
             fig_radar.add_trace(go.Scatterpolar(
-                r=reference_line,
+                r=avg_percentiles,
                 theta=list(offensive_metrics.keys()),
                 mode='lines',
-                line=dict(color='rgba(255,255,255,0.5)', width=2, dash='dash'),
-                name='Médiane (50e percentile)',
-                showlegend=True
+                line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
+                name=f'Moyenne {selected_competition}',
+                showlegend=True,
+                hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
+                customdata=avg_values
             ))
             
             fig_radar.update_layout(

@@ -463,7 +463,7 @@ if df is not None:
                             bar=dict(color=colors_precision_off[i]),
                             bgcolor="rgba(0,0,0,0.3)",
                             borderwidth=2,
-            )
+            ))
     
     with tab2:
         st.markdown("<h2 style='color: #FF6B35;'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)

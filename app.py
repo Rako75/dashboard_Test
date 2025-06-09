@@ -463,6 +463,17 @@ if df is not None:
                             bar=dict(color=colors_precision_off[i]),
                             bgcolor="rgba(0,0,0,0.3)",
                             borderwidth=2,
+                            bordercolor="white",
+                            steps=[
+                                {'range': [0, 30], 'color': 'rgba(255,255,255,0.1)'},
+                                {'range': [30, 60], 'color': 'rgba(255,255,255,0.2)'},
+                                {'range': [60, 100], 'color': 'rgba(255,255,255,0.3)'}
+                            ]
+                        ),
+                        number={'suffix': '%', 'font': {'color': 'white', 'size': 16}}
+                    ),
+                    row=row, col=col
+                )
                 
     
     with tab2:

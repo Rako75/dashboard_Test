@@ -436,9 +436,9 @@ if df is not None:
             
             zone_precision_off = {
                 'Conversion Buts': (player_data['Buts'] / player_data.get('Tirs', 1)) * 100 if player_data.get('Tirs', 0) > 0 else 0,
-                'Précision Tirs': player_data.get('Pourcentage de tirs cadrés', 0),
+                'Précision Tirs': player_data.get('Pourcentage de tirs cadrés', 0) if pd.notna(player_data.get('Pourcentage de tirs cadrés', 0)) else 0,
                 'Efficacité Passes clés': (player_data['Passes décisives'] / player_data.get('Passes clés', 1)) * 100 if player_data.get('Passes clés', 0) > 0 else 0,
-                'Réussite Dribbles': player_data.get('Pourcentage de dribbles réussis', 0)
+                'Réussite Dribbles': player_data.get('Pourcentage de dribbles réussis', 0) if pd.notna(player_data.get('Pourcentage de dribbles réussis', 0)) else 0
             }
             
             # Créer des jauges pour les pourcentages d'efficacité offensive
@@ -463,7 +463,7 @@ if df is not None:
                             bar=dict(color=colors_precision_off[i]),
                             bgcolor="rgba(0,0,0,0.3)",
                             borderwidth=2,
-            ))
+                
     
     with tab2:
         st.markdown("<h2 style='color: #FF6B35;'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
@@ -1106,9 +1106,9 @@ if df is not None:
             st.markdown("<h3 style='color: #00C896; margin-top: 0px;'>📐 Précision par Zone</h3>", unsafe_allow_html=True)
             
             zone_precision = {
-                'Passes courtes': player_data.get('Pourcentage de passes courtes réussies', 0),
-                'Passes moyennes': player_data.get('Pourcentage de passes moyennes réussies', 0),
-                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0),
+                'Passes courtes': player_data.get('Pourcentage de passes courtes réussies', 0) if pd.notna(player_data.get('Pourcentage de passes courtes réussies', 0)) else 0,
+                'Passes moyennes': player_data.get('Pourcentage de passes moyennes réussies', 0) if pd.notna(player_data.get('Pourcentage de passes moyennes réussies', 0)) else 0,
+                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0) if pd.notna(player_data.get('Pourcentage de passes longues réussies', 0)) else 0,
                 'Passes dernier tiers': (player_data.get('Passes réussies dans le dernier tiers', 0) / player_data.get('Passes dans le dernier tiers', 1)) * 100 if player_data.get('Passes dans le dernier tiers', 0) > 0 else 0
             }
             

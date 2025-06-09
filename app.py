@@ -426,26 +426,6 @@ if df is not None:
             )
             
             st.plotly_chart(fig_radar, use_container_width=True)
-            
-            # Afficher les valeurs détaillées sous le radar
-            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques offensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
-            
-            col_a, col_b = st.columns(2)
-            with col_a:
-                for i, (metric, value) in enumerate(list(offensive_metrics.items())[:5]):
-                    percentile = percentile_values[i]
-                    avg_comp = avg_values[i]
-                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
-                    comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
-            
-            with col_b:
-                for i, (metric, value) in enumerate(list(offensive_metrics.items())[5:], 5):
-                    percentile = percentile_values[i]
-                    avg_comp = avg_values[i]
-                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
-                    comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
         
         with col2:
             # Graphique buts vs buts attendus amélioré
@@ -560,7 +540,7 @@ if df is not None:
         
         # Métriques offensives par 90 minutes avec design amélioré
         st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques offensives par 90 minutes</h3>", unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
             st.metric("Buts/90min", f"{player_data['Buts par 90 minutes']:.2f}")
@@ -570,6 +550,10 @@ if df is not None:
             st.metric("xG/90min", f"{player_data['Buts attendus par 90 minutes']:.2f}")
         with col4:
             st.metric("Actions → Tir/90min", f"{player_data['Actions menant à un tir par 90 minutes']:.2f}")
+        with col5:
+            # Nouveau compteur de pourcentage d'efficacité offensive
+            efficiency_off = (player_data['Buts'] + player_data['Passes décisives']) / player_data.get('Tirs', 1) * 100 if player_data.get('Tirs', 0) > 0 else 0
+            st.metric("Efficacité Offensive", f"{efficiency_off:.1f}%")
     
     with tab2:
         st.markdown("<h2 style='color: #FF6B35;'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
@@ -618,105 +602,8 @@ if df is not None:
                 height=400
             )
             st.plotly_chart(fig_bar, use_container_width=True)
-        
-        with col2:
-            # Pourcentages de réussite avec design amélioré
-            pourcentages = {
-                'Duels aériens': player_data['Pourcentage de duels aériens gagnés'],
-                'Duels défensifs': player_data['Pourcentage de duels gagnés'],
-                'Passes réussies': player_data['Pourcentage de passes réussies']
-            }
             
-            # Nettoyer les valeurs NaN
-            pourcentages = {k: v if pd.notna(v) else 0 for k, v in pourcentages.items()}
-            
-            fig_gauge = make_subplots(
-                rows=1, cols=3,
-                specs=[[{"type": "indicator"}, {"type": "indicator"}, {"type": "indicator"}]],
-                subplot_titles=list(pourcentages.keys())
-            )
-            
-            colors = [COLORS['danger'], COLORS['secondary'], COLORS['success']]
-            for i, (metric, value) in enumerate(pourcentages.items()):
-                fig_gauge.add_trace(
-                    go.Indicator(
-                        mode="gauge+number",
-                        value=value,
-                        gauge=dict(
-                            axis=dict(range=[0, 100]),
-                            bar=dict(color=colors[i]),
-                            bgcolor="rgba(0,0,0,0.3)",
-                            borderwidth=2,
-                            bordercolor="white",
-                            steps=[
-                                {'range': [0, 50], 'color': 'rgba(255,255,255,0.1)'},
-                                {'range': [50, 80], 'color': 'rgba(255,255,255,0.2)'},
-                                {'range': [80, 100], 'color': 'rgba(255,255,255,0.3)'}
-                            ]
-                        ),
-                        number={'suffix': '%', 'font': {'color': 'white'}}
-                    ),
-                    row=1, col=i+1
-                )
-            
-            fig_gauge.update_layout(
-                height=300, 
-                title_text="Pourcentages de Réussite",
-                title_font_color='white',
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white')
-            )
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Graphique de comparaison défensive
-            defensive_comparison = {
-                'Tacles/90': player_data['Tacles gagnants'] / (player_data['Minutes jouées'] / 90),
-                'Interceptions/90': player_data['Interceptions'] / (player_data['Minutes jouées'] / 90),
-                'Ballons récupérés/90': player_data['Ballons récupérés'] / (player_data['Minutes jouées'] / 90)
-            }
-            
-            # Moyennes de la compétition
-            avg_comparison = {
-                'Tacles/90': (df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)).mean(),
-                'Interceptions/90': (df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)).mean(),
-                'Ballons récupérés/90': (df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)).mean()
-            }
-            
-            fig_def_comp = go.Figure()
-            
-            fig_def_comp.add_trace(go.Bar(
-                name=selected_player,
-                x=list(defensive_comparison.keys()),
-                y=list(defensive_comparison.values()),
-                marker_color=COLORS['primary']
-            ))
-            
-            fig_def_comp.add_trace(go.Bar(
-                name='Moyenne compétition',
-                x=list(avg_comparison.keys()),
-                y=list(avg_comparison.values()),
-                marker_color=COLORS['secondary']
-            ))
-            
-            fig_def_comp.update_layout(
-                title=dict(
-                    text='Actions Défensives par 90min vs Moyenne',
-                    font=dict(color='white'),
-                    x=0.5
-                ),
-                barmode='group',
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                xaxis=dict(tickfont=dict(color='white')),
-                yaxis=dict(tickfont=dict(color='white'), gridcolor='rgba(255,255,255,0.2)'),
-                height=400
-            )
-            
-            st.plotly_chart(fig_def_comp, use_container_width=True)
-            
-            # Radar professionnel des actions défensives avec plus de variables
+            # Radar professionnel des actions défensives
             st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🛡️ Radar Défensif Professionnel</h3>", unsafe_allow_html=True)
             
             defensive_metrics = {
@@ -897,36 +784,179 @@ if df is not None:
             )
             
             st.plotly_chart(fig_def_radar, use_container_width=True)
-            
-            # Afficher les valeurs détaillées sous le radar défensif
-            st.markdown("<h4 style='color: #00C896; margin-top: 20px;'>📊 Détail des métriques défensives vs moyenne de la compétition</h4>", unsafe_allow_html=True)
-            
-            col_a, col_b = st.columns(2)
-            with col_a:
-                for i, (metric, value) in enumerate(list(defensive_metrics.items())[:5]):
-                    percentile = def_percentile_values[i]
-                    avg_comp = def_avg_values[i]
-                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
-                    comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    if '/' in metric:
-                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
-            
-            with col_b:
-                for i, (metric, value) in enumerate(list(defensive_metrics.items())[5:], 5):
-                    percentile = def_percentile_values[i]
-                    avg_comp = def_avg_values[i]
-                    color = "#00C896" if percentile >= 75 else "#F7B801" if percentile >= 50 else "#D62828"
-                    comparison = "↗️" if value > avg_comp else "↘️" if value < avg_comp else "➡️"
-                    if '/' in metric:
-                        st.markdown(f"**{metric}**: {value:.2f} {comparison} (Moy: {avg_comp:.2f}) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"**{metric}**: {value:.1f}% {comparison} (Moy: {avg_comp:.1f}%) <span style='color: {color}'>({percentile:.0f}e percentile)</span>", unsafe_allow_html=True)
         
-        # Métriques défensives par 90 minutes avec design amélioré - UNIQUEMENT DANS CET ONGLET
+        with col2:
+            # Pourcentages de réussite avec design amélioré
+            pourcentages = {
+                'Duels aériens': player_data['Pourcentage de duels aériens gagnés'],
+                'Duels défensifs': player_data['Pourcentage de duels gagnés'],
+                'Passes réussies': player_data['Pourcentage de passes réussies']
+            }
+            
+            # Nettoyer les valeurs NaN
+            pourcentages = {k: v if pd.notna(v) else 0 for k, v in pourcentages.items()}
+            
+            fig_gauge = make_subplots(
+                rows=1, cols=3,
+                specs=[[{"type": "indicator"}, {"type": "indicator"}, {"type": "indicator"}]],
+                subplot_titles=list(pourcentages.keys())
+            )
+            
+            colors = [COLORS['danger'], COLORS['secondary'], COLORS['success']]
+            for i, (metric, value) in enumerate(pourcentages.items()):
+                fig_gauge.add_trace(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=value,
+                        gauge=dict(
+                            axis=dict(range=[0, 100]),
+                            bar=dict(color=colors[i]),
+                            bgcolor="rgba(0,0,0,0.3)",
+                            borderwidth=2,
+                            bordercolor="white",
+                            steps=[
+                                {'range': [0, 50], 'color': 'rgba(255,255,255,0.1)'},
+                                {'range': [50, 80], 'color': 'rgba(255,255,255,0.2)'},
+                                {'range': [80, 100], 'color': 'rgba(255,255,255,0.3)'}
+                            ]
+                        ),
+                        number={'suffix': '%', 'font': {'color': 'white'}}
+                    ),
+                    row=1, col=i+1
+                )
+            
+            fig_gauge.update_layout(
+                height=300, 
+                title_text="Pourcentages de Réussite",
+                title_font_color='white',
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white')
+            )
+            st.plotly_chart(fig_gauge, use_container_width=True)
+            
+            # Graphique de comparaison défensive
+            defensive_comparison = {
+                'Tacles/90': player_data['Tacles gagnants'] / (player_data['Minutes jouées'] / 90),
+                'Interceptions/90': player_data['Interceptions'] / (player_data['Minutes jouées'] / 90),
+                'Ballons récupérés/90': player_data['Ballons récupérés'] / (player_data['Minutes jouées'] / 90)
+            }
+            
+            # Moyennes de la compétition
+            avg_comparison = {
+                'Tacles/90': (df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)).mean(),
+                'Interceptions/90': (df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)).mean(),
+                'Ballons récupérés/90': (df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)).mean()
+            }
+            
+            fig_def_comp = go.Figure()
+            
+            fig_def_comp.add_trace(go.Bar(
+                name=selected_player,
+                x=list(defensive_comparison.keys()),
+                y=list(defensive_comparison.values()),
+                marker_color=COLORS['primary']
+            ))
+            
+            fig_def_comp.add_trace(go.Bar(
+                name='Moyenne compétition',
+                x=list(avg_comparison.keys()),
+                y=list(avg_comparison.values()),
+                marker_color=COLORS['secondary']
+            ))
+            
+            fig_def_comp.update_layout(
+                title=dict(
+                    text='Actions Défensives par 90min vs Moyenne',
+                    font=dict(color='white'),
+                    x=0.5
+                ),
+                barmode='group',
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                xaxis=dict(tickfont=dict(color='white')),
+                yaxis=dict(tickfont=dict(color='white'), gridcolor='rgba(255,255,255,0.2)'),
+                height=400
+            )
+            
+            st.plotly_chart(fig_def_comp, use_container_width=True)
+        
+        # Scatter plot pour comparaison défensive
+        st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>🔍 Analyse Comparative Défensive</h3>", unsafe_allow_html=True)
+        
+        col_scatter1, col_scatter2 = st.columns(2)
+        
+        with col_scatter1:
+            # Sélection des métriques pour le scatter plot défensif
+            metric_options_def = [
+                'Tacles gagnants', 'Interceptions', 'Ballons récupérés', 
+                'Duels aériens gagnés', 'Dégagements', 'Pourcentage de duels gagnés',
+                'Pourcentage de duels aériens gagnés'
+            ]
+            
+            x_metric_def = st.selectbox("Métrique X", metric_options_def, index=0, key="x_def")
+            y_metric_def = st.selectbox("Métrique Y", metric_options_def, index=1, key="y_def")
+        
+        with col_scatter2:
+            # Créer le scatter plot défensif
+            fig_scatter_def = go.Figure()
+            
+            # Convertir en par 90 minutes si nécessaire
+            if x_metric_def not in ['Pourcentage de duels gagnés', 'Pourcentage de duels aériens gagnés']:
+                x_data = df_filtered[x_metric_def] / (df_filtered['Minutes jouées'] / 90)
+                x_player = player_data[x_metric_def] / (player_data['Minutes jouées'] / 90)
+                x_title = f"{x_metric_def} par 90min"
+            else:
+                x_data = df_filtered[x_metric_def]
+                x_player = player_data[x_metric_def]
+                x_title = x_metric_def
+                
+            if y_metric_def not in ['Pourcentage de duels gagnés', 'Pourcentage de duels aériens gagnés']:
+                y_data = df_filtered[y_metric_def] / (df_filtered['Minutes jouées'] / 90)
+                y_player = player_data[y_metric_def] / (player_data['Minutes jouées'] / 90)
+                y_title = f"{y_metric_def} par 90min"
+            else:
+                y_data = df_filtered[y_metric_def]
+                y_player = player_data[y_metric_def]
+                y_title = y_metric_def
+            
+            # Tous les joueurs
+            fig_scatter_def.add_trace(go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode='markers',
+                name='Autres joueurs',
+                marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
+                text=df_filtered['Joueur'],
+                hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
+            ))
+            
+            # Joueur sélectionné
+            fig_scatter_def.add_trace(go.Scatter(
+                x=[x_player],
+                y=[y_player],
+                mode='markers',
+                name=selected_player,
+                marker=dict(color=COLORS['primary'], size=20, symbol='star'),
+                hovertemplate=f'<b>{selected_player}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
+            ))
+            
+            fig_scatter_def.update_layout(
+                title=dict(text=f"{x_title} vs {y_title}", font=dict(size=14, color='white'), x=0.5),
+                xaxis=dict(title=dict(text=x_title, font=dict(color='white')), tickfont=dict(color='white')),
+                yaxis=dict(title=dict(text=y_title, font=dict(color='white')), tickfont=dict(color='white')),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                height=400
+            )
+            
+            st.plotly_chart(fig_scatter_def, use_container_width=True)
+        
+        # Métriques défensives par 90 minutes avec design amélioré
         st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques défensives par 90 min</h3>", unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         # Calcul des métriques par 90 minutes
         minutes_90 = player_data['Minutes jouées'] / 90 if player_data['Minutes jouées'] > 0 else 1
@@ -943,6 +973,10 @@ if df is not None:
         with col4:
             duels_90 = player_data['Duels aériens gagnés'] / minutes_90
             st.metric("Duels aériens/90min", f"{duels_90:.2f}")
+        with col5:
+            # Nouveau compteur de pourcentage de réussite défensive
+            defensive_success = (player_data['Pourcentage de duels gagnés'] + player_data['Pourcentage de duels aériens gagnés']) / 2
+            st.metric("Efficacité Défensive", f"{defensive_success:.1f}%")
     
     with tab3:
         st.markdown("<h2 style='color: #FF6B35;'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
@@ -950,26 +984,29 @@ if df is not None:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Répartition du temps de jeu possible (conservé)
-            temps_jeu = {
-                'Minutes jouées': player_data['Minutes jouées'],
-                'Minutes non jouées': (player_data['Matchs joués'] * 90) - player_data['Minutes jouées']
+            # Répartition des passes selon les zones du terrain (NOUVEAU)
+            zones_passes = {
+                'Zone défensive': player_data.get('Passes dans le tiers défensif', 0),
+                'Zone médiane': player_data.get('Passes progressives', 0) * 0.6,  # Estimation
+                'Zone offensive': player_data.get('Passes dans le dernier tiers', 0),
+                'Dans la surface': player_data.get('Passes dans la surface', 0)
             }
             
-            fig_pie_temps = go.Figure(data=[go.Pie(
-                labels=['Minutes jouées', 'Minutes non jouées'],
-                values=list(temps_jeu.values()),
+            fig_zones = go.Figure(data=[go.Pie(
+                labels=list(zones_passes.keys()),
+                values=list(zones_passes.values()),
                 hole=0.4,
                 marker=dict(
-                    colors=[COLORS['success'], COLORS['danger']],
+                    colors=[COLORS['accent'], COLORS['warning'], COLORS['primary'], COLORS['success']],
                     line=dict(color='white', width=2)
                 ),
-                textfont=dict(size=12, color='white')
+                textfont=dict(size=12, color='white'),
+                hovertemplate='<b>%{label}</b><br>Passes: %{value}<br>Pourcentage: %{percent}<extra></extra>'
             )])
             
-            fig_pie_temps.update_layout(
+            fig_zones.update_layout(
                 title=dict(
-                    text='Répartition du temps de jeu possible',
+                    text="Répartition des Passes par Zone",
                     font=dict(size=16, color='white'),
                     x=0.5
                 ),
@@ -978,154 +1015,312 @@ if df is not None:
                 font=dict(color='white'),
                 height=400,
                 annotations=[dict(
-                    text=f'{(player_data["Minutes jouées"]/(player_data["Matchs joués"]*90)*100):.1f}%',
-                    x=0.5, y=0.5, font_size=16, showarrow=False, font_color='white'
+                    text=f'Total<br>{sum(zones_passes.values()):.0f}',
+                    x=0.5, y=0.5, font_size=14, showarrow=False, font_color='white'
                 )]
             )
-            st.plotly_chart(fig_pie_temps, use_container_width=True)
+            st.plotly_chart(fig_zones, use_container_width=True)
             
-            # Graphique des qualités techniques - Passes par distance
-            pass_types = {
-                'Passes courtes': player_data.get('Passes courtes réussies', 0),
-                'Passes moyennes': player_data.get('Passes moyennes réussies', 0),
-                'Passes longues': player_data.get('Passes longues réussies', 0)
+            # Radar de Capacité de Progression du Ballon (MODIFIÉ - même type que les autres)
+            progression_metrics = {
+                'Courses prog./90': player_data.get('Courses progressives', 0) / (player_data['Minutes jouées'] / 90),
+                'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90),
+                'Réceptions prog./90': player_data.get('Réceptions progressives', 0) / (player_data['Minutes jouées'] / 90),
+                'Portées prog./90': player_data.get('Portées de balle progressives', 0) / (player_data['Minutes jouées'] / 90),
+                'Passes dernier tiers/90': player_data.get('Passes dans le dernier tiers', 0) / (player_data['Minutes jouées'] / 90),
+                'Distance prog./90': player_data.get('Distance progressive des passes', 0) / (player_data['Minutes jouées'] / 90),
+                'Centres/90': player_data.get('Centres réussis', 0) / (player_data['Minutes jouées'] / 90),
+                'Touches/90': player_data['Touches de balle'] / (player_data['Minutes jouées'] / 90)
             }
             
-            fig_pass_types = go.Figure(data=[go.Bar(
-                x=list(pass_types.keys()),
-                y=list(pass_types.values()),
-                marker=dict(
-                    color=[COLORS['success'], COLORS['warning'], COLORS['accent']],
-                    line=dict(color='white', width=1)
-                ),
-                text=list(pass_types.values()),
-                textposition='outside',
-                textfont=dict(color='white', size=12)
-            )])
+            # Calculer les percentiles pour la progression
+            prog_percentile_values = []
+            prog_avg_values = []
+            for metric, value in progression_metrics.items():
+                try:
+                    if metric == 'Courses prog./90':
+                        distribution = df_filtered.get('Courses progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Passes prog./90':
+                        distribution = df_filtered.get('Passes progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Réceptions prog./90':
+                        distribution = df_filtered.get('Réceptions progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Portées prog./90':
+                        distribution = df_filtered.get('Portées de balle progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Passes dernier tiers/90':
+                        distribution = df_filtered.get('Passes dans le dernier tiers', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Distance prog./90':
+                        distribution = df_filtered.get('Distance progressive des passes', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Centres/90':
+                        distribution = df_filtered.get('Centres réussis', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                    elif metric == 'Touches/90':
+                        distribution = df_filtered['Touches de balle'] / (df_filtered['Minutes jouées'] / 90)
+                    
+                    # Nettoyer les valeurs NaN et infinies
+                    distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+                    value = value if not np.isnan(value) and not np.isinf(value) else 0
+                    
+                    if len(distribution) > 0:
+                        percentile = (distribution < value).mean() * 100
+                        avg_comp = distribution.mean()
+                    else:
+                        percentile = 50
+                        avg_comp = 0
+                    
+                    prog_percentile_values.append(min(percentile, 100))
+                    prog_avg_values.append(avg_comp)
+                except:
+                    prog_percentile_values.append(50)
+                    prog_avg_values.append(0)
             
-            fig_pass_types.update_layout(
-                title=dict(
-                    text="Répartition des Passes par Distance",
-                    font=dict(size=16, color='white'),
-                    x=0.5
-                ),
-                xaxis=dict(
-                    tickfont=dict(color='white')
-                ),
-                yaxis=dict(
-                    title=dict(text='Nombre de passes réussies', font=dict(color='white')),
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)'
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                height=400
-            )
-            st.plotly_chart(fig_pass_types, use_container_width=True)
-        
-        with col2:
-            # Analyse de la progression du ballon
-            progression_data = {
-                'Courses progressives': player_data.get('Courses progressives', 0),
-                'Passes progressives': player_data.get('Passes progressives', 0),
-                'Réceptions progressives': player_data.get('Réceptions progressives', 0),
-                'Portées progressives': player_data.get('Portées de balle progressives', 0)
-            }
+            # Créer le radar de progression (même style que les autres)
+            fig_prog_radar = go.Figure()
             
-            fig_progression = go.Figure()
-            
-            # Graphique radar pour la progression
-            fig_progression.add_trace(go.Scatterpolar(
-                r=list(progression_data.values()),
-                theta=list(progression_data.keys()),
+            # Ajouter la performance du joueur
+            fig_prog_radar.add_trace(go.Scatterpolar(
+                r=prog_percentile_values,
+                theta=list(progression_metrics.keys()),
                 fill='toself',
                 fillcolor='rgba(0, 200, 150, 0.3)',
                 line=dict(color=COLORS['success'], width=3),
-                marker=dict(color=COLORS['success'], size=8),
-                name='Progression du ballon'
+                marker=dict(color=COLORS['success'], size=8, symbol='circle'),
+                name=f'{selected_player}',
+                hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
+                customdata=list(progression_metrics.values())
             ))
             
-            fig_progression.update_layout(
+            # Calculer les percentiles des moyennes de la compétition
+            prog_avg_percentiles = []
+            for i, avg_val in enumerate(prog_avg_values):
+                try:
+                    if avg_val > 0:
+                        metric_name = list(progression_metrics.keys())[i]
+                        if metric_name == 'Courses prog./90':
+                            distribution = df_filtered.get('Courses progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Passes prog./90':
+                            distribution = df_filtered.get('Passes progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Réceptions prog./90':
+                            distribution = df_filtered.get('Réceptions progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Portées prog./90':
+                            distribution = df_filtered.get('Portées de balle progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Passes dernier tiers/90':
+                            distribution = df_filtered.get('Passes dans le dernier tiers', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Distance prog./90':
+                            distribution = df_filtered.get('Distance progressive des passes', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Centres/90':
+                            distribution = df_filtered.get('Centres réussis', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        elif metric_name == 'Touches/90':
+                            distribution = df_filtered['Touches de balle'] / (df_filtered['Minutes jouées'] / 90)
+                        
+                        distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
+                        if len(distribution) > 0:
+                            avg_percentile = (distribution < avg_val).mean() * 100
+                            prog_avg_percentiles.append(avg_percentile)
+                        else:
+                            prog_avg_percentiles.append(50)
+                    else:
+                        prog_avg_percentiles.append(50)
+                except:
+                    prog_avg_percentiles.append(50)
+            
+            # Ajouter une ligne de référence pour la moyenne de la compétition
+            fig_prog_radar.add_trace(go.Scatterpolar(
+                r=prog_avg_percentiles,
+                theta=list(progression_metrics.keys()),
+                mode='lines',
+                line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
+                name=f'Moyenne {selected_competition}',
+                showlegend=True,
+                hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
+                customdata=prog_avg_values
+            ))
+            
+            fig_prog_radar.update_layout(
                 polar=dict(
                     radialaxis=dict(
                         visible=True,
-                        range=[0, max(progression_data.values()) * 1.1] if max(progression_data.values()) > 0 else [0, 10],
-                        gridcolor='rgba(255,255,255,0.2)',
+                        range=[0, 100],
+                        gridcolor='rgba(255,255,255,0.3)',
                         tickcolor='white',
-                        tickfont=dict(color='white')
+                        tickfont=dict(color='white', size=10),
+                        showticklabels=True,
+                        tickmode='linear',
+                        tick0=0,
+                        dtick=20
                     ),
                     angularaxis=dict(
-                        gridcolor='rgba(255,255,255,0.2)',
+                        gridcolor='rgba(255,255,255,0.3)',
                         tickcolor='white',
-                        tickfont=dict(color='white', size=10)
-                    )
+                        tickfont=dict(color='white', size=11, family='Arial Black'),
+                        linecolor='rgba(255,255,255,0.5)'
+                    ),
+                    bgcolor='rgba(30, 38, 64, 0.8)'
                 ),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font=dict(color='white'),
                 title=dict(
-                    text="Capacité de Progression du Ballon",
-                    font=dict(size=16, color='white'),
-                    x=0.5
+                    text="Capacité de Progression du Ballon (Percentiles)",
+                    font=dict(size=16, color='white', family='Arial Black'),
+                    x=0.5,
+                    y=0.95
                 ),
-                height=400
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.2,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color='white', size=10)
+                ),
+                height=450,
+                annotations=[
+                    dict(
+                        text=f"Progression vs Moyenne {selected_competition}",
+                        showarrow=False,
+                        x=0.5,
+                        y=-0.15,
+                        xref="paper",
+                        yref="paper",
+                        font=dict(color='white', size=12, family='Arial'),
+                        bgcolor='rgba(0, 200, 150, 0.8)',
+                        bordercolor='white',
+                        borderwidth=1
+                    )
+                ]
             )
             
-            st.plotly_chart(fig_progression, use_container_width=True)
+            st.plotly_chart(fig_prog_radar, use_container_width=True)
+        
+        with col2:
+            # Pourcentages de réussite des passes dans certaines zones (NOUVEAU)
+            st.markdown("<h3 style='color: #00C896; margin-top: 0px;'>📐 Précision par Zone</h3>", unsafe_allow_html=True)
             
-            # Pourcentages de précision technique
-            st.markdown("<h3 style='color: #00C896; margin-top: 20px;'>📐 Précision Technique</h3>", unsafe_allow_html=True)
-            
-            precision_metrics = {
-                'Passes courtes (%)': player_data.get('Pourcentage de passes courtes réussies', 0),
-                'Passes moyennes (%)': player_data.get('Pourcentage de passes moyennes réussies', 0),
-                'Passes longues (%)': player_data.get('Pourcentage de passes longues réussies', 0),
-                'Dribbles (%)': player_data.get('Pourcentage de dribbles réussis', 0)
+            zone_precision = {
+                'Passes courtes': player_data.get('Pourcentage de passes courtes réussies', 0),
+                'Passes moyennes': player_data.get('Pourcentage de passes moyennes réussies', 0),
+                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0),
+                'Passes dernier tiers': (player_data.get('Passes réussies dans le dernier tiers', 0) / player_data.get('Passes dans le dernier tiers', 1)) * 100 if player_data.get('Passes dans le dernier tiers', 0) > 0 else 0
             }
             
-            fig_precision = go.Figure()
+            # Créer des jauges pour les pourcentages de réussite par zone
+            fig_precision_zones = make_subplots(
+                rows=2, cols=2,
+                specs=[[{"type": "indicator"}, {"type": "indicator"}],
+                       [{"type": "indicator"}, {"type": "indicator"}]],
+                subplot_titles=list(zone_precision.keys())
+            )
             
-            fig_precision.add_trace(go.Bar(
-                x=list(precision_metrics.keys()),
-                y=list(precision_metrics.values()),
-                marker=dict(
-                    color=COLORS['gradient'][:len(precision_metrics)],
-                    line=dict(color='white', width=1)
-                ),
-                text=[f"{v:.1f}%" for v in precision_metrics.values()],
-                textposition='outside',
-                textfont=dict(color='white', size=12)
+            colors_precision = [COLORS['success'], COLORS['warning'], COLORS['danger'], COLORS['primary']]
+            positions = [(1,1), (1,2), (2,1), (2,2)]
+            
+            for i, (metric, value) in enumerate(zone_precision.items()):
+                row, col = positions[i]
+                fig_precision_zones.add_trace(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=value,
+                        gauge=dict(
+                            axis=dict(range=[0, 100]),
+                            bar=dict(color=colors_precision[i]),
+                            bgcolor="rgba(0,0,0,0.3)",
+                            borderwidth=2,
+                            bordercolor="white",
+                            steps=[
+                                {'range': [0, 60], 'color': 'rgba(255,255,255,0.1)'},
+                                {'range': [60, 80], 'color': 'rgba(255,255,255,0.2)'},
+                                {'range': [80, 100], 'color': 'rgba(255,255,255,0.3)'}
+                            ]
+                        ),
+                        number={'suffix': '%', 'font': {'color': 'white', 'size': 16}}
+                    ),
+                    row=row, col=col
+                )
+            
+            fig_precision_zones.update_layout(
+                height=400, 
+                title_text="Pourcentages de Réussite par Zone",
+                title_font_color='white',
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white')
+            )
+            st.plotly_chart(fig_precision_zones, use_container_width=True)
+            
+            # Scatter plot pour comparaison technique (NOUVEAU)
+            st.markdown("<h3 style='color: #F7B801; margin-top: 20px;'>🔍 Analyse Comparative Technique</h3>", unsafe_allow_html=True)
+            
+            # Sélection des métriques pour le scatter plot technique
+            metric_options_tech = [
+                'Passes tentées', 'Pourcentage de passes réussies', 'Passes progressives',
+                'Passes clés', 'Dribbles tentés', 'Pourcentage de dribbles réussis',
+                'Touches de balle', 'Distance progressive des passes'
+            ]
+            
+            col_select1, col_select2 = st.columns(2)
+            with col_select1:
+                x_metric_tech = st.selectbox("Métrique X", metric_options_tech, index=0, key="x_tech")
+            with col_select2:
+                y_metric_tech = st.selectbox("Métrique Y", metric_options_tech, index=1, key="y_tech")
+            
+            # Créer le scatter plot technique
+            fig_scatter_tech = go.Figure()
+            
+            # Convertir en par 90 minutes si nécessaire pour les métriques non-pourcentage
+            if 'Pourcentage' not in x_metric_tech:
+                x_data = df_filtered[x_metric_tech] / (df_filtered['Minutes jouées'] / 90)
+                x_player = player_data[x_metric_tech] / (player_data['Minutes jouées'] / 90)
+                x_title = f"{x_metric_tech} par 90min"
+            else:
+                x_data = df_filtered[x_metric_tech]
+                x_player = player_data[x_metric_tech]
+                x_title = x_metric_tech
+                
+            if 'Pourcentage' not in y_metric_tech:
+                y_data = df_filtered[y_metric_tech] / (df_filtered['Minutes jouées'] / 90)
+                y_player = player_data[y_metric_tech] / (player_data['Minutes jouées'] / 90)
+                y_title = f"{y_metric_tech} par 90min"
+            else:
+                y_data = df_filtered[y_metric_tech]
+                y_player = player_data[y_metric_tech]
+                y_title = y_metric_tech
+            
+            # Tous les joueurs
+            fig_scatter_tech.add_trace(go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode='markers',
+                name='Autres joueurs',
+                marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
+                text=df_filtered['Joueur'],
+                hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
             ))
             
-            fig_precision.update_layout(
-                title=dict(
-                    text="Pourcentages de Réussite Technique",
-                    font=dict(size=16, color='white'),
-                    x=0.5
-                ),
-                xaxis=dict(
-                    tickfont=dict(color='white'),
-                    tickangle=45
-                ),
-                yaxis=dict(
-                    title=dict(text='Pourcentage (%)', font=dict(color='white')),
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)',
-                    range=[0, 100]
-                ),
+            # Joueur sélectionné
+            fig_scatter_tech.add_trace(go.Scatter(
+                x=[x_player],
+                y=[y_player],
+                mode='markers',
+                name=selected_player,
+                marker=dict(color=COLORS['primary'], size=20, symbol='star'),
+                hovertemplate=f'<b>{selected_player}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
+            ))
+            
+            fig_scatter_tech.update_layout(
+                title=dict(text=f"{x_title} vs {y_title}", font=dict(size=14, color='white'), x=0.5),
+                xaxis=dict(title=dict(text=x_title, font=dict(color='white')), tickfont=dict(color='white')),
+                yaxis=dict(title=dict(text=y_title, font=dict(color='white')), tickfont=dict(color='white')),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font=dict(color='white'),
                 height=350
             )
             
-            st.plotly_chart(fig_precision, use_container_width=True)
+            st.plotly_chart(fig_scatter_tech, use_container_width=True)
         
         # Métriques techniques détaillées
         st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques Techniques Détaillées</h3>", unsafe_allow_html=True)
         
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
             st.metric("Distance passes", f"{player_data.get('Distance totale des passes', 0):.0f}m")
@@ -1145,170 +1340,11 @@ if df is not None:
             st.metric("Distance portée", f"{distance_portee:.0f}m")
             st.metric("Centres dans surface", f"{player_data.get('Centres dans la surface', 0):.0f}")
         
-        # Heatmap des zones d'activité technique
-        st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🗺️ Zones d'Activité Technique</h3>", unsafe_allow_html=True)
-        
-        # Données pour la heatmap technique
-        zones_technique = {
-            'Tiers défensif': [
-                player_data.get('Touches de balle dans le tiers défensif', 0),
-                player_data.get('Passes dans le tiers défensif', 0),
-                player_data.get('Tacles réussis dans le tiers défensif', 0)
-            ],
-            'Tiers médian': [
-                player_data.get('Touches de balle dans le tiers médian', 0),
-                player_data.get('Passes progressives', 0) * 0.6,  # Estimation
-                player_data.get('Tacles réussis dans le tiers médian', 0)
-            ],
-            'Tiers offensif': [
-                player_data.get('Touches de balle dans le tiers offensif', 0),
-                player_data.get('Passes dans le dernier tiers', 0),
-                player_data.get('Tacles réussis dans le tiers offensif', 0)
-            ]
-        }
-        
-        # Créer la heatmap
-        zones_names = list(zones_technique.keys())
-        activity_types = ['Touches de balle', 'Passes', 'Actions défensives']
-        
-        # Normaliser les valeurs pour la heatmap
-        all_values = [val for zone_vals in zones_technique.values() for val in zone_vals]
-        max_val = max(all_values) if all_values else 1
-        
-        heatmap_data = []
-        for zone_vals in zones_technique.values():
-            normalized_vals = [val/max_val for val in zone_vals]
-            heatmap_data.append(normalized_vals)
-        
-        fig_heatmap = go.Figure(data=go.Heatmap(
-            z=heatmap_data,
-            x=activity_types,
-            y=zones_names,
-            colorscale='Viridis',
-            showscale=True,
-            text=[[f"{zones_technique[zone][i]}" for i in range(len(activity_types))] for zone in zones_names],
-            texttemplate="%{text}",
-            textfont={"size": 12, "color": "white"},
-            hoverongaps=False,
-            hovertemplate='<b>%{y}</b><br>%{x}: %{text}<extra></extra>'
-        ))
-        
-        fig_heatmap.update_layout(
-            title=dict(
-                text="Heatmap - Activité Technique par Zone",
-                font=dict(size=16, color='white'),
-                x=0.5
-            ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white'),
-            height=300,
-            xaxis=dict(tickfont=dict(color='white')),
-            yaxis=dict(tickfont=dict(color='white'))
-        )
-        
-        st.plotly_chart(fig_heatmap, use_container_width=True)
-        
-        # Comparaison technique avec la moyenne de la compétition
-        col_a, col_b = st.columns(2)
-        
-        with col_a:
-            st.markdown("<h4 style='color: #F7B801;'>🎯 Qualité vs Quantité</h4>", unsafe_allow_html=True)
-            
-            # Graphique scatter qualité vs quantité
-            quality_vs_quantity = {
-                'x': [player_data.get('Passes tentées', 0), player_data.get('Dribbles tentés', 0), player_data.get('Tirs', 0)],
-                'y': [player_data.get('Pourcentage de passes réussies', 0), player_data.get('Pourcentage de dribbles réussis', 0), player_data.get('Pourcentage de tirs cadrés', 0)],
-                'labels': ['Passes', 'Dribbles', 'Tirs'],
-                'colors': [COLORS['primary'], COLORS['success'], COLORS['warning']]
-            }
-            
-            fig_quality = go.Figure()
-            
-            for i, label in enumerate(quality_vs_quantity['labels']):
-                fig_quality.add_trace(go.Scatter(
-                    x=[quality_vs_quantity['x'][i]],
-                    y=[quality_vs_quantity['y'][i]],
-                    mode='markers',
-                    name=label,
-                    marker=dict(
-                        color=quality_vs_quantity['colors'][i],
-                        size=15,
-                        line=dict(color='white', width=2)
-                    ),
-                    hovertemplate=f'<b>{label}</b><br>Quantité: %{{x}}<br>Qualité: %{{y:.1f}}%<extra></extra>'
-                ))
-            
-            fig_quality.update_layout(
-                title=dict(
-                    text="Qualité vs Quantité des Actions",
-                    font=dict(size=14, color='white'),
-                    x=0.5
-                ),
-                xaxis=dict(
-                    title=dict(text="Quantité (tentatives)", font=dict(color='white')),
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)'
-                ),
-                yaxis=dict(
-                    title=dict(text="Qualité (%)", font=dict(color='white')),
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)'
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                height=350
-            )
-            
-            st.plotly_chart(fig_quality, use_container_width=True)
-        
-        with col_b:
-            st.markdown("<h4 style='color: #F7B801;'>⚡ Intensité de Jeu</h4>", unsafe_allow_html=True)
-            
-            # Indicateur d'intensité de jeu
-            intensite_data = {
-                'Fautes commises': player_data.get('Fautes commises', 0),
-                'Fautes subies': player_data.get('Fautes subies', 0),
-                'Cartons': player_data.get('Cartons jaunes', 0) + player_data.get('Cartons rouges', 0) * 2,
-                'Duels disputés': player_data.get('Duels défensifs disputés', 0)
-            }
-            
-            fig_intensite = go.Figure()
-            
-            fig_intensite.add_trace(go.Bar(
-                x=list(intensite_data.keys()),
-                y=list(intensite_data.values()),
-                marker=dict(
-                    color=[COLORS['danger'], COLORS['warning'], COLORS['accent'], COLORS['secondary']],
-                    line=dict(color='white', width=1)
-                ),
-                text=list(intensite_data.values()),
-                textposition='outside',
-                textfont=dict(color='white', size=12)
-            ))
-            
-            fig_intensite.update_layout(
-                title=dict(
-                    text="Indicateurs d'Intensité de Jeu",
-                    font=dict(size=14, color='white'),
-                    x=0.5
-                ),
-                xaxis=dict(
-                    tickfont=dict(color='white'),
-                    tickangle=45
-                ),
-                yaxis=dict(
-                    tickfont=dict(color='white'),
-                    gridcolor='rgba(255,255,255,0.2)'
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white'),
-                height=350
-            )
-            
-            st.plotly_chart(fig_intensite, use_container_width=True)
+        with col5:
+            # Nouveau compteur de pourcentage de réussite des passes en zones critiques
+            passes_critiques = (player_data.get('Pourcentage de passes longues réussies', 0) + 
+                               player_data.get('Pourcentage de passes courtes réussies', 0)) / 2
+            st.metric("Précision Zones Critiques", f"{passes_critiques:.1f}%")
     
     with tab4:
         st.markdown("<h2 style='color: #FF6B35;'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)

@@ -1424,3 +1424,4 @@ else:
     """, unsafe_allow_html=True)
     
     st.info("💡 Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies.")
+

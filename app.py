@@ -1656,5 +1656,3 @@ else:
     
     st.info("💡 Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies.")0.515, 0.99, f"{joueur1} vs {joueur2}", size=26, ha="center",
                                  fontproperties=font_bold.prop, color="#ffffff")
-                        
-                        fig.text(

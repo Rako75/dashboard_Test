@@ -389,8 +389,8 @@ if df is not None:
                 except Exception as e:
                     st.error(f"Erreur lors de la création du radar individuel : {str(e)}")
             
-                elif mode == "Radar comparatif":
-                    col1, col2 = st.columns(2)
+            elif mode == "Radar comparatif":
+                col1, col2 = st.columns(2)
                 
                 with col1:
                     ligue1 = st.selectbox("🏆 Ligue Joueur 1", competitions, 
@@ -506,7 +506,7 @@ else:
             ⚽ Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies pour entrer sur le terrain ! 🏟️
         </p>
     </div>
-    """, unsafe_allow_html=True)"<h3 style='color: #4CAF50; margin-top: 30px; font-weight: 600;'>⚽ Radar Offensif - Terrain de Football 🏟️</h3>", unsafe_allow_html=True
+    """, unsafe_allow_html=True)"<h3 style='color: #4CAF50; margin-top: 30px; font-weight: 600;'>⚽ Radar Offensif - Terrain de Football 🏟️</h3>", unsafe_allow_html=True)
                 
                 offensive_metrics = {
                     'Buts/90': player_data['Buts par 90 minutes'],
@@ -865,7 +865,7 @@ else:
                     ),
                     text=list(actions_def.values()),
                     textposition='outside',
-                    textfont=dict(color=COLORS['primary'], size=12, family='Arial Black')
+                    textfont=dict(color=COLORS['dark'], size=12, family='Arial Black')
                 )])
                 
                 fig_bar.update_layout(

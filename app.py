@@ -568,7 +568,7 @@ if df is not None:
                 # Sélection des métriques pour le scatter plot offensif
                 metric_options_off = [
                     'Buts', 'Passes décisives', 'Tirs', 'Buts attendus (xG)',
-                    'Passes décisives attendues (xA)', 'Passes clés', 'Actions menant à un tir',
+                    'Passes décisives attendues (xAG)', 'Passes clés', 'Actions menant à un tir',
                     'Pourcentage de tirs cadrés'
                 ]
                 

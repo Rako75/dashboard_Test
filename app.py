@@ -181,44 +181,79 @@ if df is not None:
         # Filtrer les joueurs selon la compétition
         df_filtered = df[df['Compétition'] == selected_competition]
         
-        # Sélection du joueur
-        joueurs = sorted(df_filtered['Joueur'].dropna().unique())
-        selected_player = st.selectbox(
-            "👤 Choisir un joueur :",
-            joueurs,
-            index=0
+        # Filtre par minutes jouées
+        min_minutes = int(df_filtered['Minutes jouées'].min()) if not df_filtered['Minutes jouées'].empty else 0
+        max_minutes = int(df_filtered['Minutes jouées'].max()) if not df_filtered['Minutes jouées'].empty else 3000
+        
+        st.markdown("---")
+        st.markdown("**⏱️ Filtrer par minutes jouées :**")
+        
+        # Slider pour sélectionner le minimum de minutes
+        min_minutes_filter = st.slider(
+            "Minutes minimum jouées :",
+            min_value=min_minutes,
+            max_value=max_minutes,
+            value=min_minutes,
+            step=90,
+            help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
         )
+        
+        # Filtrer les joueurs selon les minutes jouées
+        df_filtered_minutes = df_filtered[df_filtered['Minutes jouées'] >= min_minutes_filter]
+        
+        # Afficher le nombre de joueurs après filtrage
+        nb_joueurs = len(df_filtered_minutes)
+        st.markdown(f"📊 **{nb_joueurs} joueurs** correspondent aux critères")
+        
+        st.markdown("---")
+        
+        # Sélection du joueur (maintenant filtré par minutes)
+        if not df_filtered_minutes.empty:
+            joueurs = sorted(df_filtered_minutes['Joueur'].dropna().unique())
+            selected_player = st.selectbox(
+                "👤 Choisir un joueur :",
+                joueurs,
+                index=0
+            )
+        else:
+            st.error("Aucun joueur ne correspond aux critères sélectionnés.")
+            selected_player = None
     
     # Obtenir les données du joueur sélectionné
-    player_data = df_filtered[df_filtered['Joueur'] == selected_player].iloc[0]
+    if selected_player:
+        player_data = df_filtered_minutes[df_filtered_minutes['Joueur'] == selected_player].iloc[0]
+        
+        # Utiliser df_filtered_minutes pour les comparaisons et calculs
+        df_comparison = df_filtered_minutes  # Utiliser les données filtrées par minutes
     
     # Affichage des informations générales du joueur avec design amélioré
-    st.markdown(f"""
-    <div style='background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #FF6B35;'>
-        <h2 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
-    </div>
-    """, unsafe_allow_html=True)
+    if selected_player:
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #FF6B35;'>
+            <h2 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3, col4, col5 = st.columns(5)
+        
+        with col1:
+            st.metric("Âge", f"{player_data['Âge']} ans")
+        with col2:
+            st.metric("Position", player_data['Position'])
+        with col3:
+            st.metric("Équipe", player_data['Équipe'])
+        with col4:
+            st.metric("Nationalité", player_data['Nationalité'])
+        with col5:
+            st.metric("Minutes jouées", f"{int(player_data['Minutes jouées'])} min")
+        
+        st.markdown("---")
     
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
-    with col1:
-        st.metric("Âge", f"{player_data['Âge']} ans")
-    with col2:
-        st.metric("Position", player_data['Position'])
-    with col3:
-        st.metric("Équipe", player_data['Équipe'])
-    with col4:
-        st.metric("Nationalité", player_data['Nationalité'])
-    with col5:
-        st.metric("Matchs joués", int(player_data['Matchs joués']))
-    
-    st.markdown("---")
-    
-    # Graphiques principaux
-    tab1, tab2, tab3, tab4 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "🎨 Performance Technique", "🔄 Comparer Joueurs"])
-    
-    with tab1:
-        st.markdown("<h2 style='color: #FF6B35;'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
+        # Graphiques principaux
+        tab1, tab2, tab3, tab4 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "🎨 Performance Technique", "🔄 Comparer Joueurs"])
+        
+        with tab1:
+            st.markdown("<h2 style='color: #FF6B35;'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
@@ -288,23 +323,23 @@ if df is not None:
                 if metric.endswith('/90'):
                     # Métriques déjà par 90 minutes
                     if metric == 'Buts/90':
-                        distribution = df_filtered['Buts par 90 minutes']
+                        distribution = df_comparison['Buts par 90 minutes']
                     elif metric == 'Passes D./90':
-                        distribution = df_filtered['Passes décisives par 90 minutes']
+                        distribution = df_comparison['Passes décisives par 90 minutes']
                     elif metric == 'xG/90':
-                        distribution = df_filtered['Buts attendus par 90 minutes']
+                        distribution = df_comparison['Buts attendus par 90 minutes']
                     elif metric == 'xA/90':
-                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                        distribution = df_comparison['Passes décisives attendues par 90 minutes']
                     elif metric == 'Tirs/90':
-                        distribution = df_filtered['Tirs par 90 minutes']
+                        distribution = df_comparison['Tirs par 90 minutes']
                     elif metric == 'Actions → Tir/90':
-                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                        distribution = df_comparison['Actions menant à un tir par 90 minutes']
                     elif metric == 'Passes dernier tiers/90':
-                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Passes dans le dernier tiers'] / (df_comparison['Minutes jouées'] / 90)
                     else:
                         # Calculer pour les autres métriques
                         base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison[base_column] / (df_comparison['Minutes jouées'] / 90)
                     
                     # Calculer le percentile et la moyenne
                     percentile = (distribution < value).mean() * 100
@@ -337,22 +372,22 @@ if df is not None:
                 if avg_val > 0:
                     metric_name = list(offensive_metrics.keys())[i]
                     if metric_name == 'Buts/90':
-                        distribution = df_filtered['Buts par 90 minutes']
+                        distribution = df_comparison['Buts par 90 minutes']
                     elif metric_name == 'Passes D./90':
-                        distribution = df_filtered['Passes décisives par 90 minutes']
+                        distribution = df_comparison['Passes décisives par 90 minutes']
                     elif metric_name == 'xG/90':
-                        distribution = df_filtered['Buts attendus par 90 minutes']
+                        distribution = df_comparison['Buts attendus par 90 minutes']
                     elif metric_name == 'xA/90':
-                        distribution = df_filtered['Passes décisives attendues par 90 minutes']
+                        distribution = df_comparison['Passes décisives attendues par 90 minutes']
                     elif metric_name == 'Tirs/90':
-                        distribution = df_filtered['Tirs par 90 minutes']
+                        distribution = df_comparison['Tirs par 90 minutes']
                     elif metric_name == 'Actions → Tir/90':
-                        distribution = df_filtered['Actions menant à un tir par 90 minutes']
+                        distribution = df_comparison['Actions menant à un tir par 90 minutes']
                     elif metric_name == 'Passes dernier tiers/90':
-                        distribution = df_filtered['Passes dans le dernier tiers'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Passes dans le dernier tiers'] / (df_comparison['Minutes jouées'] / 90)
                     else:
                         base_column = metric_name.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
-                        distribution = df_filtered[base_column] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison[base_column] / (df_comparison['Minutes jouées'] / 90)
                     
                     avg_percentile = (distribution < avg_val).mean() * 100
                     avg_percentiles.append(avg_percentile)
@@ -487,9 +522,9 @@ if df is not None:
             
             # Moyennes de la compétition
             avg_comparison_off = {
-                'Buts/90': df_filtered['Buts par 90 minutes'].mean(),
-                'Passes D./90': df_filtered['Passes décisives par 90 minutes'].mean(),
-                'xG/90': df_filtered['Buts attendus par 90 minutes'].mean()
+                'Buts/90': df_comparison['Buts par 90 minutes'].mean(),
+                'Passes D./90': df_comparison['Passes décisives par 90 minutes'].mean(),
+                'xG/90': df_comparison['Buts attendus par 90 minutes'].mean()
             }
             
             fig_off_comp = go.Figure()
@@ -547,20 +582,20 @@ if df is not None:
             
             # Convertir en par 90 minutes si nécessaire
             if x_metric_off not in ['Pourcentage de tirs cadrés']:
-                x_data = df_filtered[x_metric_off] / (df_filtered['Minutes jouées'] / 90)
+                x_data = df_comparison[x_metric_off] / (df_comparison['Minutes jouées'] / 90)
                 x_player = player_data[x_metric_off] / (player_data['Minutes jouées'] / 90)
                 x_title = f"{x_metric_off} par 90min"
             else:
-                x_data = df_filtered[x_metric_off]
+                x_data = df_comparison[x_metric_off]
                 x_player = player_data[x_metric_off]
                 x_title = x_metric_off
                 
             if y_metric_off not in ['Pourcentage de tirs cadrés']:
-                y_data = df_filtered[y_metric_off] / (df_filtered['Minutes jouées'] / 90)
+                y_data = df_comparison[y_metric_off] / (df_comparison['Minutes jouées'] / 90)
                 y_player = player_data[y_metric_off] / (player_data['Minutes jouées'] / 90)
                 y_title = f"{y_metric_off} par 90min"
             else:
-                y_data = df_filtered[y_metric_off]
+                y_data = df_comparison[y_metric_off]
                 y_player = player_data[y_metric_off]
                 y_title = y_metric_off
             
@@ -571,7 +606,7 @@ if df is not None:
                 mode='markers',
                 name='Autres joueurs',
                 marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
-                text=df_filtered['Joueur'],
+                text=df_comparison['Joueur'],
                 hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
             ))
             
@@ -684,25 +719,25 @@ if df is not None:
             for metric, value in defensive_metrics.items():
                 try:
                     if metric == 'Tacles/90':
-                        distribution = df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Tacles gagnants'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Interceptions/90':
-                        distribution = df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Interceptions'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Ballons récupérés/90':
-                        distribution = df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Ballons récupérés'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Duels défensifs/90':
-                        distribution = df_filtered.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison.get('Duels défensifs gagnés', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Duels aériens/90':
-                        distribution = df_filtered['Duels aériens gagnés'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Duels aériens gagnés'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Dégagements/90':
-                        distribution = df_filtered['Dégagements'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Dégagements'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Tirs bloqués/90':
-                        distribution = df_filtered.get('Tirs bloqués', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison.get('Tirs bloqués', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                     elif metric == '% Duels gagnés':
-                        distribution = df_filtered.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered)))
+                        distribution = df_comparison.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_comparison)))
                     elif metric == '% Duels aériens':
-                        distribution = df_filtered['Pourcentage de duels aériens gagnés']
+                        distribution = df_comparison['Pourcentage de duels aériens gagnés']
                     elif metric == 'Total Blocs/90':
-                        distribution = df_filtered.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                     
                     # Nettoyer les valeurs NaN et infinies
                     distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
@@ -744,25 +779,25 @@ if df is not None:
                     if avg_val > 0:
                         metric_name = list(defensive_metrics.keys())[i]
                         if metric_name == 'Tacles/90':
-                            distribution = df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Tacles gagnants'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Interceptions/90':
-                            distribution = df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Interceptions'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Ballons récupérés/90':
-                            distribution = df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Ballons récupérés'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Duels défensifs/90':
-                            distribution = df_filtered.get('Duels défensifs gagnés', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison.get('Duels défensifs gagnés', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Duels aériens/90':
-                            distribution = df_filtered['Duels aériens gagnés'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Duels aériens gagnés'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Dégagements/90':
-                            distribution = df_filtered['Dégagements'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Dégagements'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Tirs bloqués/90':
-                            distribution = df_filtered.get('Tirs bloqués', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison.get('Tirs bloqués', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == '% Duels gagnés':
-                            distribution = df_filtered.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_filtered)))
+                            distribution = df_comparison.get('Pourcentage de duels gagnés', pd.Series([0]*len(df_comparison)))
                         elif metric_name == '% Duels aériens':
-                            distribution = df_filtered['Pourcentage de duels aériens gagnés']
+                            distribution = df_comparison['Pourcentage de duels aériens gagnés']
                         elif metric_name == 'Total Blocs/90':
-                            distribution = df_filtered.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         
                         distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
                         if len(distribution) > 0:
@@ -903,9 +938,9 @@ if df is not None:
             
             # Moyennes de la compétition
             avg_comparison = {
-                'Tacles/90': (df_filtered['Tacles gagnants'] / (df_filtered['Minutes jouées'] / 90)).mean(),
-                'Interceptions/90': (df_filtered['Interceptions'] / (df_filtered['Minutes jouées'] / 90)).mean(),
-                'Ballons récupérés/90': (df_filtered['Ballons récupérés'] / (df_filtered['Minutes jouées'] / 90)).mean()
+                'Tacles/90': (df_comparison['Tacles gagnants'] / (df_comparison['Minutes jouées'] / 90)).mean(),
+                'Interceptions/90': (df_comparison['Interceptions'] / (df_comparison['Minutes jouées'] / 90)).mean(),
+                'Ballons récupérés/90': (df_comparison['Ballons récupérés'] / (df_comparison['Minutes jouées'] / 90)).mean()
             }
             
             fig_def_comp = go.Figure()
@@ -963,11 +998,33 @@ if df is not None:
             
             # Convertir en par 90 minutes si nécessaire
             if x_metric_def not in ['Pourcentage de duels gagnés', 'Pourcentage de duels aériens gagnés']:
-                x_data = df_filtered[x_metric_def] / (df_filtered['Minutes jouées'] / 90)
+                x_data = df_comparison[x_metric_def] / (df_comparison['Minutes jouées'] / 90)
                 x_player = player_data[x_metric_def] / (player_data['Minutes jouées'] / 90)
                 x_title = f"{x_metric_def} par 90min"
             else:
-                x_data = df_filtered[x_metric_def]
+                x_data = df_comparison[x_metric_def]
+                x_player = player_data[x_metric_def]
+                x_title = x_metric_def
+                
+            if y_metric_def not in ['Pourcentage de duels gagnés', 'Pourcentage de duels aériens gagnés']:
+                y_data = df_comparison[y_metric_def] / (df_comparison['Minutes jouées'] / 90)
+                y_player = player_data[y_metric_def] / (player_data['Minutes jouées'] / 90)
+                y_title = f"{y_metric_def} par 90min"
+            else:
+                y_data = df_comparison[y_metric_def]
+                y_player = player_data[y_metric_def]
+                y_title = y_metric_def
+            
+            # Tous les joueurs
+            fig_scatter_def.add_trace(go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode='markers',
+                name='Autres joueurs',
+                marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
+                text=df_comparison['Joueur'],
+                hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
+            ))filtered[x_metric_def]
                 x_player = player_data[x_metric_def]
                 x_title = x_metric_def
                 
@@ -1107,25 +1164,25 @@ if df is not None:
             for metric, value in technical_metrics.items():
                 try:
                     if metric == 'Passes tentées/90':
-                        distribution = df_filtered['Passes tentées'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Passes tentées'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Passes prog./90':
-                        distribution = df_filtered.get('Passes progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison.get('Passes progressives', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Dribbles/90':
-                        distribution = df_filtered['Dribbles tentés'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Dribbles tentés'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Touches/90':
-                        distribution = df_filtered['Touches de balle'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Touches de balle'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Passes clés/90':
-                        distribution = df_filtered['Passes clés'] / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison['Passes clés'] / (df_comparison['Minutes jouées'] / 90)
                     elif metric == '% Passes réussies':
-                        distribution = df_filtered.get('Pourcentage de passes réussies', pd.Series([0]*len(df_filtered)))
+                        distribution = df_comparison.get('Pourcentage de passes réussies', pd.Series([0]*len(df_comparison)))
                     elif metric == '% Dribbles réussis':
-                        distribution = df_filtered.get('Pourcentage de dribbles réussis', pd.Series([0]*len(df_filtered)))
+                        distribution = df_comparison.get('Pourcentage de dribbles réussis', pd.Series([0]*len(df_comparison)))
                     elif metric == 'Distance prog./90':
-                        distribution = df_filtered.get('Distance progressive des passes', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison.get('Distance progressive des passes', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Centres/90':
-                        distribution = df_filtered.get('Centres réussis', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison.get('Centres réussis', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                     elif metric == 'Courses prog./90':
-                        distribution = df_filtered.get('Courses progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                        distribution = df_comparison.get('Courses progressives', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                     
                     # Nettoyer les valeurs NaN et infinies
                     distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
@@ -1167,25 +1224,25 @@ if df is not None:
                     if avg_val > 0:
                         metric_name = list(technical_metrics.keys())[i]
                         if metric_name == 'Passes tentées/90':
-                            distribution = df_filtered['Passes tentées'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Passes tentées'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Passes prog./90':
-                            distribution = df_filtered.get('Passes progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison.get('Passes progressives', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Dribbles/90':
-                            distribution = df_filtered['Dribbles tentés'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Dribbles tentés'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Touches/90':
-                            distribution = df_filtered['Touches de balle'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Touches de balle'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Passes clés/90':
-                            distribution = df_filtered['Passes clés'] / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison['Passes clés'] / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == '% Passes réussies':
-                            distribution = df_filtered.get('Pourcentage de passes réussies', pd.Series([0]*len(df_filtered)))
+                            distribution = df_comparison.get('Pourcentage de passes réussies', pd.Series([0]*len(df_comparison)))
                         elif metric_name == '% Dribbles réussis':
-                            distribution = df_filtered.get('Pourcentage de dribbles réussis', pd.Series([0]*len(df_filtered)))
+                            distribution = df_comparison.get('Pourcentage de dribbles réussis', pd.Series([0]*len(df_comparison)))
                         elif metric_name == 'Distance prog./90':
-                            distribution = df_filtered.get('Distance progressive des passes', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison.get('Distance progressive des passes', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Centres/90':
-                            distribution = df_filtered.get('Centres réussis', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison.get('Centres réussis', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         elif metric_name == 'Courses prog./90':
-                            distribution = df_filtered.get('Courses progressives', pd.Series([0]*len(df_filtered))) / (df_filtered['Minutes jouées'] / 90)
+                            distribution = df_comparison.get('Courses progressives', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         
                         distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
                         if len(distribution) > 0:
@@ -1326,9 +1383,9 @@ if df is not None:
             
             # Moyennes de la compétition
             avg_comparison_tech = {
-                'Passes/90': (df_filtered['Passes tentées'] / (df_filtered['Minutes jouées'] / 90)).mean(),
-                'Dribbles/90': (df_filtered['Dribbles tentés'] / (df_filtered['Minutes jouées'] / 90)).mean(),
-                'Touches/90': (df_filtered['Touches de balle'] / (df_filtered['Minutes jouées'] / 90)).mean()
+                'Passes/90': (df_comparison['Passes tentées'] / (df_comparison['Minutes jouées'] / 90)).mean(),
+                'Dribbles/90': (df_comparison['Dribbles tentés'] / (df_comparison['Minutes jouées'] / 90)).mean(),
+                'Touches/90': (df_comparison['Touches de balle'] / (df_comparison['Minutes jouées'] / 90)).mean()
             }
             
             fig_tech_comp = go.Figure()
@@ -1386,20 +1443,20 @@ if df is not None:
             
             # Convertir en par 90 minutes si nécessaire pour les métriques non-pourcentage
             if 'Pourcentage' not in x_metric_tech:
-                x_data = df_filtered[x_metric_tech] / (df_filtered['Minutes jouées'] / 90)
+                x_data = df_comparison[x_metric_tech] / (df_comparison['Minutes jouées'] / 90)
                 x_player = player_data[x_metric_tech] / (player_data['Minutes jouées'] / 90)
                 x_title = f"{x_metric_tech} par 90min"
             else:
-                x_data = df_filtered[x_metric_tech]
+                x_data = df_comparison[x_metric_tech]
                 x_player = player_data[x_metric_tech]
                 x_title = x_metric_tech
                 
             if 'Pourcentage' not in y_metric_tech:
-                y_data = df_filtered[y_metric_tech] / (df_filtered['Minutes jouées'] / 90)
+                y_data = df_comparison[y_metric_tech] / (df_comparison['Minutes jouées'] / 90)
                 y_player = player_data[y_metric_tech] / (player_data['Minutes jouées'] / 90)
                 y_title = f"{y_metric_tech} par 90min"
             else:
-                y_data = df_filtered[y_metric_tech]
+                y_data = df_comparison[y_metric_tech]
                 y_player = player_data[y_metric_tech]
                 y_title = y_metric_tech
             
@@ -1410,7 +1467,7 @@ if df is not None:
                 mode='markers',
                 name='Autres joueurs',
                 marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
-                text=df_filtered['Joueur'],
+                text=df_comparison['Joueur'],
                 hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
             ))
             
@@ -1479,7 +1536,7 @@ if df is not None:
             st.markdown(f"<h3 style='color: #00C896;'>🎯 Radar individuel : {selected_player}</h3>", unsafe_allow_html=True)
             
             try:
-                values1 = calculate_percentiles(selected_player, df_filtered)
+                values1 = calculate_percentiles(selected_player, df_comparison)
                 
                 baker = PyPizza(
                     params=list(RAW_STATS.keys()),
@@ -1596,7 +1653,10 @@ if df is not None:
                 except Exception as e:
                     st.error(f"Erreur lors de la création du radar comparatif : {str(e)}")
 
-    # Footer avec design professionnel
+    else:
+        st.warning("Veuillez ajuster les filtres pour sélectionner un joueur.")
+    
+    # Footer avec design professionnel (affiché même sans joueur sélectionné)
     st.markdown("---")
     st.markdown("""
     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); border-radius: 15px; margin-top: 30px;'>

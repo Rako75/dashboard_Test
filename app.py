@@ -389,8 +389,8 @@ if df is not None:
                 except Exception as e:
                     st.error(f"Erreur lors de la création du radar individuel : {str(e)}")
             
-            elif mode == "Radar comparatif":
-                col1, col2 = st.columns(2)
+                elif mode == "Radar comparatif":
+                    col1, col2 = st.columns(2)
                 
                 with col1:
                     ligue1 = st.selectbox("🏆 Ligue Joueur 1", competitions, 

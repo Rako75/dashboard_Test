@@ -1024,9 +1024,17 @@ if df is not None:
                 marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
                 text=df_comparison['Joueur'],
                 hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
-            ))filtered[x_metric_def]
-                x_player = player_data[x_metric_def]
-                x_title = x_metric_def
+            ))
+            
+            # Joueur sélectionné
+            fig_scatter_def.add_trace(go.Scatter(
+                x=[x_player],
+                y=[y_player],
+                mode='markers',
+                name=selected_player,
+                marker=dict(color=COLORS['primary'], size=20, symbol='star'),
+                hovertemplate=f'<b>{selected_player}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
+            ))
                 
             if y_metric_def not in ['Pourcentage de duels gagnés', 'Pourcentage de duels aériens gagnés']:
                 y_data = df_filtered[y_metric_def] / (df_filtered['Minutes jouées'] / 90)

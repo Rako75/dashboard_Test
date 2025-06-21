@@ -506,7 +506,7 @@ else:
             ⚽ Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies pour entrer sur le terrain ! 🏟️
         </p>
     </div>
-    """, unsafe_allow_html=True)"<h3 style='color: #4CAF50; margin-top: 30px; font-weight: 600;'>⚽ Radar Offensif - Terrain de Football 🏟️</h3>", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)"<h3 style='color: #4CAF50; margin-top: 30px; font-weight: 600;'>⚽ Radar Offensif - Terrain de Football 🏟️</h3>", unsafe_allow_html=True
                 
                 offensive_metrics = {
                     'Buts/90': player_data['Buts par 90 minutes'],

@@ -500,13 +500,15 @@ else:
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("""
+   st.markdown("""
     <div style='background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #2196F3; box-shadow: 0 3px 6px rgba(33, 150, 243, 0.15);'>
         <p style='color: #1565C0; margin: 0; font-size: 1em; text-align: center;'>
             ⚽ Ce dashboard nécessite un fichier CSV avec les colonnes spécifiées dans les données fournies pour entrer sur le terrain ! 🏟️
         </p>
     </div>
-    """, unsafe_allow_html=True)"<h3 style='color: #4CAF50; margin-top: 30px; font-weight: 600;'>⚽ Radar Offensif - Terrain de Football 🏟️</h3>", unsafe_allow_html=True))
+""", unsafe_allow_html=True)
+
+st.markdown("<h3 style='color: #4CAF50; margin-top: 30px; font-weight: 600;'>⚽ Radar Offensif - Terrain de Football 🏟️</h3>", unsafe_allow_html=True)
                 
                 offensive_metrics = {
                     'Buts/90': player_data['Buts par 90 minutes'],

@@ -1661,7 +1661,7 @@ if df is not None:
                 except Exception as e:
                     st.error(f"Erreur lors de la création du radar comparatif : {str(e)}")
 
-        else:
+    else:
         st.warning("Veuillez ajuster les filtres pour sélectionner un joueur.")
     
     # Footer avec design professionnel (affiché même sans joueur sélectionné)

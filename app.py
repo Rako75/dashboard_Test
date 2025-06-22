@@ -229,7 +229,7 @@ if df is not None:
         # Affichage des informations générales du joueur avec design amélioré
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #FF6B35;'>
-            <h2 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
+            <h2 style='color: #FFFFF; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
         </div>
         """, unsafe_allow_html=True)
         

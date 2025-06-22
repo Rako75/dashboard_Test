@@ -156,7 +156,7 @@ df = load_data()
 if df is not None:
     # Header avec design amélioré
     st.markdown("""
-    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #FF6B35 0%, #004E89 100%); border-radius: 15px; margin-bottom: 30px;'>
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #228B22 0%, #21A366 100%); border-radius: 15px; margin-bottom: 30px;'>
         <h1 style='color: white; margin: 0; font-size: 3em;'>⚽ Dashboard Analyse Joueur Football</h1>
         <p style='color: #E2E8F0; margin: 10px 0 0 0; font-size: 1.2em;'>Analyse avancée des performances - Saison 2024-25</p>
     </div>

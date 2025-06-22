@@ -19,37 +19,35 @@ st.set_page_config(
 # CSS personnalisé pour un look professionnel
 st.markdown("""
 <style>
-    .main {
-        background-color: #FFFFFF;
-    }
     .stApp {
-        background: #000000;
+        background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%);
     }
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #1E2640;
+        background-color: #1B263B;
         border-radius: 10px;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: transparent;
-        color: #FFFFFF;
+        color: #FFD100;
         border-radius: 8px;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #FF6B35;
-        color: #FFFFFF;
+        background-color: #21A179;
+        color: #0D1B2A;
     }
     .metric-card {
-        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
+        background: linear-gradient(135deg, #1B263B 0%, #21A179 100%);
         padding: 20px;
         border-radius: 12px;
-        border: 1px solid #4A5568;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        border: 1px solid #FFD100;
+        box-shadow: 0 4px 6px rgba(33, 161, 121, 0.2);
     }
     .stMetric {
-        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+        background: linear-gradient(135deg, #21A179 0%, #FFD100 100%);
         padding: 15px;
         border-radius: 10px;
-        border: 1px solid #718096;
+        border: 1px solid #F5F5F5;
+        color: #0D1B2A;
     }
 </style>
 """, unsafe_allow_html=True)

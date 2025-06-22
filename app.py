@@ -20,34 +20,34 @@ st.set_page_config(
 st.markdown("""
 <style>
     .stApp {
-        background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%);
+        background: linear-gradient(135deg, #1B2066 0%, #3B167A 100%);
     }
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #1B263B;
+        background-color: #3B167A;
         border-radius: 10px;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: transparent;
-        color: #FFD100;
+        color: #FFD700;
         border-radius: 8px;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #21A179;
-        color: #0D1B2A;
+        background-color: #5DADEC;
+        color: #1B2066;
     }
     .metric-card {
-        background: linear-gradient(135deg, #1B263B 0%, #21A179 100%);
+        background: linear-gradient(135deg, #3B167A 0%, #1B2066 100%);
         padding: 20px;
         border-radius: 12px;
-        border: 1px solid #FFD100;
-        box-shadow: 0 4px 6px rgba(33, 161, 121, 0.2);
+        border: 1px solid #FFD700;
+        box-shadow: 0 4px 6px rgba(93, 173, 236, 0.2);
     }
     .stMetric {
-        background: linear-gradient(135deg, #21A179 0%, #FFD100 100%);
+        background: linear-gradient(135deg, #5DADEC 0%, #FFD700 100%);
         padding: 15px;
         border-radius: 10px;
-        border: 1px solid #F5F5F5;
-        color: #0D1B2A;
+        border: 1px solid #C0C0C0;
+        color: #1B2066;
     }
 </style>
 """, unsafe_allow_html=True)

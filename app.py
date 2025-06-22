@@ -19,73 +19,52 @@ st.set_page_config(
 # CSS personnalisé pour un look professionnel
 st.markdown("""
 <style>
+    .main {
+        background-color: #0E1117;
+    }
     .stApp {
-        background: linear-gradient(135deg, #1B2066 0%, #3B167A 100%);
-    }
-    .main, .block-container {
-        background: transparent !important;
-    }
-    .stSidebar, .css-1d391kg, .css-1lcbmhc {
-        background: #1B2066 !important;
-        color: #FFD700 !important;
+        background: linear-gradient(135deg, #0E1117 0%, #1E2640 100%);
     }
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #3B167A;
+        background-color: #1E2640;
         border-radius: 10px;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: transparent;
-        color: #FFD700;
+        color: #FFFFFF;
         border-radius: 8px;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #5DADEC;
-        color: #1B2066;
+        background-color: #FF6B35;
+        color: #FFFFFF;
     }
     .metric-card {
-        background: linear-gradient(135deg, #3B167A 0%, #1B2066 100%);
+        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
         padding: 20px;
         border-radius: 12px;
-        border: 1px solid #FFD700;
-        box-shadow: 0 4px 6px rgba(93, 173, 236, 0.2);
+        border: 1px solid #4A5568;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
     .stMetric {
-        background: linear-gradient(135deg, #5DADEC 0%, #FFD700 100%);
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
         padding: 15px;
         border-radius: 10px;
-        border: 1px solid #C0C0C0;
-        color: #1B2066;
-    }
-    h1, h2, h3, h4, h5, h6, label, p, span, div {
-        color: #F5F5F5 !important;
-    }
-    .stButton>button {
-        background: linear-gradient(135deg, #FFD700 0%, #5DADEC 100%);
-        color: #1B2066 !important;
-        border-radius: 8px;
-        border: 1px solid #FFD700;
-        font-weight: bold;
-    }
-    .stSelectbox, .stSlider, .stRadio, .stCheckbox, .stTextInput, .stNumberInput {
-        background: #1B2066 !important;
-        color: #F5F5F5 !important;
-        border-radius: 8px;
-        border: 1px solid #FFD700;
+        border: 1px solid #718096;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Couleurs professionnelles
 COLORS = {
-    'primary': '#FFD700',      # Or
-    'secondary': '#5DADEC',    # Bleu clair
-    'accent': '#3B167A',       # Violet profond
-    'success': '#5DADEC',      # Bleu clair
-    'warning': '#FFD700',      # Or
-    'danger': '#C0C0C0',       # Argent
-    'dark': '#1B2066',         # Bleu nuit
-    'light': '#F5F5F5',        # Blanc
-    'gradient': ['#FFD700', '#5DADEC', '#3B167A', '#1B2066']
+    'primary': '#FF6B35',
+    'secondary': '#004E89', 
+    'accent': '#1A759F',
+    'success': '#00C896',
+    'warning': '#F7B801',
+    'danger': '#D62828',
+    'dark': '#1E2640',
+    'light': '#F8F9FA',
+    'gradient': ['#FF6B35', '#004E89', '#1A759F', '#00C896', '#F7B801']
 }
 
 # ---------------------- PARAMÈTRES DU RADAR ----------------------
@@ -250,7 +229,7 @@ if df is not None:
         # Affichage des informations générales du joueur avec design amélioré
         st.markdown(f"""
         <div style='background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #FF6B35;'>
-            <h2 style='color: #FFFFF; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
+            <h2 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
         </div>
         """, unsafe_allow_html=True)
         

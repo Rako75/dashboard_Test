@@ -54,15 +54,15 @@ st.markdown("""
 
 # Couleurs professionnelles
 COLORS = {
-    'primary': '#FF6B35',
-    'secondary': '#004E89', 
-    'accent': '#1A759F',
-    'success': '#00C896',
-    'warning': '#F7B801',
-    'danger': '#D62828',
-    'dark': '#1E2640',
-    'light': '#F8F9FA',
-    'gradient': ['#FF6B35', '#004E89', '#1A759F', '#00C896', '#F7B801']
+    'primary': '#FFD100',      # Jaune ballon officiel
+    'secondary': '#21A179',    # Vert pelouse
+    'accent': '#CB2D3E',       # Rouge passion
+    'success': '#21A179',      # Vert pelouse (succès)
+    'warning': '#FFD100',      # Jaune
+    'danger': '#CB2D3E',       # Rouge
+    'dark': '#0D1B2A',         # Bleu nuit profond
+    'light': '#F5F5F5',        # Blanc
+    'gradient': ['#FFD100', '#21A179', '#CB2D3E', '#1B263B', '#0D1B2A']
 }
 
 # ---------------------- PARAMÈTRES DU RADAR ----------------------

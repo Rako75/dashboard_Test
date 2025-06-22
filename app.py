@@ -1,7 +1,3 @@
-Je souhaite changer la couleur de l'interface Streamlit 
-
-Voici le code : 
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px

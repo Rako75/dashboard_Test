@@ -1,3 +1,7 @@
+Je souhaite changer la couleur de l'interface Streamlit 
+
+Voici le code : 
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -8,7 +12,7 @@ from mplsoccer import PyPizza, FontManager
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-# Configuration de la page avec thème moderne
+# Configuration de la page avec thème sombre professionnel
 st.set_page_config(
     page_title="Dashboard Joueur Football",
     page_icon="⚽",
@@ -16,88 +20,55 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS personnalisé pour un nouveau look moderne
+# CSS personnalisé pour un look professionnel
 st.markdown("""
 <style>
     .main {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        background-color: #0E1117;
     }
     .stApp {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        background: linear-gradient(135deg, #0E1117 0%, #1E2640 100%);
     }
     .stTabs [data-baseweb="tab-list"] {
-        background: linear-gradient(135deg, #16213e 0%, #533483 100%);
-        border-radius: 15px;
-        padding: 8px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        background-color: #1E2640;
+        border-radius: 10px;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: transparent;
-        color: #e94560;
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        color: #FFFFFF;
+        border-radius: 8px;
     }
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #e94560 0%, #f39c12 100%);
-        color: #ffffff;
-        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        background-color: #FF6B35;
+        color: #FFFFFF;
     }
     .metric-card {
-        background: linear-gradient(135deg, #16213e 0%, #533483 100%);
-        padding: 25px;
-        border-radius: 20px;
-        border: 2px solid #e94560;
-        box-shadow: 0 8px 32px rgba(233, 69, 96, 0.2);
-        backdrop-filter: blur(10px);
+        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #4A5568;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
     .stMetric {
-        background: linear-gradient(135deg, #16213e 0%, #533483 100%);
-        padding: 20px;
-        border-radius: 15px;
-        border: 1px solid #e94560;
-        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
-    }
-    .stSidebar {
-        background: linear-gradient(180deg, #16213e 0%, #533483 100%);
-    }
-    .stSelectbox > div > div {
-        background: linear-gradient(135deg, #16213e 0%, #533483 100%);
-        border: 1px solid #e94560;
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+        padding: 15px;
         border-radius: 10px;
-    }
-    .stSlider > div > div > div {
-        background: linear-gradient(135deg, #e94560 0%, #f39c12 100%);
-    }
-    /* Style pour les métriques */
-    [data-testid="metric-container"] {
-        background: linear-gradient(135deg, #16213e 0%, #533483 100%);
-        border: 1px solid #e94560;
-        padding: 1rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.2);
-        backdrop-filter: blur(10px);
-    }
-    /* Animation pour les cartes */
-    .metric-card:hover, [data-testid="metric-container"]:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(233, 69, 96, 0.4);
-        transition: all 0.3s ease;
+        border: 1px solid #718096;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Nouvelles couleurs modernes et vibrantes
+# Couleurs professionnelles
 COLORS = {
-    'primary': '#e94560',      # Rouge moderne
-    'secondary': '#f39c12',     # Orange doré
-    'accent': '#9b59b6',        # Violet
-    'success': '#2ecc71',       # Vert moderne
-    'warning': '#f1c40f',       # Jaune vif
-    'danger': '#e74c3c',        # Rouge vif
-    'dark': '#16213e',          # Bleu foncé
-    'light': '#ecf0f1',         # Gris clair
-    'gradient': ['#e94560', '#f39c12', '#9b59b6', '#2ecc71', '#3498db']
+    'primary': '#FF6B35',
+    'secondary': '#004E89', 
+    'accent': '#1A759F',
+    'success': '#00C896',
+    'warning': '#F7B801',
+    'danger': '#D62828',
+    'dark': '#1E2640',
+    'light': '#F8F9FA',
+    'gradient': ['#FF6B35', '#004E89', '#1A759F', '#00C896', '#F7B801']
 }
 
 # ---------------------- PARAMÈTRES DU RADAR ----------------------
@@ -187,19 +158,19 @@ def load_data():
 df = load_data()
 
 if df is not None:
-    # Header avec design amélioré - Nouveau style
+    # Header avec design amélioré
     st.markdown("""
-    <div style='text-align: center; padding: 30px; background: linear-gradient(135deg, #e94560 0%, #f39c12 50%, #9b59b6 100%); border-radius: 25px; margin-bottom: 40px; box-shadow: 0 15px 40px rgba(233, 69, 96, 0.3);'>
-        <h1 style='color: white; margin: 0; font-size: 3.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);'>⚽ Dashboard Football Elite</h1>
-        <p style='color: #ffffff; margin: 15px 0 0 0; font-size: 1.3em; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);'>Analyse Professionnelle des Performances - Saison 2024-25</p>
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #FF6B35 0%, #004E89 100%); border-radius: 15px; margin-bottom: 30px;'>
+        <h1 style='color: white; margin: 0; font-size: 3em;'>⚽ Dashboard Analyse Joueur Football</h1>
+        <p style='color: #E2E8F0; margin: 10px 0 0 0; font-size: 1.2em;'>Analyse avancée des performances - Saison 2024-25</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Sidebar avec design amélioré
     with st.sidebar:
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #16213e 0%, #533483 100%); padding: 25px; border-radius: 20px; margin-bottom: 25px; border: 2px solid #e94560; box-shadow: 0 8px 32px rgba(233, 69, 96, 0.2);'>
-            <h2 style='color: #e94560; text-align: center; margin-bottom: 25px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);'>🎯 Sélection du joueur</h2>
+        <div style='background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); padding: 20px; border-radius: 15px; margin-bottom: 20px;'>
+            <h2 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>🎯 Sélection du joueur</h2>
         </div>
         """, unsafe_allow_html=True)
         
@@ -261,8 +232,8 @@ if df is not None:
     
         # Affichage des informations générales du joueur avec design amélioré
         st.markdown(f"""
-        <div style='background: linear-gradient(135deg, #16213e 0%, #533483 100%); padding: 30px; border-radius: 20px; margin: 25px 0; border: 2px solid #e94560; box-shadow: 0 12px 40px rgba(233, 69, 96, 0.3);'>
-            <h2 style='color: #e94560; text-align: center; margin-bottom: 25px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);'>📊 Profil Elite de {selected_player}</h2>
+        <div style='background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #FF6B35;'>
+            <h2 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
         </div>
         """, unsafe_allow_html=True)
         
@@ -281,16 +252,16 @@ if df is not None:
         
         st.markdown("---")
     
-        # Graphiques principaux avec nouvelles couleurs
+        # Graphiques principaux - CORRECTION DE L'INDENTATION
         tab1, tab2, tab3, tab4 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "🎨 Performance Technique", "🔄 Comparer Joueurs"])
         
         with tab1:
-            st.markdown("<h2 style='color: #e94560;'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='color: #FF6B35;'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
             
             with col1:
-                # Graphique des actions offensives avec nouvelles couleurs
+                # Graphique des actions offensives (même style que défensif)
                 actions_off = {
                     'Buts': player_data['Buts'],
                     'Passes décisives': player_data['Passes décisives'],
@@ -304,36 +275,36 @@ if df is not None:
                     y=list(actions_off.values()),
                     marker=dict(
                         color=COLORS['gradient'],
-                        line=dict(color='white', width=2)
+                        line=dict(color='white', width=1)
                     ),
                     text=list(actions_off.values()),
                     textposition='outside',
-                    textfont=dict(color='white', size=14, family='Arial Black')
+                    textfont=dict(color='white', size=12)
                 )])
                 
                 fig_bar_off.update_layout(
                     title=dict(
-                        text="Actions Offensives Elite",
-                        font=dict(size=18, color='white', family='Arial Black'),
+                        text="Actions Offensives",
+                        font=dict(size=16, color='white'),
                         x=0.5
                     ),
                     xaxis=dict(
-                        tickfont=dict(color='white', size=12),
+                        tickfont=dict(color='white'),
                         tickangle=45
                     ),
                     yaxis=dict(
-                        tickfont=dict(color='white', size=12),
-                        gridcolor='rgba(233, 69, 96, 0.3)'
+                        tickfont=dict(color='white'),
+                        gridcolor='rgba(255,255,255,0.2)'
                     ),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    height=450
+                    height=400
                 )
                 st.plotly_chart(fig_bar_off, use_container_width=True)
                 
-                # Radar professionnel avec nouvelles couleurs
-                st.markdown("<h3 style='color: #2ecc71; margin-top: 30px;'>🎯 Radar Offensif Elite</h3>", unsafe_allow_html=True)
+                # Radar professionnel des actions offensives
+                st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🎯 Radar Offensif Professionnel</h3>", unsafe_allow_html=True)
                 
                 offensive_metrics = {
                     'Buts/90': player_data['Buts par 90 minutes'],
@@ -348,11 +319,12 @@ if df is not None:
                     'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90)
                 }
                 
-                # Calculer les percentiles
+                # Calculer les percentiles par rapport à la compétition pour une meilleure lisibilité
                 percentile_values = []
                 avg_values = []
                 for metric, value in offensive_metrics.items():
                     if metric.endswith('/90'):
+                        # Métriques déjà par 90 minutes
                         if metric == 'Buts/90':
                             distribution = df_comparison['Buts par 90 minutes']
                         elif metric == 'Passes D./90':
@@ -368,32 +340,36 @@ if df is not None:
                         elif metric == 'Passes dernier tiers/90':
                             distribution = df_comparison['Passes dans le dernier tiers'] / (df_comparison['Minutes jouées'] / 90)
                         else:
+                            # Calculer pour les autres métriques
                             base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
                             distribution = df_comparison[base_column] / (df_comparison['Minutes jouées'] / 90)
                         
+                        # Calculer le percentile et la moyenne
                         percentile = (distribution < value).mean() * 100
                         avg_comp = distribution.mean()
-                        percentile_values.append(min(percentile, 100))
+                        percentile_values.append(min(percentile, 100))  # Cap à 100
                         avg_values.append(avg_comp)
                     else:
-                        percentile_values.append(50)
+                        percentile_values.append(50)  # Valeur par défaut si problème
                         avg_values.append(0)
                 
-                # Créer le radar avec nouvelles couleurs
+                # Créer le radar avec les moyennes de la compétition comme référence
                 fig_radar = go.Figure()
                 
+                # Ajouter la performance du joueur
                 fig_radar.add_trace(go.Scatterpolar(
                     r=percentile_values,
                     theta=list(offensive_metrics.keys()),
                     fill='toself',
-                    fillcolor='rgba(233, 69, 96, 0.4)',
-                    line=dict(color=COLORS['primary'], width=4),
-                    marker=dict(color=COLORS['primary'], size=10, symbol='circle'),
+                    fillcolor='rgba(255, 107, 53, 0.3)',
+                    line=dict(color=COLORS['primary'], width=3),
+                    marker=dict(color=COLORS['primary'], size=8, symbol='circle'),
                     name=f'{selected_player}',
                     hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
                     customdata=list(offensive_metrics.values())
                 ))
                 
+                # Calculer les percentiles des moyennes de la compétition (seront autour de 50)
                 avg_percentiles = []
                 for i, avg_val in enumerate(avg_values):
                     if avg_val > 0:
@@ -421,11 +397,12 @@ if df is not None:
                     else:
                         avg_percentiles.append(50)
                 
+                # Ajouter une ligne de référence pour la moyenne de la compétition
                 fig_radar.add_trace(go.Scatterpolar(
                     r=avg_percentiles,
                     theta=list(offensive_metrics.keys()),
                     mode='lines',
-                    line=dict(color='rgba(243, 156, 18, 0.8)', width=3, dash='dash'),
+                    line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
                     name=f'Moyenne {selected_competition}',
                     showlegend=True,
                     hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
@@ -437,28 +414,28 @@ if df is not None:
                         radialaxis=dict(
                             visible=True,
                             range=[0, 100],
-                            gridcolor='rgba(233, 69, 96, 0.4)',
+                            gridcolor='rgba(255,255,255,0.3)',
                             tickcolor='white',
-                            tickfont=dict(color='white', size=11),
+                            tickfont=dict(color='white', size=10),
                             showticklabels=True,
                             tickmode='linear',
                             tick0=0,
                             dtick=20
                         ),
                         angularaxis=dict(
-                            gridcolor='rgba(233, 69, 96, 0.4)',
+                            gridcolor='rgba(255,255,255,0.3)',
                             tickcolor='white',
-                            tickfont=dict(color='white', size=12, family='Arial Black'),
-                            linecolor='rgba(233, 69, 96, 0.6)'
+                            tickfont=dict(color='white', size=11, family='Arial Black'),
+                            linecolor='rgba(255,255,255,0.5)'
                         ),
-                        bgcolor='rgba(22, 33, 62, 0.9)'
+                        bgcolor='rgba(30, 38, 64, 0.8)'
                     ),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
                     title=dict(
-                        text="Radar Offensif Elite (Percentiles)",
-                        font=dict(size=18, color='white', family='Arial Black'),
+                        text="Radar Offensif Professionnel (Percentiles)",
+                        font=dict(size=16, color='white', family='Arial Black'),
                         x=0.5,
                         y=0.95
                     ),
@@ -468,9 +445,9 @@ if df is not None:
                         y=-0.2,
                         xanchor="center",
                         x=0.5,
-                        font=dict(color='white', size=11)
+                        font=dict(color='white', size=10)
                     ),
-                    height=500,
+                    height=450,
                     annotations=[
                         dict(
                             text=f"Performance vs Moyenne {selected_competition}",
@@ -479,11 +456,10 @@ if df is not None:
                             y=-0.15,
                             xref="paper",
                             yref="paper",
-                            font=dict(color='white', size=13, family='Arial'),
-                            bgcolor='rgba(233, 69, 96, 0.9)',
+                            font=dict(color='white', size=12, family='Arial'),
+                            bgcolor='rgba(255, 107, 53, 0.8)',
                             bordercolor='white',
-                            borderwidth=2,
-                            borderradius=10
+                            borderwidth=1
                         )
                     ]
                 )
@@ -491,13 +467,14 @@ if df is not None:
                 st.plotly_chart(fig_radar, use_container_width=True)
             
             with col2:
-                # Pourcentages de réussite offensifs avec nouvelles couleurs
+                # Pourcentages de réussite offensifs (même style que défensif)
                 pourcentages_off = {
                     'Conversion (Buts/Tirs)': (player_data['Buts'] / player_data['Tirs'] * 100) if player_data['Tirs'] > 0 else 0,
                     'Précision tirs': player_data.get('Pourcentage de tirs cadrés', 0),
                     'Efficacité passes clés': (player_data['Passes décisives'] / player_data['Passes clés'] * 100) if player_data['Passes clés'] > 0 else 0
                 }
                 
+                # Nettoyer les valeurs NaN
                 pourcentages_off = {k: v if pd.notna(v) else 0 for k, v in pourcentages_off.items()}
                 
                 fig_gauge_off = make_subplots(
@@ -514,39 +491,39 @@ if df is not None:
                             value=value,
                             gauge=dict(
                                 axis=dict(range=[0, 100]),
-                                bar=dict(color=colors_off[i], thickness=0.8),
-                                bgcolor="rgba(22, 33, 62, 0.5)",
-                                borderwidth=3,
+                                bar=dict(color=colors_off[i]),
+                                bgcolor="rgba(0,0,0,0.3)",
+                                borderwidth=2,
                                 bordercolor="white",
                                 steps=[
-                                    {'range': [0, 40], 'color': 'rgba(233, 69, 96, 0.2)'},
-                                    {'range': [40, 70], 'color': 'rgba(243, 156, 18, 0.3)'},
-                                    {'range': [70, 100], 'color': 'rgba(46, 204, 113, 0.4)'}
+                                    {'range': [0, 50], 'color': 'rgba(255,255,255,0.1)'},
+                                    {'range': [50, 80], 'color': 'rgba(255,255,255,0.2)'},
+                                    {'range': [80, 100], 'color': 'rgba(255,255,255,0.3)'}
                                 ]
                             ),
-                            number={'suffix': '%', 'font': {'color': 'white', 'size': 16}}
+                            number={'suffix': '%', 'font': {'color': 'white'}}
                         ),
                         row=1, col=i+1
                     )
                 
                 fig_gauge_off.update_layout(
-                    height=350, 
-                    title_text="Efficacité Offensive Elite",
+                    height=300, 
+                    title_text="Pourcentages de Réussite Offensive",
                     title_font_color='white',
-                    title_font_size=18,
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white')
                 )
                 st.plotly_chart(fig_gauge_off, use_container_width=True)
                 
-                # Graphique de comparaison offensive avec nouvelles couleurs
+                # Graphique de comparaison offensive
                 offensive_comparison = {
                     'Buts/90': player_data['Buts par 90 minutes'],
                     'Passes D./90': player_data['Passes décisives par 90 minutes'],
                     'xG/90': player_data['Buts attendus par 90 minutes']
                 }
                 
+                # Moyennes de la compétition
                 avg_comparison_off = {
                     'Buts/90': df_comparison['Buts par 90 minutes'].mean(),
                     'Passes D./90': df_comparison['Passes décisives par 90 minutes'].mean(),
@@ -559,41 +536,40 @@ if df is not None:
                     name=selected_player,
                     x=list(offensive_comparison.keys()),
                     y=list(offensive_comparison.values()),
-                    marker_color=COLORS['primary'],
-                    marker_line=dict(color='white', width=2)
+                    marker_color=COLORS['primary']
                 ))
                 
                 fig_off_comp.add_trace(go.Bar(
                     name='Moyenne compétition',
                     x=list(avg_comparison_off.keys()),
                     y=list(avg_comparison_off.values()),
-                    marker_color=COLORS['secondary'],
-                    marker_line=dict(color='white', width=2)
+                    marker_color=COLORS['secondary']
                 ))
                 
                 fig_off_comp.update_layout(
                     title=dict(
-                        text='Actions Offensives Elite vs Moyenne',
-                        font=dict(color='white', size=16, family='Arial Black'),
+                        text='Actions Offensives par 90min vs Moyenne',
+                        font=dict(color='white'),
                         x=0.5
                     ),
                     barmode='group',
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    xaxis=dict(tickfont=dict(color='white', size=12)),
-                    yaxis=dict(tickfont=dict(color='white', size=12), gridcolor='rgba(233, 69, 96, 0.3)'),
-                    height=450
+                    xaxis=dict(tickfont=dict(color='white')),
+                    yaxis=dict(tickfont=dict(color='white'), gridcolor='rgba(255,255,255,0.2)'),
+                    height=400
                 )
                 
                 st.plotly_chart(fig_off_comp, use_container_width=True)
             
-            # Scatter plot pour comparaison offensive avec nouvelles couleurs
-            st.markdown("<h3 style='color: #e94560; margin-top: 30px;'>🔍 Analyse Comparative Offensive Elite</h3>", unsafe_allow_html=True)
+            # Scatter plot pour comparaison offensive
+            st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>🔍 Analyse Comparative Offensive</h3>", unsafe_allow_html=True)
             
             col_scatter1, col_scatter2 = st.columns(2)
             
             with col_scatter1:
+                # Sélection des métriques pour le scatter plot offensif
                 metric_options_off = [
                     'Buts', 'Passes décisives', 'Tirs', 'Buts attendus (xG)',
                     'Passes décisives attendues (xAG)', 'Passes clés', 'Actions menant à un tir',
@@ -604,8 +580,10 @@ if df is not None:
                 y_metric_off = st.selectbox("Métrique Y", metric_options_off, index=1, key="y_off")
             
             with col_scatter2:
+                # Créer le scatter plot offensif
                 fig_scatter_off = go.Figure()
                 
+                # Convertir en par 90 minutes si nécessaire
                 if x_metric_off not in ['Pourcentage de tirs cadrés']:
                     x_data = df_comparison[x_metric_off] / (df_comparison['Minutes jouées'] / 90)
                     x_player = player_data[x_metric_off] / (player_data['Minutes jouées'] / 90)
@@ -624,41 +602,41 @@ if df is not None:
                     y_player = player_data[y_metric_off]
                     y_title = y_metric_off
                 
+                # Tous les joueurs
                 fig_scatter_off.add_trace(go.Scatter(
                     x=x_data,
                     y=y_data,
                     mode='markers',
                     name='Autres joueurs',
-                    marker=dict(color=COLORS['accent'], size=10, opacity=0.7, 
-                               line=dict(color='white', width=1)),
+                    marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
                     text=df_comparison['Joueur'],
                     hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
                 ))
                 
+                # Joueur sélectionné
                 fig_scatter_off.add_trace(go.Scatter(
                     x=[x_player],
                     y=[y_player],
                     mode='markers',
                     name=selected_player,
-                    marker=dict(color=COLORS['primary'], size=25, symbol='star',
-                               line=dict(color='white', width=3)),
+                    marker=dict(color=COLORS['primary'], size=20, symbol='star'),
                     hovertemplate=f'<b>{selected_player}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
                 ))
                 
                 fig_scatter_off.update_layout(
-                    title=dict(text=f"{x_title} vs {y_title}", font=dict(size=16, color='white', family='Arial Black'), x=0.5),
+                    title=dict(text=f"{x_title} vs {y_title}", font=dict(size=14, color='white'), x=0.5),
                     xaxis=dict(title=dict(text=x_title, font=dict(color='white')), tickfont=dict(color='white')),
                     yaxis=dict(title=dict(text=y_title, font=dict(color='white')), tickfont=dict(color='white')),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    height=450
+                    height=400
                 )
                 
                 st.plotly_chart(fig_scatter_off, use_container_width=True)
             
             # Métriques offensives par 90 minutes avec design amélioré
-            st.markdown("<h3 style='color: #e94560; margin-top: 30px;'>📊 Statistiques Offensives Elite</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques offensives par 90 minutes</h3>", unsafe_allow_html=True)
             col1, col2, col3, col4, col5 = st.columns(5)
             
             with col1:
@@ -670,16 +648,17 @@ if df is not None:
             with col4:
                 st.metric("Actions → Tir/90min", f"{player_data['Actions menant à un tir par 90 minutes']:.2f}")
             with col5:
+                # Nouveau compteur de pourcentage d'efficacité offensive
                 efficiency_off = (player_data['Buts'] + player_data['Passes décisives']) / player_data.get('Tirs', 1) * 100 if player_data.get('Tirs', 0) > 0 else 0
                 st.metric("Efficacité Offensive", f"{efficiency_off:.1f}%")
     
         with tab2:
-            st.markdown("<h2 style='color: #e94560;'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='color: #FF6B35;'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
             
             with col1:
-                # Graphique des actions défensives avec nouvelles couleurs
+                # Graphique des actions défensives amélioré
                 actions_def = {
                     'Tacles gagnants': player_data['Tacles gagnants'],
                     'Interceptions': player_data['Interceptions'],
@@ -693,36 +672,36 @@ if df is not None:
                     y=list(actions_def.values()),
                     marker=dict(
                         color=COLORS['gradient'],
-                        line=dict(color='white', width=2)
+                        line=dict(color='white', width=1)
                     ),
                     text=list(actions_def.values()),
                     textposition='outside',
-                    textfont=dict(color='white', size=14, family='Arial Black')
+                    textfont=dict(color='white', size=12)
                 )])
                 
                 fig_bar.update_layout(
                     title=dict(
-                        text="Actions Défensives Elite",
-                        font=dict(size=18, color='white', family='Arial Black'),
+                        text="Actions Défensives",
+                        font=dict(size=16, color='white'),
                         x=0.5
                     ),
                     xaxis=dict(
-                        tickfont=dict(color='white', size=12),
+                        tickfont=dict(color='white'),
                         tickangle=45
                     ),
                     yaxis=dict(
-                        tickfont=dict(color='white', size=12),
-                        gridcolor='rgba(233, 69, 96, 0.3)'
+                        tickfont=dict(color='white'),
+                        gridcolor='rgba(255,255,255,0.2)'
                     ),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    height=450
+                    height=400
                 )
                 st.plotly_chart(fig_bar, use_container_width=True)
                 
-                # Radar défensif avec nouvelles couleurs
-                st.markdown("<h3 style='color: #2ecc71; margin-top: 30px;'>🛡️ Radar Défensif Elite</h3>", unsafe_allow_html=True)
+                # Radar professionnel des actions défensives
+                st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🛡️ Radar Défensif Professionnel</h3>", unsafe_allow_html=True)
                 
                 defensive_metrics = {
                     'Tacles/90': player_data['Tacles gagnants'] / (player_data['Minutes jouées'] / 90),
@@ -737,7 +716,7 @@ if df is not None:
                     'Total Blocs/90': player_data.get('Total de blocs (tirs et passes)', 0) / (player_data['Minutes jouées'] / 90)
                 }
                 
-                # Calculer les percentiles défensifs
+                # Calculer les percentiles et moyennes par rapport à la compétition
                 def_percentile_values = []
                 def_avg_values = []
                 for metric, value in defensive_metrics.items():
@@ -763,6 +742,7 @@ if df is not None:
                         elif metric == 'Total Blocs/90':
                             distribution = df_comparison.get('Total de blocs (tirs et passes)', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         
+                        # Nettoyer les valeurs NaN et infinies
                         distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
                         value = value if not np.isnan(value) and not np.isinf(value) else 0
                         
@@ -779,21 +759,23 @@ if df is not None:
                         def_percentile_values.append(50)
                         def_avg_values.append(0)
                 
-                # Créer le radar défensif avec nouvelles couleurs
+                # Créer le radar défensif
                 fig_def_radar = go.Figure()
                 
+                # Ajouter la performance du joueur
                 fig_def_radar.add_trace(go.Scatterpolar(
                     r=def_percentile_values,
                     theta=list(defensive_metrics.keys()),
                     fill='toself',
-                    fillcolor='rgba(155, 89, 182, 0.4)',
-                    line=dict(color=COLORS['accent'], width=4),
-                    marker=dict(color=COLORS['accent'], size=10, symbol='circle'),
+                    fillcolor='rgba(26, 117, 159, 0.3)',
+                    line=dict(color=COLORS['accent'], width=3),
+                    marker=dict(color=COLORS['accent'], size=8, symbol='circle'),
                     name=f'{selected_player}',
                     hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
                     customdata=list(defensive_metrics.values())
                 ))
                 
+                # Calculer les percentiles des moyennes de la compétition
                 def_avg_percentiles = []
                 for i, avg_val in enumerate(def_avg_values):
                     try:
@@ -831,11 +813,12 @@ if df is not None:
                     except:
                         def_avg_percentiles.append(50)
                 
+                # Ajouter une ligne de référence pour la moyenne de la compétition
                 fig_def_radar.add_trace(go.Scatterpolar(
                     r=def_avg_percentiles,
                     theta=list(defensive_metrics.keys()),
                     mode='lines',
-                    line=dict(color='rgba(243, 156, 18, 0.8)', width=3, dash='dash'),
+                    line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
                     name=f'Moyenne {selected_competition}',
                     showlegend=True,
                     hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
@@ -847,28 +830,28 @@ if df is not None:
                         radialaxis=dict(
                             visible=True,
                             range=[0, 100],
-                            gridcolor='rgba(155, 89, 182, 0.4)',
+                            gridcolor='rgba(255,255,255,0.3)',
                             tickcolor='white',
-                            tickfont=dict(color='white', size=11),
+                            tickfont=dict(color='white', size=10),
                             showticklabels=True,
                             tickmode='linear',
                             tick0=0,
                             dtick=20
                         ),
                         angularaxis=dict(
-                            gridcolor='rgba(155, 89, 182, 0.4)',
+                            gridcolor='rgba(255,255,255,0.3)',
                             tickcolor='white',
-                            tickfont=dict(color='white', size=12, family='Arial Black'),
-                            linecolor='rgba(155, 89, 182, 0.6)'
+                            tickfont=dict(color='white', size=11, family='Arial Black'),
+                            linecolor='rgba(255,255,255,0.5)'
                         ),
-                        bgcolor='rgba(22, 33, 62, 0.9)'
+                        bgcolor='rgba(30, 38, 64, 0.8)'
                     ),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
                     title=dict(
-                        text="Radar Défensif Elite (Percentiles)",
-                        font=dict(size=18, color='white', family='Arial Black'),
+                        text="Radar Défensif Professionnel (Percentiles)",
+                        font=dict(size=16, color='white', family='Arial Black'),
                         x=0.5,
                         y=0.95
                     ),
@@ -878,9 +861,9 @@ if df is not None:
                         y=-0.2,
                         xanchor="center",
                         x=0.5,
-                        font=dict(color='white', size=11)
+                        font=dict(color='white', size=10)
                     ),
-                    height=500,
+                    height=450,
                     annotations=[
                         dict(
                             text=f"Performance Défensive vs Moyenne {selected_competition}",
@@ -889,11 +872,10 @@ if df is not None:
                             y=-0.15,
                             xref="paper",
                             yref="paper",
-                            font=dict(color='white', size=13, family='Arial'),
-                            bgcolor='rgba(155, 89, 182, 0.9)',
+                            font=dict(color='white', size=12, family='Arial'),
+                            bgcolor='rgba(26, 117, 159, 0.8)',
                             bordercolor='white',
-                            borderwidth=2,
-                            borderradius=10
+                            borderwidth=1
                         )
                     ]
                 )
@@ -901,13 +883,14 @@ if df is not None:
                 st.plotly_chart(fig_def_radar, use_container_width=True)
             
             with col2:
-                # Pourcentages de réussite défensifs avec nouvelles couleurs
+                # Pourcentages de réussite avec design amélioré
                 pourcentages = {
                     'Duels aériens': player_data['Pourcentage de duels aériens gagnés'],
                     'Duels défensifs': player_data['Pourcentage de duels gagnés'],
                     'Passes réussies': player_data['Pourcentage de passes réussies']
                 }
                 
+                # Nettoyer les valeurs NaN
                 pourcentages = {k: v if pd.notna(v) else 0 for k, v in pourcentages.items()}
                 
                 fig_gauge = make_subplots(
@@ -924,26 +907,25 @@ if df is not None:
                             value=value,
                             gauge=dict(
                                 axis=dict(range=[0, 100]),
-                                bar=dict(color=colors[i], thickness=0.8),
-                                bgcolor="rgba(22, 33, 62, 0.5)",
-                                borderwidth=3,
+                                bar=dict(color=colors[i]),
+                                bgcolor="rgba(0,0,0,0.3)",
+                                borderwidth=2,
                                 bordercolor="white",
                                 steps=[
-                                    {'range': [0, 40], 'color': 'rgba(233, 69, 96, 0.2)'},
-                                    {'range': [40, 70], 'color': 'rgba(243, 156, 18, 0.3)'},
-                                    {'range': [70, 100], 'color': 'rgba(46, 204, 113, 0.4)'}
+                                    {'range': [0, 50], 'color': 'rgba(255,255,255,0.1)'},
+                                    {'range': [50, 80], 'color': 'rgba(255,255,255,0.2)'},
+                                    {'range': [80, 100], 'color': 'rgba(255,255,255,0.3)'}
                                 ]
                             ),
-                            number={'suffix': '%', 'font': {'color': 'white', 'size': 16}}
+                            number={'suffix': '%', 'font': {'color': 'white'}}
                         ),
                         row=1, col=i+1
                     )
                 
                 fig_gauge.update_layout(
-                    height=350, 
-                    title_text="Efficacité Défensive Elite",
+                    height=300, 
+                    title_text="Pourcentages de Réussite",
                     title_font_color='white',
-                    title_font_size=18,
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white')
@@ -957,6 +939,7 @@ if df is not None:
                     'Ballons récupérés/90': player_data['Ballons récupérés'] / (player_data['Minutes jouées'] / 90)
                 }
                 
+                # Moyennes de la compétition
                 avg_comparison = {
                     'Tacles/90': (df_comparison['Tacles gagnants'] / (df_comparison['Minutes jouées'] / 90)).mean(),
                     'Interceptions/90': (df_comparison['Interceptions'] / (df_comparison['Minutes jouées'] / 90)).mean(),
@@ -969,41 +952,40 @@ if df is not None:
                     name=selected_player,
                     x=list(defensive_comparison.keys()),
                     y=list(defensive_comparison.values()),
-                    marker_color=COLORS['primary'],
-                    marker_line=dict(color='white', width=2)
+                    marker_color=COLORS['primary']
                 ))
                 
                 fig_def_comp.add_trace(go.Bar(
                     name='Moyenne compétition',
                     x=list(avg_comparison.keys()),
                     y=list(avg_comparison.values()),
-                    marker_color=COLORS['secondary'],
-                    marker_line=dict(color='white', width=2)
+                    marker_color=COLORS['secondary']
                 ))
                 
                 fig_def_comp.update_layout(
                     title=dict(
-                        text='Actions Défensives Elite vs Moyenne',
-                        font=dict(color='white', size=16, family='Arial Black'),
+                        text='Actions Défensives par 90min vs Moyenne',
+                        font=dict(color='white'),
                         x=0.5
                     ),
                     barmode='group',
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    xaxis=dict(tickfont=dict(color='white', size=12)),
-                    yaxis=dict(tickfont=dict(color='white', size=12), gridcolor='rgba(233, 69, 96, 0.3)'),
-                    height=450
+                    xaxis=dict(tickfont=dict(color='white')),
+                    yaxis=dict(tickfont=dict(color='white'), gridcolor='rgba(255,255,255,0.2)'),
+                    height=400
                 )
                 
                 st.plotly_chart(fig_def_comp, use_container_width=True)
             
-            # Scatter plot défensif et métriques détaillées...
-            st.markdown("<h3 style='color: #e94560; margin-top: 30px;'>🔍 Analyse Comparative Défensive Elite</h3>", unsafe_allow_html=True)
+            # Scatter plot pour comparaison défensive
+            st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>🔍 Analyse Comparative Défensive</h3>", unsafe_allow_html=True)
             
             col_scatter1, col_scatter2 = st.columns(2)
             
             with col_scatter1:
+                # Sélection des métriques pour le scatter plot défensif
                 metric_options_def = [
                     'Tacles gagnants', 'Interceptions', 'Ballons récupérés', 
                     'Duels aériens gagnés', 'Dégagements', 'Pourcentage de duels gagnés',
@@ -1014,8 +996,10 @@ if df is not None:
                 y_metric_def = st.selectbox("Métrique Y", metric_options_def, index=1, key="y_def")
             
             with col_scatter2:
+                # Créer le scatter plot défensif
                 fig_scatter_def = go.Figure()
                 
+                # Convertir en par 90 minutes si nécessaire
                 if x_metric_def not in ['Pourcentage de duels gagnés', 'Pourcentage de duels aériens gagnés']:
                     x_data = df_comparison[x_metric_def] / (df_comparison['Minutes jouées'] / 90)
                     x_player = player_data[x_metric_def] / (player_data['Minutes jouées'] / 90)
@@ -1034,43 +1018,44 @@ if df is not None:
                     y_player = player_data[y_metric_def]
                     y_title = y_metric_def
                 
+                # Tous les joueurs
                 fig_scatter_def.add_trace(go.Scatter(
                     x=x_data,
                     y=y_data,
                     mode='markers',
                     name='Autres joueurs',
-                    marker=dict(color=COLORS['accent'], size=10, opacity=0.7,
-                               line=dict(color='white', width=1)),
+                    marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
                     text=df_comparison['Joueur'],
                     hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
                 ))
                 
+                # Joueur sélectionné
                 fig_scatter_def.add_trace(go.Scatter(
                     x=[x_player],
                     y=[y_player],
                     mode='markers',
                     name=selected_player,
-                    marker=dict(color=COLORS['primary'], size=25, symbol='star',
-                               line=dict(color='white', width=3)),
+                    marker=dict(color=COLORS['primary'], size=20, symbol='star'),
                     hovertemplate=f'<b>{selected_player}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
                 ))
                 
                 fig_scatter_def.update_layout(
-                    title=dict(text=f"{x_title} vs {y_title}", font=dict(size=16, color='white', family='Arial Black'), x=0.5),
+                    title=dict(text=f"{x_title} vs {y_title}", font=dict(size=14, color='white'), x=0.5),
                     xaxis=dict(title=dict(text=x_title, font=dict(color='white')), tickfont=dict(color='white')),
                     yaxis=dict(title=dict(text=y_title, font=dict(color='white')), tickfont=dict(color='white')),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    height=450
+                    height=400
                 )
                 
                 st.plotly_chart(fig_scatter_def, use_container_width=True)
             
-            # Métriques défensives par 90 minutes
-            st.markdown("<h3 style='color: #e94560; margin-top: 30px;'>📊 Statistiques Défensives Elite</h3>", unsafe_allow_html=True)
+            # Métriques défensives par 90 minutes avec design amélioré
+            st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques défensives par 90 min</h3>", unsafe_allow_html=True)
             col1, col2, col3, col4, col5 = st.columns(5)
             
+            # Calcul des métriques par 90 minutes
             minutes_90 = player_data['Minutes jouées'] / 90 if player_data['Minutes jouées'] > 0 else 1
             
             with col1:
@@ -1086,16 +1071,17 @@ if df is not None:
                 duels_90 = player_data['Duels aériens gagnés'] / minutes_90
                 st.metric("Duels aériens/90min", f"{duels_90:.2f}")
             with col5:
+                # Nouveau compteur de pourcentage de réussite défensive
                 defensive_success = (player_data['Pourcentage de duels gagnés'] + player_data['Pourcentage de duels aériens gagnés']) / 2
                 st.metric("Efficacité Défensive", f"{defensive_success:.1f}%")
         
         with tab3:
-            st.markdown("<h2 style='color: #e94560;'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='color: #FF6B35;'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
             
             with col1:
-                # Graphique des actions techniques avec nouvelles couleurs
+                # Graphique des actions techniques (même style que défensif/offensif)
                 actions_tech = {
                     'Passes tentées': player_data['Passes tentées'],
                     'Passes progressives': player_data.get('Passes progressives', 0),
@@ -1109,36 +1095,36 @@ if df is not None:
                     y=list(actions_tech.values()),
                     marker=dict(
                         color=COLORS['gradient'],
-                        line=dict(color='white', width=2)
+                        line=dict(color='white', width=1)
                     ),
                     text=list(actions_tech.values()),
                     textposition='outside',
-                    textfont=dict(color='white', size=14, family='Arial Black')
+                    textfont=dict(color='white', size=12)
                 )])
                 
                 fig_bar_tech.update_layout(
                     title=dict(
-                        text="Actions Techniques Elite",
-                        font=dict(size=18, color='white', family='Arial Black'),
+                        text="Actions Techniques",
+                        font=dict(size=16, color='white'),
                         x=0.5
                     ),
                     xaxis=dict(
-                        tickfont=dict(color='white', size=12),
+                        tickfont=dict(color='white'),
                         tickangle=45
                     ),
                     yaxis=dict(
-                        tickfont=dict(color='white', size=12),
-                        gridcolor='rgba(233, 69, 96, 0.3)'
+                        tickfont=dict(color='white'),
+                        gridcolor='rgba(255,255,255,0.2)'
                     ),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    height=450
+                    height=400
                 )
                 st.plotly_chart(fig_bar_tech, use_container_width=True)
                 
-                # Radar technique avec nouvelles couleurs
-                st.markdown("<h3 style='color: #2ecc71; margin-top: 30px;'>🎨 Radar Technique Elite</h3>", unsafe_allow_html=True)
+                # Radar de Capacité de Progression du Ballon (même style que les autres)
+                st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🎨 Radar Technique Professionnel</h3>", unsafe_allow_html=True)
                 
                 technical_metrics = {
                     'Passes tentées/90': player_data['Passes tentées'] / (player_data['Minutes jouées'] / 90),
@@ -1153,7 +1139,7 @@ if df is not None:
                     'Courses prog./90': player_data.get('Courses progressives', 0) / (player_data['Minutes jouées'] / 90)
                 }
                 
-                # Calculer les percentiles techniques
+                # Calculer les percentiles pour les métriques techniques
                 tech_percentile_values = []
                 tech_avg_values = []
                 for metric, value in technical_metrics.items():
@@ -1179,6 +1165,7 @@ if df is not None:
                         elif metric == 'Courses prog./90':
                             distribution = df_comparison.get('Courses progressives', pd.Series([0]*len(df_comparison))) / (df_comparison['Minutes jouées'] / 90)
                         
+                        # Nettoyer les valeurs NaN et infinies
                         distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
                         value = value if not np.isnan(value) and not np.isinf(value) else 0
                         
@@ -1195,21 +1182,23 @@ if df is not None:
                         tech_percentile_values.append(50)
                         tech_avg_values.append(0)
                 
-                # Créer le radar technique avec nouvelles couleurs
+                # Créer le radar technique (même style que les autres)
                 fig_tech_radar = go.Figure()
                 
+                # Ajouter la performance du joueur
                 fig_tech_radar.add_trace(go.Scatterpolar(
                     r=tech_percentile_values,
                     theta=list(technical_metrics.keys()),
                     fill='toself',
-                    fillcolor='rgba(46, 204, 113, 0.4)',
-                    line=dict(color=COLORS['success'], width=4),
-                    marker=dict(color=COLORS['success'], size=10, symbol='circle'),
+                    fillcolor='rgba(0, 200, 150, 0.3)',
+                    line=dict(color=COLORS['success'], width=3),
+                    marker=dict(color=COLORS['success'], size=8, symbol='circle'),
                     name=f'{selected_player}',
                     hovertemplate='<b>%{theta}</b><br>Percentile: %{r:.0f}<br>Valeur: %{customdata:.2f}<extra></extra>',
                     customdata=list(technical_metrics.values())
                 ))
                 
+                # Calculer les percentiles des moyennes de la compétition
                 tech_avg_percentiles = []
                 for i, avg_val in enumerate(tech_avg_values):
                     try:
@@ -1247,11 +1236,12 @@ if df is not None:
                     except:
                         tech_avg_percentiles.append(50)
                 
+                # Ajouter une ligne de référence pour la moyenne de la compétition
                 fig_tech_radar.add_trace(go.Scatterpolar(
                     r=tech_avg_percentiles,
                     theta=list(technical_metrics.keys()),
                     mode='lines',
-                    line=dict(color='rgba(243, 156, 18, 0.8)', width=3, dash='dash'),
+                    line=dict(color='rgba(255,255,255,0.7)', width=2, dash='dash'),
                     name=f'Moyenne {selected_competition}',
                     showlegend=True,
                     hovertemplate='<b>%{theta}</b><br>Moyenne ligue: %{customdata:.2f}<extra></extra>',
@@ -1263,28 +1253,28 @@ if df is not None:
                         radialaxis=dict(
                             visible=True,
                             range=[0, 100],
-                            gridcolor='rgba(46, 204, 113, 0.4)',
+                            gridcolor='rgba(255,255,255,0.3)',
                             tickcolor='white',
-                            tickfont=dict(color='white', size=11),
+                            tickfont=dict(color='white', size=10),
                             showticklabels=True,
                             tickmode='linear',
                             tick0=0,
                             dtick=20
                         ),
                         angularaxis=dict(
-                            gridcolor='rgba(46, 204, 113, 0.4)',
+                            gridcolor='rgba(255,255,255,0.3)',
                             tickcolor='white',
-                            tickfont=dict(color='white', size=12, family='Arial Black'),
-                            linecolor='rgba(46, 204, 113, 0.6)'
+                            tickfont=dict(color='white', size=11, family='Arial Black'),
+                            linecolor='rgba(255,255,255,0.5)'
                         ),
-                        bgcolor='rgba(22, 33, 62, 0.9)'
+                        bgcolor='rgba(30, 38, 64, 0.8)'
                     ),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
                     title=dict(
-                        text="Radar Technique Elite (Percentiles)",
-                        font=dict(size=18, color='white', family='Arial Black'),
+                        text="Radar Technique Professionnel (Percentiles)",
+                        font=dict(size=16, color='white', family='Arial Black'),
                         x=0.5,
                         y=0.95
                     ),
@@ -1294,9 +1284,9 @@ if df is not None:
                         y=-0.2,
                         xanchor="center",
                         x=0.5,
-                        font=dict(color='white', size=11)
+                        font=dict(color='white', size=10)
                     ),
-                    height=500,
+                    height=450,
                     annotations=[
                         dict(
                             text=f"Performance Technique vs Moyenne {selected_competition}",
@@ -1305,11 +1295,10 @@ if df is not None:
                             y=-0.15,
                             xref="paper",
                             yref="paper",
-                            font=dict(color='white', size=13, family='Arial'),
-                            bgcolor='rgba(46, 204, 113, 0.9)',
+                            font=dict(color='white', size=12, family='Arial'),
+                            bgcolor='rgba(0, 200, 150, 0.8)',
                             bordercolor='white',
-                            borderwidth=2,
-                            borderradius=10
+                            borderwidth=1
                         )
                     ]
                 )
@@ -1317,13 +1306,14 @@ if df is not None:
                 st.plotly_chart(fig_tech_radar, use_container_width=True)
             
             with col2:
-                # Pourcentages de réussite techniques avec nouvelles couleurs
+                # Pourcentages de réussite techniques (même style que défensif)
                 pourcentages_tech = {
                     'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
                     'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
                     'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0)
                 }
                 
+                # Nettoyer les valeurs NaN
                 pourcentages_tech = {k: v if pd.notna(v) else 0 for k, v in pourcentages_tech.items()}
                 
                 fig_gauge_tech = make_subplots(
@@ -1340,26 +1330,25 @@ if df is not None:
                             value=value,
                             gauge=dict(
                                 axis=dict(range=[0, 100]),
-                                bar=dict(color=colors_tech[i], thickness=0.8),
-                                bgcolor="rgba(22, 33, 62, 0.5)",
-                                borderwidth=3,
+                                bar=dict(color=colors_tech[i]),
+                                bgcolor="rgba(0,0,0,0.3)",
+                                borderwidth=2,
                                 bordercolor="white",
                                 steps=[
-                                    {'range': [0, 40], 'color': 'rgba(233, 69, 96, 0.2)'},
-                                    {'range': [40, 70], 'color': 'rgba(243, 156, 18, 0.3)'},
-                                    {'range': [70, 100], 'color': 'rgba(46, 204, 113, 0.4)'}
+                                    {'range': [0, 50], 'color': 'rgba(255,255,255,0.1)'},
+                                    {'range': [50, 80], 'color': 'rgba(255,255,255,0.2)'},
+                                    {'range': [80, 100], 'color': 'rgba(255,255,255,0.3)'}
                                 ]
                             ),
-                            number={'suffix': '%', 'font': {'color': 'white', 'size': 16}}
+                            number={'suffix': '%', 'font': {'color': 'white'}}
                         ),
                         row=1, col=i+1
                     )
                 
                 fig_gauge_tech.update_layout(
-                    height=350, 
-                    title_text="Efficacité Technique Elite",
+                    height=300, 
+                    title_text="Pourcentages de Réussite Technique",
                     title_font_color='white',
-                    title_font_size=18,
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white')
@@ -1373,6 +1362,7 @@ if df is not None:
                     'Touches/90': player_data['Touches de balle'] / (player_data['Minutes jouées'] / 90)
                 }
                 
+                # Moyennes de la compétition
                 avg_comparison_tech = {
                     'Passes/90': (df_comparison['Passes tentées'] / (df_comparison['Minutes jouées'] / 90)).mean(),
                     'Dribbles/90': (df_comparison['Dribbles tentés'] / (df_comparison['Minutes jouées'] / 90)).mean(),
@@ -1385,41 +1375,40 @@ if df is not None:
                     name=selected_player,
                     x=list(technical_comparison.keys()),
                     y=list(technical_comparison.values()),
-                    marker_color=COLORS['primary'],
-                    marker_line=dict(color='white', width=2)
+                    marker_color=COLORS['primary']
                 ))
                 
                 fig_tech_comp.add_trace(go.Bar(
                     name='Moyenne compétition',
                     x=list(avg_comparison_tech.keys()),
                     y=list(avg_comparison_tech.values()),
-                    marker_color=COLORS['secondary'],
-                    marker_line=dict(color='white', width=2)
+                    marker_color=COLORS['secondary']
                 ))
                 
                 fig_tech_comp.update_layout(
                     title=dict(
-                        text='Actions Techniques Elite vs Moyenne',
-                        font=dict(color='white', size=16, family='Arial Black'),
+                        text='Actions Techniques par 90min vs Moyenne',
+                        font=dict(color='white'),
                         x=0.5
                     ),
                     barmode='group',
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    xaxis=dict(tickfont=dict(color='white', size=12)),
-                    yaxis=dict(tickfont=dict(color='white', size=12), gridcolor='rgba(233, 69, 96, 0.3)'),
-                    height=450
+                    xaxis=dict(tickfont=dict(color='white')),
+                    yaxis=dict(tickfont=dict(color='white'), gridcolor='rgba(255,255,255,0.2)'),
+                    height=400
                 )
                 
                 st.plotly_chart(fig_tech_comp, use_container_width=True)
             
-            # Scatter plot technique et métriques détaillées
-            st.markdown("<h3 style='color: #e94560; margin-top: 30px;'>🔍 Analyse Comparative Technique Elite</h3>", unsafe_allow_html=True)
+            # Scatter plot pour comparaison technique
+            st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>🔍 Analyse Comparative Technique</h3>", unsafe_allow_html=True)
             
             col_scatter1, col_scatter2 = st.columns(2)
             
             with col_scatter1:
+                # Sélection des métriques pour le scatter plot technique
                 metric_options_tech = [
                     'Passes tentées', 'Pourcentage de passes réussies', 'Passes progressives',
                     'Passes clés', 'Dribbles tentés', 'Pourcentage de dribbles réussis',
@@ -1430,8 +1419,10 @@ if df is not None:
                 y_metric_tech = st.selectbox("Métrique Y", metric_options_tech, index=1, key="y_tech")
             
             with col_scatter2:
+                # Créer le scatter plot technique
                 fig_scatter_tech = go.Figure()
                 
+                # Convertir en par 90 minutes si nécessaire pour les métriques non-pourcentage
                 if 'Pourcentage' not in x_metric_tech:
                     x_data = df_comparison[x_metric_tech] / (df_comparison['Minutes jouées'] / 90)
                     x_player = player_data[x_metric_tech] / (player_data['Minutes jouées'] / 90)
@@ -1450,41 +1441,41 @@ if df is not None:
                     y_player = player_data[y_metric_tech]
                     y_title = y_metric_tech
                 
+                # Tous les joueurs
                 fig_scatter_tech.add_trace(go.Scatter(
                     x=x_data,
                     y=y_data,
                     mode='markers',
                     name='Autres joueurs',
-                    marker=dict(color=COLORS['accent'], size=10, opacity=0.7,
-                               line=dict(color='white', width=1)),
+                    marker=dict(color=COLORS['accent'], size=8, opacity=0.6),
                     text=df_comparison['Joueur'],
                     hovertemplate='<b>%{text}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
                 ))
                 
+                # Joueur sélectionné
                 fig_scatter_tech.add_trace(go.Scatter(
                     x=[x_player],
                     y=[y_player],
                     mode='markers',
                     name=selected_player,
-                    marker=dict(color=COLORS['primary'], size=25, symbol='star',
-                               line=dict(color='white', width=3)),
+                    marker=dict(color=COLORS['primary'], size=20, symbol='star'),
                     hovertemplate=f'<b>{selected_player}</b><br>' + x_title + ': %{x:.2f}<br>' + y_title + ': %{y:.2f}<extra></extra>'
                 ))
                 
                 fig_scatter_tech.update_layout(
-                    title=dict(text=f"{x_title} vs {y_title}", font=dict(size=16, color='white', family='Arial Black'), x=0.5),
+                    title=dict(text=f"{x_title} vs {y_title}", font=dict(size=14, color='white'), x=0.5),
                     xaxis=dict(title=dict(text=x_title, font=dict(color='white')), tickfont=dict(color='white')),
                     yaxis=dict(title=dict(text=y_title, font=dict(color='white')), tickfont=dict(color='white')),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white'),
-                    height=450
+                    height=400
                 )
                 
                 st.plotly_chart(fig_scatter_tech, use_container_width=True)
             
             # Métriques techniques détaillées
-            st.markdown("<h3 style='color: #e94560; margin-top: 30px;'>📊 Statistiques Techniques Elite</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #FF6B35; margin-top: 30px;'>📊 Statistiques Techniques Détaillées</h3>", unsafe_allow_html=True)
             
             col1, col2, col3, col4, col5 = st.columns(5)
             
@@ -1507,13 +1498,15 @@ if df is not None:
                 st.metric("Centres dans surface", f"{player_data.get('Centres dans la surface', 0):.0f}")
             
             with col5:
+                # Nouveau compteur de pourcentage de réussite des passes en zones critiques
                 passes_critiques = (player_data.get('Pourcentage de passes longues réussies', 0) + 
                                    player_data.get('Pourcentage de passes courtes réussies', 0)) / 2
                 st.metric("Précision Zones Critiques", f"{passes_critiques:.1f}%")
         
         with tab4:
-            st.markdown("<h2 style='color: #e94560;'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='color: #FF6B35;'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)
             
+            # Choix du mode avec design amélioré
             mode = st.radio("Mode de visualisation", ["Radar individuel", "Radar comparatif"], horizontal=True)
             
             font_normal = FontManager()
@@ -1521,42 +1514,41 @@ if df is not None:
             font_italic = FontManager()
             
             if mode == "Radar individuel":
-                st.markdown(f"<h3 style='color: #2ecc71;'>🎯 Radar individuel Elite : {selected_player}</h3>", unsafe_allow_html=True)
+                st.markdown(f"<h3 style='color: #00C896;'>🎯 Radar individuel : {selected_player}</h3>", unsafe_allow_html=True)
                 
                 try:
                     values1 = calculate_percentiles(selected_player, df_comparison)
                     
                     baker = PyPizza(
                         params=list(RAW_STATS.keys()),
-                        background_color="#1a1a2e",
-                        straight_line_color="#e94560",
-                        straight_line_lw=2,
-                        last_circle_color="#e94560",
-                        last_circle_lw=2,
-                        other_circle_lw=1,
-                        other_circle_color="#f39c12",
-                        inner_circle_size=12
+                        background_color="#0E1117",
+                        straight_line_color="#FFFFFF",
+                        straight_line_lw=1,
+                        last_circle_color="#FFFFFF",
+                        last_circle_lw=1,
+                        other_circle_lw=0,
+                        inner_circle_size=11
                     )
                     
                     fig, ax = baker.make_pizza(
                         values1,
-                        figsize=(14, 16),
+                        figsize=(12, 14),
                         param_location=110,
                         color_blank_space="same",
                         slice_colors=[COLORS['primary']] * len(values1),
                         value_colors=["#ffffff"] * len(values1),
                         value_bck_colors=[COLORS['primary']] * len(values1),
-                        kwargs_slices=dict(edgecolor="#FFFFFF", zorder=2, linewidth=2),
-                        kwargs_params=dict(color="#ffffff", fontsize=14, fontproperties=font_bold.prop),
-                        kwargs_values=dict(color="#ffffff", fontsize=12, fontproperties=font_normal.prop,
-                                           bbox=dict(edgecolor="#FFFFFF", facecolor=COLORS['primary'], boxstyle="round,pad=0.3", lw=2))
+                        kwargs_slices=dict(edgecolor="#FFFFFF", zorder=2, linewidth=1),
+                        kwargs_params=dict(color="#ffffff", fontsize=13, fontproperties=font_bold.prop),
+                        kwargs_values=dict(color="#ffffff", fontsize=11, fontproperties=font_normal.prop,
+                                           bbox=dict(edgecolor="#FFFFFF", facecolor=COLORS['primary'], boxstyle="round,pad=0.2", lw=1))
                     )
                     
-                    fig.text(0.515, 0.95, selected_player, size=28, ha="center", fontproperties=font_bold.prop, color="#e94560")
-                    fig.text(0.515, 0.925, "Radar Elite | Percentile | Saison 2024-25", size=16,
-                             ha="center", fontproperties=font_bold.prop, color="#f39c12")
-                    fig.text(0.99, 0.01, "Dashboard Football Elite | Données: FBRef",
-                             size=9, ha="right", fontproperties=font_italic.prop, color="#ffffff")
+                    fig.text(0.515, 0.95, selected_player, size=26, ha="center", fontproperties=font_bold.prop, color="#ffffff")
+                    fig.text(0.515, 0.925, "Radar Individuel | Percentile | Saison 2024-25", size=14,
+                             ha="center", fontproperties=font_bold.prop, color="#ffffff")
+                    fig.text(0.99, 0.01, "Dashboard Football Pro | Données: FBRef",
+                             size=8, ha="right", fontproperties=font_italic.prop, color="#dddddd")
                     
                     st.pyplot(fig)
                     
@@ -1579,7 +1571,7 @@ if df is not None:
                     joueur2 = st.selectbox("👤 Joueur 2", df_j2['Joueur'].sort_values(), key="joueur2_comp")
                 
                 if joueur1 and joueur2:
-                    st.markdown(f"<h3 style='color: #2ecc71;'>⚔️ Radar comparatif Elite : {joueur1} vs {joueur2}</h3>", unsafe_allow_html=True)
+                    st.markdown(f"<h3 style='color: #00C896;'>⚔️ Radar comparatif : {joueur1} vs {joueur2}</h3>", unsafe_allow_html=True)
                     
                     try:
                         values1 = calculate_percentiles(joueur1, df_j1)
@@ -1593,30 +1585,29 @@ if df is not None:
                         
                         baker = PyPizza(
                             params=list(RAW_STATS.keys()),
-                            background_color="#1a1a2e",
-                            straight_line_color="#e94560",
-                            straight_line_lw=2,
-                            last_circle_color="#e94560",
-                            last_circle_lw=2,
+                            background_color="#0E1117",
+                            straight_line_color="#FFFFFF",
+                            straight_line_lw=1,
+                            last_circle_color="#FFFFFF",
+                            last_circle_lw=1,
                             other_circle_ls="-.",
-                            other_circle_lw=1,
-                            other_circle_color="#f39c12"
+                            other_circle_lw=1
                         )
                         
                         fig, ax = baker.make_pizza(
                             values1,
                             compare_values=values2,
-                            figsize=(14, 14),
-                            kwargs_slices=dict(facecolor=COLORS['primary'], edgecolor="#FFFFFF", linewidth=2, zorder=2),
-                            kwargs_compare=dict(facecolor=COLORS['secondary'], edgecolor="#FFFFFF", linewidth=2, zorder=2),
-                            kwargs_params=dict(color="#ffffff", fontsize=14, fontproperties=font_bold.prop),
+                            figsize=(12, 12),
+                            kwargs_slices=dict(facecolor=COLORS['primary'], edgecolor="#FFFFFF", linewidth=1, zorder=2),
+                            kwargs_compare=dict(facecolor=COLORS['secondary'], edgecolor="#FFFFFF", linewidth=1, zorder=2),
+                            kwargs_params=dict(color="#ffffff", fontsize=13, fontproperties=font_bold.prop),
                             kwargs_values=dict(
-                                color="#ffffff", fontsize=12, fontproperties=font_normal.prop, zorder=3,
-                                bbox=dict(edgecolor="#FFFFFF", facecolor=COLORS['primary'], boxstyle="round,pad=0.3", lw=2)
+                                color="#ffffff", fontsize=11, fontproperties=font_normal.prop, zorder=3,
+                                bbox=dict(edgecolor="#FFFFFF", facecolor=COLORS['primary'], boxstyle="round,pad=0.2", lw=1)
                             ),
                             kwargs_compare_values=dict(
-                                color="#ffffff", fontsize=12, fontproperties=font_normal.prop, zorder=3,
-                                bbox=dict(edgecolor="#FFFFFF", facecolor=COLORS['secondary'], boxstyle="round,pad=0.3", lw=2)
+                                color="#ffffff", fontsize=11, fontproperties=font_normal.prop, zorder=3,
+                                bbox=dict(edgecolor="#FFFFFF", facecolor=COLORS['secondary'], boxstyle="round,pad=0.2", lw=1)
                             )
                         )
                         
@@ -1625,16 +1616,15 @@ if df is not None:
                         except:
                             pass  # Si la méthode n'existe pas, on continue sans ajustement
                         
-                        fig.text(0.515, 0.955, "Radar Comparatif Elite | Percentile | Saison 2024-25",
-                                 size=16, ha="center", fontproperties=font_bold.prop, color="#e94560")
+                        fig.text(0.515, 0.955, "Radar comparatif | Percentile | Saison 2024-25",
+                                 size=14, ha="center", fontproperties=font_bold.prop, color="#ffffff")
                         
                         legend_p1 = mpatches.Patch(color=COLORS['primary'], label=joueur1)
                         legend_p2 = mpatches.Patch(color=COLORS['secondary'], label=joueur2)
-                        ax.legend(handles=[legend_p1, legend_p2], loc="upper right", bbox_to_anchor=(1.3, 1.0),
-                                 facecolor='#1a1a2e', edgecolor='#e94560', fontsize=12)
+                        ax.legend(handles=[legend_p1, legend_p2], loc="upper right", bbox_to_anchor=(1.3, 1.0))
                         
-                        fig.text(0.99, 0.01, "Dashboard Football Elite | Source: FBRef\nInspiration: @Worville, @FootballSlices",
-                                 size=9, ha="right", fontproperties=font_italic.prop, color="#ffffff")
+                        fig.text(0.99, 0.01, "Dashboard Football Pro | Source: FBRef\nInspiration: @Worville, @FootballSlices",
+                                 size=8, ha="right", fontproperties=font_italic.prop, color="#dddddd")
                         
                         st.pyplot(fig)
                         
@@ -1644,15 +1634,15 @@ if df is not None:
     else:
         st.warning("Veuillez ajuster les filtres pour sélectionner un joueur.")
 
-    # Footer avec design professionnel moderne
+    # Footer avec design professionnel (affiché même sans joueur sélectionné)
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; padding: 30px; background: linear-gradient(135deg, #16213e 0%, #533483 50%, #e94560 100%); border-radius: 25px; margin-top: 40px; box-shadow: 0 15px 50px rgba(233, 69, 96, 0.4);'>
-        <p style='color: #ffffff; margin: 0; font-size: 1.3em; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);'>
-            📊 Dashboard Football Elite - Analyse Professionnelle des Performances
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); border-radius: 15px; margin-top: 30px;'>
+        <p style='color: #E2E8F0; margin: 0; font-size: 1.1em;'>
+            📊 Dashboard Football Professionnel - Analyse avancée des performances
         </p>
-        <p style='color: #f39c12; margin: 10px 0 0 0; font-size: 1em; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);'>
-            Données: FBRef | Design: Elite Dashboard | Saison 2024-25
+        <p style='color: #A0AEC0; margin: 5px 0 0 0; font-size: 0.9em;'>
+            Données: FBRef | Design: Dashboard Pro | Saison 2024-25
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -1660,9 +1650,9 @@ if df is not None:
 else:
     # Message d'erreur avec design amélioré
     st.markdown("""
-    <div style='text-align: center; padding: 50px; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); border-radius: 25px; margin: 30px 0; box-shadow: 0 15px 40px rgba(231, 76, 60, 0.4);'>
-        <h2 style='color: white; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);'>⚠️ Erreur de Chargement des Données</h2>
-        <p style='color: #ffebee; margin: 20px 0 0 0; font-size: 1.2em; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);'>
+    <div style='text-align: center; padding: 40px; background: linear-gradient(135deg, #D62828 0%, #F77F00 100%); border-radius: 15px; margin: 20px 0;'>
+        <h2 style='color: white; margin: 0;'>⚠️ Erreur de chargement des données</h2>
+        <p style='color: #FFE8E8; margin: 15px 0 0 0; font-size: 1.1em;'>
             Impossible de charger les données. Veuillez vérifier que le fichier 'df_BIG2025.csv' est présent.
         </p>
     </div>

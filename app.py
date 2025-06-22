@@ -22,6 +22,13 @@ st.markdown("""
     .stApp {
         background: linear-gradient(135deg, #1B2066 0%, #3B167A 100%);
     }
+    .main, .block-container {
+        background: transparent !important;
+    }
+    .stSidebar, .css-1d391kg, .css-1lcbmhc {
+        background: #1B2066 !important;
+        color: #FFD700 !important;
+    }
     .stTabs [data-baseweb="tab-list"] {
         background-color: #3B167A;
         border-radius: 10px;
@@ -49,12 +56,28 @@ st.markdown("""
         border: 1px solid #C0C0C0;
         color: #1B2066;
     }
+    h1, h2, h3, h4, h5, h6, label, p, span, div {
+        color: #F5F5F5 !important;
+    }
+    .stButton>button {
+        background: linear-gradient(135deg, #FFD700 0%, #5DADEC 100%);
+        color: #1B2066 !important;
+        border-radius: 8px;
+        border: 1px solid #FFD700;
+        font-weight: bold;
+    }
+    .stSelectbox, .stSlider, .stRadio, .stCheckbox, .stTextInput, .stNumberInput {
+        background: #1B2066 !important;
+        color: #F5F5F5 !important;
+        border-radius: 8px;
+        border: 1px solid #FFD700;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # Couleurs professionnelles
 COLORS = {
-    'primary': '#FFD700',      # Or Champions League
+    'primary': '#FFD700',      # Or
     'secondary': '#5DADEC',    # Bleu clair
     'accent': '#3B167A',       # Violet profond
     'success': '#5DADEC',      # Bleu clair

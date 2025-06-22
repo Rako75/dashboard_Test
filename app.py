@@ -23,7 +23,7 @@ st.markdown("""
         background-color: #FFFFFF;
     }
     .stApp {
-        background: linear-gradient(135deg, #2196F3 0%, #FFFFFF 100%);
+        background: #000000;
     }
     .stTabs [data-baseweb="tab-list"] {
         background-color: #1E2640;

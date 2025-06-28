@@ -525,16 +525,21 @@ if df is not None:
         # Affichage de la carte du joueur avec photo et logo
         display_player_card(player_data, selected_competition)
         
-        st.markdown("---")
+        # Métriques de base
+        col1, col2, col3, col4, col5 = st.columns(5)
         
-        # Métriques de base dans un style plus compact et harmonieux
-        st.markdown("""
-        <div class='metrics-container'>
-            <h3 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>
-                📈 Statistiques générales
-            </h3>
-        </div>
-        """, unsafe_allow_html=True)
+        with col1:
+            st.metric("Âge", f"{player_data['Âge']} ans")
+        with col2:
+            st.metric("Position", player_data['Position'])
+        with col3:
+            st.metric("Équipe", player_data['Équipe'])
+        with col4:
+            st.metric("Nationalité", player_data['Nationalité'])
+        with col5:
+            st.metric("Minutes jouées", f"{int(player_data['Minutes jouées'])} min")
+        
+        st.markdown("---")
     
         # Graphiques principaux
         tab1, tab2, tab3, tab4 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "🎨 Performance Technique", "🔄 Comparer Joueurs"])

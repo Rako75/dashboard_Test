@@ -130,7 +130,7 @@ def get_club_logo(competition, team_name):
     """Retourne le chemin du logo du club selon la compétition"""
     # Mapping des compétitions vers les dossiers
     league_folders = {
-        'Bundesliga': 'Bundliga_Logos',
+        'Bundliga': 'Bundliga_Logos',
         'La Liga': 'La_Liga_Logos',
         'Ligue 1': 'Ligue1_Logos',
         'Premier League': 'Premier_League_Logos',

@@ -55,23 +55,84 @@ st.markdown("""
     }
     .player-card {
         background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
-        padding: 20px;
+        padding: 25px;
+        border-radius: 20px;
+        border: 3px solid #FF6B35;
+        margin: 20px 0;
+        text-align: center;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    }
+    .player-image-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
         border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 2px solid #FF6B35;
+        height: 280px;
+        overflow: hidden;
+        position: relative;
+    }
+    .club-logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border: 2px solid #FF6B35;
+        height: 150px;
+        overflow: hidden;
+        position: relative;
+    }
+    .image-caption {
+        color: #FF6B35;
+        font-weight: bold;
+        font-size: 14px;
+        margin-top: 10px;
+        text-align: center;
+    }
+    .info-section {
+        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
+        padding: 30px;
+        border-radius: 20px;
         border: 2px solid #FF6B35;
         margin: 20px 0;
         text-align: center;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
     }
-    .club-logo {
-        max-width: 80px;
-        max-height: 80px;
-        object-fit: contain;
+    .metrics-container {
+        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
+        padding: 20px;
+        border-radius: 15px;
+        margin: 15px 0;
+        border: 1px solid #4A5568;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
-    .player-photo {
-        max-width: 150px;
-        max-height: 200px;
-        object-fit: cover;
-        border-radius: 10px;
-        border: 3px solid #FF6B35;
+    /* Masquer les avertissements de dépréciation */
+    .stAlert > div {
+        display: none;
+    }
+    /* Style pour les métriques */
+    .metric-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin: 20px 0;
+    }
+    .metric-item {
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid #718096;
+        text-align: center;
+        min-width: 150px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -464,21 +525,16 @@ if df is not None:
         # Affichage de la carte du joueur avec photo et logo
         display_player_card(player_data, selected_competition)
         
-        # Métriques de base
-        col1, col2, col3, col4, col5 = st.columns(5)
-        
-        with col1:
-            st.metric("Âge", f"{player_data['Âge']} ans")
-        with col2:
-            st.metric("Position", player_data['Position'])
-        with col3:
-            st.metric("Équipe", player_data['Équipe'])
-        with col4:
-            st.metric("Nationalité", player_data['Nationalité'])
-        with col5:
-            st.metric("Minutes jouées", f"{int(player_data['Minutes jouées'])} min")
-        
         st.markdown("---")
+        
+        # Métriques de base dans un style plus compact et harmonieux
+        st.markdown("""
+        <div class='metrics-container'>
+            <h3 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>
+                📈 Statistiques générales
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
     
         # Graphiques principaux
         tab1, tab2, tab3, tab4 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "🎨 Performance Technique", "🔄 Comparer Joueurs"])

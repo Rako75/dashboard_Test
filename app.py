@@ -93,16 +93,36 @@ COLORS = {
 
 def get_player_photo(player_name):
     """Retourne le chemin de la photo du joueur ou None si non trouvée"""
-    # Nettoyer le nom du joueur pour la recherche de fichier
-    clean_name = player_name.replace(" ", "_").replace("'", "").replace("-", "_")
-    
     # Extensions possibles
     extensions = ['.jpg', '.jpeg', '.JPG', '.JPEG']
     
+    # Format attendu : **Prenom Nom.extension
     for ext in extensions:
-        photo_path = f"images_joueurs/{clean_name}{ext}"
+        # Essayer avec le format exact : **Nom Prenom.extension
+        photo_path = f"images_joueurs/**{player_name}{ext}"
         if os.path.exists(photo_path):
             return photo_path
+    
+    # Si pas trouvé avec le format exact, essayer de chercher dans tous les fichiers
+    import glob
+    for ext in extensions:
+        # Chercher tous les fichiers avec cette extension
+        pattern = f"images_joueurs/**{player_name}*{ext}"
+        files = glob.glob(pattern)
+        if files:
+            return files[0]  # Retourner le premier fichier trouvé
+        
+        # Essayer aussi avec des variations de nom
+        # Inverser prénom/nom si le nom contient un espace
+        if " " in player_name:
+            parts = player_name.split(" ")
+            if len(parts) >= 2:
+                # Essayer Nom Prénom au lieu de Prénom Nom
+                reversed_name = " ".join(parts[::-1])
+                pattern = f"images_joueurs/**{reversed_name}*{ext}"
+                files = glob.glob(pattern)
+                if files:
+                    return files[0]
     
     return None
 
@@ -110,7 +130,7 @@ def get_club_logo(competition, team_name):
     """Retourne le chemin du logo du club selon la compétition"""
     # Mapping des compétitions vers les dossiers
     league_folders = {
-        'Bundliga': 'Bundliga_Logos',
+        'Bundesliga': 'Bundliga_Logos',
         'La Liga': 'La_Liga_Logos',
         'Ligue 1': 'Ligue1_Logos',
         'Premier League': 'Premier_League_Logos',
@@ -153,9 +173,30 @@ def display_player_card(player_data, selected_competition):
                 st.image(player_image, caption=f"📸 {player_data['Joueur']}", 
                         use_column_width=True, output_format="auto")
             except Exception as e:
-                st.info("📷 Photo du joueur non disponible")
+                st.info(f"📷 Erreur lors du chargement de la photo: {str(e)}")
+                # Debug info
+                st.text(f"Chemin tenté: {player_photo_path}")
         else:
-            st.info("📷 Photo du joueur non trouvée")
+            st.info(f"📷 Photo non trouvée pour: {player_data['Joueur']}")
+            # Afficher les chemins tentés pour debug
+            if st.checkbox("Afficher les détails de recherche"):
+                st.text(f"Recherche effectuée pour: **{player_data['Joueur']}.jpg/jpeg")
+                st.text(f"Dans le dossier: images_joueurs/")
+                
+                # Lister les fichiers disponibles dans le dossier
+                try:
+                    import glob
+                    available_files = glob.glob("images_joueurs/**.*")
+                    if available_files:
+                        st.text("Fichiers disponibles:")
+                        for file in available_files[:10]:  # Limiter à 10 fichiers
+                            st.text(f"  - {file}")
+                        if len(available_files) > 10:
+                            st.text(f"  ... et {len(available_files) - 10} autres fichiers")
+                    else:
+                        st.text("Aucun fichier trouvé dans images_joueurs/")
+                except Exception as e:
+                    st.text(f"Erreur lors de la liste des fichiers: {str(e)}")
     
     with col2:
         # Informations centrales du joueur
@@ -173,9 +214,36 @@ def display_player_card(player_data, selected_competition):
                 st.image(club_image, caption=f"🏟️ {player_data['Équipe']}", 
                         use_column_width=True, output_format="auto")
             except Exception as e:
-                st.info("🏟️ Logo du club non disponible")
+                st.info(f"🏟️ Erreur lors du chargement du logo: {str(e)}")
         else:
-            st.info("🏟️ Logo du club non trouvé")
+            st.info(f"🏟️ Logo non trouvé pour: {player_data['Équipe']}")
+            if st.checkbox("Afficher les détails de recherche logo", key="logo_debug"):
+                st.text(f"Compétition: {selected_competition}")
+                st.text(f"Équipe: {player_data['Équipe']}")
+                # Afficher le mapping des dossiers
+                league_folders = {
+                    'Bundesliga': 'Bundliga_Logos',
+                    'La Liga': 'La_Liga_Logos', 
+                    'Ligue 1': 'Ligue1_Logos',
+                    'Premier League': 'Premier_League_Logos',
+                    'Serie A': 'Serie_A_Logos'
+                }
+                expected_folder = league_folders.get(selected_competition, "Dossier non mappé")
+                st.text(f"Dossier attendu: {expected_folder}")
+                
+                # Lister les fichiers disponibles dans le dossier du logo
+                try:
+                    import glob
+                    if expected_folder != "Dossier non mappé":
+                        available_logos = glob.glob(f"{expected_folder}/*.*")
+                        if available_logos:
+                            st.text("Logos disponibles:")
+                            for logo in available_logos[:10]:
+                                st.text(f"  - {logo}")
+                        else:
+                            st.text(f"Aucun logo trouvé dans {expected_folder}/")
+                except Exception as e:
+                    st.text(f"Erreur lors de la liste des logos: {str(e)}")
 
 # ---------------------- PARAMÈTRES DU RADAR ----------------------
 

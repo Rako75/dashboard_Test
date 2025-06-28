@@ -141,16 +141,49 @@ def get_club_logo(competition, team_name):
     if not folder:
         return None
     
-    # Nettoyer le nom de l'équipe
-    clean_team = team_name.replace(" ", "_").replace("'", "").replace("-", "_")
-    
     # Extensions possibles
     extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
     
+    # Format attendu : **Nom du Club.extension
     for ext in extensions:
-        logo_path = f"{folder}/{clean_team}{ext}"
+        # Essayer avec le format exact : **Nom du Club.extension
+        logo_path = f"{folder}/**{team_name}{ext}"
         if os.path.exists(logo_path):
             return logo_path
+    
+    # Si pas trouvé avec le format exact, essayer de chercher dans tous les fichiers
+    import glob
+    for ext in extensions:
+        # Chercher tous les fichiers avec cette extension et le nom de l'équipe
+        pattern = f"{folder}/**{team_name}*{ext}"
+        files = glob.glob(pattern)
+        if files:
+            return files[0]  # Retourner le premier fichier trouvé
+        
+        # Essayer aussi avec des variations de nom (sans espaces, avec underscores, etc.)
+        clean_team = team_name.replace(" ", "_").replace("'", "").replace("-", "_")
+        pattern = f"{folder}/**{clean_team}*{ext}"
+        files = glob.glob(pattern)
+        if files:
+            return files[0]
+            
+        # Essayer aussi de chercher juste par une partie du nom
+        if " " in team_name:
+            # Prendre le premier mot significatif
+            first_word = team_name.split()[0]
+            if len(first_word) > 3:  # Éviter les mots courts comme "FC", "AS", etc.
+                pattern = f"{folder}/**{first_word}*{ext}"
+                files = glob.glob(pattern)
+                if files:
+                    return files[0]
+            
+            # Prendre le dernier mot significatif
+            last_word = team_name.split()[-1]
+            if len(last_word) > 3:
+                pattern = f"{folder}/**{last_word}*{ext}"
+                files = glob.glob(pattern)
+                if files:
+                    return files[0]
     
     return None
 
@@ -215,14 +248,16 @@ def display_player_card(player_data, selected_competition):
                         use_column_width=True, output_format="auto")
             except Exception as e:
                 st.info(f"🏟️ Erreur lors du chargement du logo: {str(e)}")
+                st.text(f"Chemin tenté: {club_logo_path}")
         else:
             st.info(f"🏟️ Logo non trouvé pour: {player_data['Équipe']}")
             if st.checkbox("Afficher les détails de recherche logo", key="logo_debug"):
                 st.text(f"Compétition: {selected_competition}")
                 st.text(f"Équipe: {player_data['Équipe']}")
+                
                 # Afficher le mapping des dossiers
                 league_folders = {
-                    'Bundesliga': 'Bundliga_Logos',
+                    'Bundliga': 'Bundliga_Logos',
                     'La Liga': 'La_Liga_Logos', 
                     'Ligue 1': 'Ligue1_Logos',
                     'Premier League': 'Premier_League_Logos',
@@ -230,18 +265,40 @@ def display_player_card(player_data, selected_competition):
                 }
                 expected_folder = league_folders.get(selected_competition, "Dossier non mappé")
                 st.text(f"Dossier attendu: {expected_folder}")
+                st.text(f"Format recherché: **{player_data['Équipe']}.png/jpg/jpeg")
                 
                 # Lister les fichiers disponibles dans le dossier du logo
                 try:
                     import glob
                     if expected_folder != "Dossier non mappé":
-                        available_logos = glob.glob(f"{expected_folder}/*.*")
+                        available_logos = glob.glob(f"{expected_folder}/**.*")
                         if available_logos:
-                            st.text("Logos disponibles:")
-                            for logo in available_logos[:10]:
-                                st.text(f"  - {logo}")
+                            st.text("Logos disponibles (format **Nom.extension):")
+                            for logo in available_logos[:15]:  # Limiter à 15 fichiers
+                                # Extraire juste le nom du fichier pour l'affichage
+                                filename = logo.split('/')[-1] if '/' in logo else logo.split('\\')[-1]
+                                st.text(f"  - {filename}")
+                            if len(available_logos) > 15:
+                                st.text(f"  ... et {len(available_logos) - 15} autres fichiers")
+                                
+                            # Suggérer des correspondances possibles
+                            team_words = player_data['Équipe'].lower().split()
+                            suggestions = []
+                            for logo in available_logos:
+                                filename = logo.split('/')[-1] if '/' in logo else logo.split('\\')[-1]
+                                filename_lower = filename.lower()
+                                for word in team_words:
+                                    if len(word) > 3 and word in filename_lower:
+                                        suggestions.append(filename)
+                                        break
+                            
+                            if suggestions:
+                                st.text("Correspondances possibles trouvées:")
+                                for suggestion in suggestions[:5]:
+                                    st.text(f"  → {suggestion}")
                         else:
                             st.text(f"Aucun logo trouvé dans {expected_folder}/")
+                            st.text("Vérifiez que le dossier existe et contient des fichiers **Nom.extension")
                 except Exception as e:
                     st.text(f"Erreur lors de la liste des logos: {str(e)}")
 

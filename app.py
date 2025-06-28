@@ -7,6 +7,8 @@ import numpy as np
 from mplsoccer import PyPizza, FontManager
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import os
+from PIL import Image
 
 # Configuration de la page avec thème sombre professionnel
 st.set_page_config(
@@ -51,6 +53,26 @@ st.markdown("""
         border-radius: 10px;
         border: 1px solid #718096;
     }
+    .player-card {
+        background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid #FF6B35;
+        margin: 20px 0;
+        text-align: center;
+    }
+    .club-logo {
+        max-width: 80px;
+        max-height: 80px;
+        object-fit: contain;
+    }
+    .player-photo {
+        max-width: 150px;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 3px solid #FF6B35;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -66,6 +88,94 @@ COLORS = {
     'light': '#F8F9FA',
     'gradient': ['#FF6B35', '#004E89', '#1A759F', '#00C896', '#F7B801']
 }
+
+# ---------------------- FONCTIONS UTILITAIRES POUR IMAGES ----------------------
+
+def get_player_photo(player_name):
+    """Retourne le chemin de la photo du joueur ou None si non trouvée"""
+    # Nettoyer le nom du joueur pour la recherche de fichier
+    clean_name = player_name.replace(" ", "_").replace("'", "").replace("-", "_")
+    
+    # Extensions possibles
+    extensions = ['.jpg', '.jpeg', '.JPG', '.JPEG']
+    
+    for ext in extensions:
+        photo_path = f"images_joueurs/{clean_name}{ext}"
+        if os.path.exists(photo_path):
+            return photo_path
+    
+    return None
+
+def get_club_logo(competition, team_name):
+    """Retourne le chemin du logo du club selon la compétition"""
+    # Mapping des compétitions vers les dossiers
+    league_folders = {
+        'Bundliga': 'Bundliga_Logos',
+        'La Liga': 'La_Liga_Logos',
+        'Ligue 1': 'Ligue1_Logos',
+        'Premier League': 'Premier_League_Logos',
+        'Serie A': 'Serie_A_Logos'
+    }
+    
+    folder = league_folders.get(competition)
+    if not folder:
+        return None
+    
+    # Nettoyer le nom de l'équipe
+    clean_team = team_name.replace(" ", "_").replace("'", "").replace("-", "_")
+    
+    # Extensions possibles
+    extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
+    
+    for ext in extensions:
+        logo_path = f"{folder}/{clean_team}{ext}"
+        if os.path.exists(logo_path):
+            return logo_path
+    
+    return None
+
+def display_player_card(player_data, selected_competition):
+    """Affiche la carte du joueur avec photo et logo"""
+    # Récupérer la photo du joueur
+    player_photo_path = get_player_photo(player_data['Joueur'])
+    
+    # Récupérer le logo du club
+    club_logo_path = get_club_logo(selected_competition, player_data['Équipe'])
+    
+    # Créer la carte du joueur
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col1:
+        # Afficher la photo du joueur
+        if player_photo_path:
+            try:
+                player_image = Image.open(player_photo_path)
+                st.image(player_image, caption=f"📸 {player_data['Joueur']}", 
+                        use_column_width=True, output_format="auto")
+            except Exception as e:
+                st.info("📷 Photo du joueur non disponible")
+        else:
+            st.info("📷 Photo du joueur non trouvée")
+    
+    with col2:
+        # Informations centrales du joueur
+        st.markdown(f"""
+        <div class='player-card'>
+            <h2 style='color: #FF6B35; margin-bottom: 20px;'>📊 Profil de {player_data['Joueur']}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        # Afficher le logo du club
+        if club_logo_path:
+            try:
+                club_image = Image.open(club_logo_path)
+                st.image(club_image, caption=f"🏟️ {player_data['Équipe']}", 
+                        use_column_width=True, output_format="auto")
+            except Exception as e:
+                st.info("🏟️ Logo du club non disponible")
+        else:
+            st.info("🏟️ Logo du club non trouvé")
 
 # ---------------------- PARAMÈTRES DU RADAR ----------------------
 
@@ -226,13 +336,10 @@ if df is not None:
         # Utiliser df_filtered_minutes pour les comparaisons et calculs
         df_comparison = df_filtered_minutes  # Utiliser les données filtrées par minutes
     
-        # Affichage des informations générales du joueur avec design amélioré
-        st.markdown(f"""
-        <div style='background: linear-gradient(135deg, #1E2640 0%, #2D3748 100%); padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid #FF6B35;'>
-            <h2 style='color: #FF6B35; text-align: center; margin-bottom: 20px;'>📊 Profil de {selected_player}</h2>
-        </div>
-        """, unsafe_allow_html=True)
+        # Affichage de la carte du joueur avec photo et logo
+        display_player_card(player_data, selected_competition)
         
+        # Métriques de base
         col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
@@ -248,7 +355,7 @@ if df is not None:
         
         st.markdown("---")
     
-        # Graphiques principaux - CORRECTION DE L'INDENTATION
+        # Graphiques principaux
         tab1, tab2, tab3, tab4 = st.tabs(["🎯 Performance Offensive", "🛡️ Performance Défensive", "🎨 Performance Technique", "🔄 Comparer Joueurs"])
         
         with tab1:
@@ -257,7 +364,7 @@ if df is not None:
             col1, col2 = st.columns(2)
             
             with col1:
-                # Graphique des actions offensives (même style que défensif)
+                # Graphique des actions offensives
                 actions_off = {
                     'Buts': player_data['Buts'],
                     'Passes décisives': player_data['Passes décisives'],
@@ -315,12 +422,11 @@ if df is not None:
                     'Passes prog./90': player_data.get('Passes progressives', 0) / (player_data['Minutes jouées'] / 90)
                 }
                 
-                # Calculer les percentiles par rapport à la compétition pour une meilleure lisibilité
+                # Calculer les percentiles par rapport à la compétition
                 percentile_values = []
                 avg_values = []
                 for metric, value in offensive_metrics.items():
                     if metric.endswith('/90'):
-                        # Métriques déjà par 90 minutes
                         if metric == 'Buts/90':
                             distribution = df_comparison['Buts par 90 minutes']
                         elif metric == 'Passes D./90':
@@ -336,17 +442,15 @@ if df is not None:
                         elif metric == 'Passes dernier tiers/90':
                             distribution = df_comparison['Passes dans le dernier tiers'] / (df_comparison['Minutes jouées'] / 90)
                         else:
-                            # Calculer pour les autres métriques
                             base_column = metric.replace('/90', '').replace('Passes D.', 'Passes décisives').replace('Passes prog.', 'Passes progressives')
                             distribution = df_comparison[base_column] / (df_comparison['Minutes jouées'] / 90)
                         
-                        # Calculer le percentile et la moyenne
                         percentile = (distribution < value).mean() * 100
                         avg_comp = distribution.mean()
-                        percentile_values.append(min(percentile, 100))  # Cap à 100
+                        percentile_values.append(min(percentile, 100))
                         avg_values.append(avg_comp)
                     else:
-                        percentile_values.append(50)  # Valeur par défaut si problème
+                        percentile_values.append(50)
                         avg_values.append(0)
                 
                 # Créer le radar avec les moyennes de la compétition comme référence
@@ -365,7 +469,7 @@ if df is not None:
                     customdata=list(offensive_metrics.values())
                 ))
                 
-                # Calculer les percentiles des moyennes de la compétition (seront autour de 50)
+                # Calculer les percentiles des moyennes de la compétition
                 avg_percentiles = []
                 for i, avg_val in enumerate(avg_values):
                     if avg_val > 0:
@@ -463,7 +567,7 @@ if df is not None:
                 st.plotly_chart(fig_radar, use_container_width=True)
             
             with col2:
-                # Pourcentages de réussite offensifs (même style que défensif)
+                # Pourcentages de réussite offensifs
                 pourcentages_off = {
                     'Conversion (Buts/Tirs)': (player_data['Buts'] / player_data['Tirs'] * 100) if player_data['Tirs'] > 0 else 0,
                     'Précision tirs': player_data.get('Pourcentage de tirs cadrés', 0),
@@ -644,7 +748,6 @@ if df is not None:
             with col4:
                 st.metric("Actions → Tir/90min", f"{player_data['Actions menant à un tir par 90 minutes']:.2f}")
             with col5:
-                # Nouveau compteur de pourcentage d'efficacité offensive
                 efficiency_off = (player_data['Buts'] + player_data['Passes décisives']) / player_data.get('Tirs', 1) * 100 if player_data.get('Tirs', 0) > 0 else 0
                 st.metric("Efficacité Offensive", f"{efficiency_off:.1f}%")
     
@@ -1077,7 +1180,7 @@ if df is not None:
             col1, col2 = st.columns(2)
             
             with col1:
-                # Graphique des actions techniques (même style que défensif/offensif)
+                # Graphique des actions techniques
                 actions_tech = {
                     'Passes tentées': player_data['Passes tentées'],
                     'Passes progressives': player_data.get('Passes progressives', 0),
@@ -1119,7 +1222,7 @@ if df is not None:
                 )
                 st.plotly_chart(fig_bar_tech, use_container_width=True)
                 
-                # Radar de Capacité de Progression du Ballon (même style que les autres)
+                # Radar de Capacité de Progression du Ballon
                 st.markdown("<h3 style='color: #00C896; margin-top: 30px;'>🎨 Radar Technique Professionnel</h3>", unsafe_allow_html=True)
                 
                 technical_metrics = {
@@ -1178,7 +1281,7 @@ if df is not None:
                         tech_percentile_values.append(50)
                         tech_avg_values.append(0)
                 
-                # Créer le radar technique (même style que les autres)
+                # Créer le radar technique
                 fig_tech_radar = go.Figure()
                 
                 # Ajouter la performance du joueur
@@ -1302,7 +1405,7 @@ if df is not None:
                 st.plotly_chart(fig_tech_radar, use_container_width=True)
             
             with col2:
-                # Pourcentages de réussite techniques (même style que défensif)
+                # Pourcentages de réussite techniques
                 pourcentages_tech = {
                     'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
                     'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),

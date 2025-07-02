@@ -337,7 +337,199 @@ class ImageManager:
         return None
 
 # ================================================================================================
-# COMPOSANTS UI
+# ANALYSEUR DE PROFIL JOUEUR
+# ================================================================================================
+
+class PlayerProfileAnalyzer:
+    """Analyseur de profil complet du joueur"""
+    
+    # Base de données des trophées par joueur (exemple - à enrichir avec vraie base de données)
+    PLAYER_TROPHIES = {
+        # Joueurs célèbres et leurs trophées
+        "Lionel Messi": {
+            "major_trophees": 44,
+            "ballons_or": 8,
+            "coupes_monde": 1,
+            "champions_league": 4,
+            "championnats": 12,
+            "description": "Génie argentin considéré comme l'un des plus grands joueurs de l'histoire. Maître du dribble et finisseur exceptionnel.",
+            "style_jeu": "Attaquant polyvalent, faux-9, créateur et finisseur",
+            "points_forts": ["Dribbles", "Finition", "Vision de jeu", "Passes décisives"],
+            "records": ["Plus de buts en Liga", "Plus de Ballons d'Or", "Plus de passes décisives en Liga"]
+        },
+        "Cristiano Ronaldo": {
+            "major_trophees": 35,
+            "ballons_or": 5,
+            "coupes_monde": 0,
+            "champions_league": 5,
+            "championnats": 7,
+            "description": "Machine à buts portugaise, athlète complet avec une mentalité de gagnant incomparable.",
+            "style_jeu": "Buteur prolifique, jeu aérien exceptionnel, vitesse",
+            "points_forts": ["Finition", "Jeu de tête", "Vitesse", "Mentalité"],
+            "records": ["Plus de buts en Champions League", "Plus de buts internationaux", "Plus de buts toutes compétitions"]
+        },
+        "Kylian Mbappé": {
+            "major_trophees": 18,
+            "ballons_or": 0,
+            "coupes_monde": 1,
+            "champions_league": 0,
+            "championnats": 6,
+            "description": "Prodige français, vitesse fulgurante et finition clinique. Futur du football mondial.",
+            "style_jeu": "Ailier rapide, contre-attaques, courses en profondeur",
+            "points_forts": ["Vitesse", "Finition", "Dribbles", "Contre-attaques"],
+            "records": ["Plus jeune buteur en finale de Coupe du Monde", "Plus jeune à 40 buts en C1"]
+        },
+        "Erling Haaland": {
+            "major_trophees": 12,
+            "ballons_or": 0,
+            "coupes_monde": 0,
+            "champions_league": 1,
+            "championnats": 3,
+            "description": "Machine à buts norvégienne, physique impressionnant et instinct de buteur exceptionnel.",
+            "style_jeu": "Avant-centre pur, finisseur dans la surface, puissance physique",
+            "points_forts": ["Finition", "Puissance", "Positionnement", "Efficacité"],
+            "records": ["Plus rapide à 50 buts en Premier League", "Meilleur ratio buts/match en C1"]
+        }
+    }
+    
+    @staticmethod
+    def get_player_profile(player_name: str, player_data: pd.Series) -> Dict:
+        """Récupère ou génère le profil complet du joueur"""
+        # Vérifier si le joueur est dans la base de données
+        if player_name in PlayerProfileAnalyzer.PLAYER_TROPHEES:
+            profile = PlayerProfileAnalyzer.PLAYER_TROPHEES[player_name].copy()
+        else:
+            # Générer un profil basé sur les statistiques
+            profile = PlayerProfileAnalyzer._generate_profile_from_stats(player_name, player_data)
+        
+        # Ajouter l'analyse de performance de la saison actuelle
+        profile["performance_analysis"] = PlayerProfileAnalyzer._analyze_current_performance(player_data)
+        
+        return profile
+    
+    @staticmethod
+    def _generate_profile_from_stats(player_name: str, player_data: pd.Series) -> Dict:
+        """Génère un profil basé sur les statistiques du joueur"""
+        
+        # Analyse du style de jeu basé sur les stats
+        style_jeu = PlayerProfileAnalyzer._determine_play_style(player_data)
+        points_forts = PlayerProfileAnalyzer._determine_strengths(player_data)
+        
+        # Estimation des trophées basée sur l'âge et les performances
+        age = player_data.get('Âge', 25)
+        estimated_trophies = max(0, (age - 18) * 2)  # Estimation simple
+        
+        return {
+            "major_trophees": estimated_trophies,
+            "ballons_or": 0,  # Données non disponibles
+            "coupes_monde": 0,  # Données non disponibles
+            "champions_league": 0,  # Données non disponibles
+            "championnats": max(0, (age - 20) // 3),  # Estimation
+            "description": f"Joueur talentueux évoluant au poste de {player_data.get('Position', 'N/A')}. " +
+                          f"Âgé de {age} ans, il représente {player_data.get('Nationalité', 'son pays')} " +
+                          f"et joue actuellement pour {player_data.get('Équipe', 'son club')}.",
+            "style_jeu": style_jeu,
+            "points_forts": points_forts,
+            "records": ["Données non disponibles"]
+        }
+    
+    @staticmethod
+    def _determine_play_style(player_data: pd.Series) -> str:
+        """Détermine le style de jeu basé sur les statistiques"""
+        position = player_data.get('Position', '')
+        
+        # Ratios pour déterminer le style
+        buts_90 = player_data.get('Buts par 90 minutes', 0)
+        passes_90 = player_data.get('Passes tentées', 0) / (player_data.get('Minutes jouées', 90) / 90)
+        tacles_90 = player_data.get('Tacles gagnants', 0) / (player_data.get('Minutes jouées', 90) / 90)
+        
+        if 'GK' in position or 'Gardien' in position:
+            return "Gardien de but, jeu au pied, réflexes"
+        elif buts_90 > 0.5:
+            return "Attaquant prolifique, finisseur dans la surface"
+        elif passes_90 > 50:
+            return "Meneur de jeu, créateur, vision de jeu"
+        elif tacles_90 > 3:
+            return "Défenseur solide, récupérateur, dueliste"
+        else:
+            return "Joueur polyvalent, contribution dans tous les secteurs"
+    
+    @staticmethod
+    def _determine_strengths(player_data: pd.Series) -> List[str]:
+        """Détermine les points forts basés sur les statistiques"""
+        strengths = []
+        
+        # Analyse des différentes métriques
+        if player_data.get('Buts par 90 minutes', 0) > 0.3:
+            strengths.append("Finition")
+        
+        if player_data.get('Passes décisives par 90 minutes', 0) > 0.2:
+            strengths.append("Création")
+        
+        if player_data.get('Pourcentage de passes réussies', 0) > 85:
+            strengths.append("Précision des passes")
+        
+        if player_data.get('Dribbles réussis', 0) / (player_data.get('Minutes jouées', 90) / 90) > 2:
+            strengths.append("Dribbles")
+        
+        if player_data.get('Tacles gagnants', 0) / (player_data.get('Minutes jouées', 90) / 90) > 2:
+            strengths.append("Défense")
+        
+        if player_data.get('Duels aériens gagnés', 0) / (player_data.get('Minutes jouées', 90) / 90) > 3:
+            strengths.append("Jeu aérien")
+        
+        return strengths if strengths else ["Polyvalence"]
+    
+    @staticmethod
+    def _analyze_current_performance(player_data: pd.Series) -> Dict:
+        """Analyse la performance de la saison actuelle"""
+        
+        # Calcul de notes sur 10
+        def calculate_rating(value, excellent_threshold, good_threshold):
+            if value >= excellent_threshold:
+                return min(10, 8 + (value - excellent_threshold) / excellent_threshold * 2)
+            elif value >= good_threshold:
+                return 6 + (value - good_threshold) / (excellent_threshold - good_threshold) * 2
+            else:
+                return max(1, value / good_threshold * 6)
+        
+        # Métriques d'évaluation
+        buts_90 = player_data.get('Buts par 90 minutes', 0)
+        passes_d_90 = player_data.get('Passes décisives par 90 minutes', 0)
+        precision_passes = player_data.get('Pourcentage de passes réussies', 0)
+        
+        # Calcul des notes
+        note_attaque = calculate_rating(buts_90, 0.8, 0.3)
+        note_creation = calculate_rating(passes_d_90, 0.5, 0.2)
+        note_technique = calculate_rating(precision_passes, 90, 80)
+        
+        # Note globale
+        note_globale = (note_attaque + note_creation + note_technique) / 3
+        
+        # Détermination du niveau
+        if note_globale >= 8:
+            niveau = "Exceptionnel ⭐⭐⭐"
+        elif note_globale >= 7:
+            niveau = "Excellent ⭐⭐"
+        elif note_globale >= 6:
+            niveau = "Très bon ⭐"
+        elif note_globale >= 5:
+            niveau = "Bon"
+        else:
+            niveau = "En progression"
+        
+        return {
+            "note_globale": note_globale,
+            "niveau": niveau,
+            "note_attaque": note_attaque,
+            "note_creation": note_creation,
+            "note_technique": note_technique,
+            "minutes_jouees": int(player_data.get('Minutes jouées', 0)),
+            "matchs_joues": int(player_data.get('Matchs joués', 0))
+        }
+
+# ================================================================================================
+# MISE À JOUR DES COMPOSANTS UI
 # ================================================================================================
 
 class UIComponents:
@@ -402,7 +594,28 @@ class UIComponents:
                 """, unsafe_allow_html=True)
             except Exception:
                 UIComponents._render_photo_placeholder(player_name)
-        else:
+            st.markdown("""
+            <div class='dashboard-card animated-card' style='text-align: center; padding: 30px; margin-top: 20px;'>
+                <h4 style='color: #F7B801; margin-bottom: 15px;'>⚠️ Sélection Incomplète</h4>
+                <p style='color: #E2E8F0; margin: 0; font-size: 1.1em;'>
+                    Veuillez sélectionner deux joueurs pour activer la comparaison
+                </p>
+                <div style='display: flex; justify-content: center; gap: 20px; margin-top: 20px;'>
+                    <div style='text-align: center;'>
+                        <div style='font-size: 2em; margin-bottom: 5px;'>👤</div>
+                        <p style='color: #A0AEC0; font-size: 0.9em;'>Joueur 1</p>
+                    </div>
+                    <div style='text-align: center; color: #FF6B35;'>
+                        <div style='font-size: 2em; margin-bottom: 5px;'>⚔️</div>
+                        <p style='color: #A0AEC0; font-size: 0.9em;'>VS</p>
+                    </div>
+                    <div style='text-align: center;'>
+                        <div style='font-size: 2em; margin-bottom: 5px;'>👤</div>
+                        <p style='color: #A0AEC0; font-size: 0.9em;'>Joueur 2</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             UIComponents._render_photo_placeholder(player_name)
     
     @staticmethod
@@ -429,12 +642,201 @@ class UIComponents:
     
     @staticmethod
     def _render_player_info(player_data: pd.Series):
-        """Affiche les informations centrales du joueur"""
+        """Affiche les informations de base du joueur (version simplifiée)"""
         st.markdown(f"""
         <div class='dashboard-card animated-card' style='text-align: center;'>
             <h2 class='section-title' style='margin-bottom: 30px;'>
                 {player_data['Joueur']}
             </h2>
+            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;'>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Âge']}</div>
+                    <div class='metric-label'>Ans</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Position']}</div>
+                    <div class='metric-label'>Position</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{int(player_data['Minutes jouées'])}</div>
+                    <div class='metric-label'>Minutes</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Nationalité']}</div>
+                    <div class='metric-label'>Nationalité</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_player_achievements_sidebar():
+        """Affiche les achievements dans la sidebar"""
+        st.markdown("---")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #FF6B35 0%, #F7B801 100%); 
+                    padding: 15px; border-radius: 10px; margin: 15px 0;'>
+            <h4 style='color: white; margin: 0 0 10px 0; font-weight: 800;'>🏆 Achievements</h4>
+            <div style='display: flex; justify-content: space-around; align-items: center;'>
+                <div style='text-align: center;'>
+                    <div style='font-size: 1.5em;'>⭐</div>
+                    <div style='color: white; font-size: 0.8em;'>Excellence</div>
+                </div>
+                <div style='text-align: center;'>
+                    <div style='font-size: 1.5em;'>🎯</div>
+                    <div style='color: white; font-size: 0.8em;'>Précision</div>
+                </div>
+                <div style='text-align: center;'>
+                    <div style='font-size: 1.5em;'>🔥</div>
+                    <div style='color: white; font-size: 0.8em;'>Performance</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_player_comparison_preview(player_data: pd.Series):
+        """Affiche un aperçu de comparaison rapide"""
+        st.markdown("""
+        <div class='dashboard-card animated-card' style='margin: 20px 0;'>
+            <h3 class='subsection-title'>⚡ Comparaison Rapide</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Métriques clés par 90 minutes
+        col1, col2, col3 = st.columns(3)
+        
+        minutes_90 = player_data['Minutes jouées'] / 90 if player_data['Minutes jouées'] > 0 else 1
+        
+        quick_metrics = [
+            ("🎯", "Buts/90", f"{player_data.get('Buts par 90 minutes', 0):.2f}"),
+            ("🅰️", "Passes D./90", f"{player_data.get('Passes décisives par 90 minutes', 0):.2f}"),
+            ("⚽", "Actions/90", f"{(player_data.get('Buts', 0) + player_data.get('Passes décisives', 0)) / minutes_90:.2f}")
+        ]
+        
+        cols = [col1, col2, col3]
+        colors = ["#FF6B35", "#00C896", "#1A759F"]
+        
+        for i, (icon, label, value) in enumerate(quick_metrics):
+            with cols[i]:
+                st.markdown(f"""
+                <div class='metric-card animated-card' style='border-color: {colors[i]}; 
+                     background: linear-gradient(135deg, {colors[i]}20, {colors[i]}05);'>
+                    <div style='font-size: 2em; color: {colors[i]}; margin-bottom: 10px;'>{icon}</div>
+                    <div class='metric-value' style='color: {colors[i]};'>{value}</div>
+                    <div class='metric-label'>{label}</div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_player_stats_summary(player_data: pd.Series):
+        """Affiche un résumé statistique avancé"""
+        st.markdown("""
+        <div class='dashboard-card animated-card' style='margin: 20px 0;'>
+            <h3 class='subsection-title'>📊 Résumé Statistique</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Calculs avancés
+        minutes_90 = player_data['Minutes jouées'] / 90 if player_data['Minutes jouées'] > 0 else 1
+        
+        # Statistiques calculées
+        impact_offensif = (player_data.get('Buts', 0) + player_data.get('Passes décisives', 0)) / minutes_90
+        efficacite_passes = player_data.get('Pourcentage de passes réussies', 0)
+        contribution_defensive = (player_data.get('Tacles gagnants', 0) + player_data.get('Interceptions', 0)) / minutes_90
+        
+        # Détermination du profil de joueur
+        if impact_offensif > 0.8:
+            profil = "⚡ Joueur Offensif"
+            profil_color = "#FF6B35"
+        elif contribution_defensive > 3:
+            profil = "🛡️ Joueur Défensif"
+            profil_color = "#1A759F"
+        elif efficacite_passes > 85:
+            profil = "🎨 Créateur de Jeu"
+            profil_color = "#00C896"
+        else:
+            profil = "⚽ Joueur Polyvalent"
+            profil_color = "#F7B801"
+        
+        # Affichage du profil
+        st.markdown(f"""
+        <div style='text-align: center; margin: 20px 0;'>
+            <div style='background: linear-gradient(135deg, {profil_color} 0%, {profil_color}80 100%); 
+                        color: white; padding: 20px; border-radius: 20px; 
+                        box-shadow: 0 8px 25px {profil_color}40;'>
+                <h4 style='margin: 0; font-size: 1.5em; font-weight: 800;'>{profil}</h4>
+                <p style='margin: 10px 0 0 0; opacity: 0.9;'>
+                    Profil déterminé par l'analyse des performances
+                </p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Statistiques détaillées
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown(f"""
+            <div class='dashboard-card'>
+                <h4 style='color: #FF6B35; margin-bottom: 15px;'>🎯 Impact Offensif</h4>
+                <div style='margin: 15px 0;'>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>
+                        <span style='color: #E2E8F0;'>Actions décisives/90:</span>
+                        <span style='color: #FF6B35; font-weight: bold;'>{impact_offensif:.2f}</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>
+                        <span style='color: #E2E8F0;'>Buts totaux:</span>
+                        <span style='color: #FF6B35; font-weight: bold;'>{player_data.get('Buts', 0)}</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>
+                        <span style='color: #E2E8F0;'>Passes décisives:</span>
+                        <span style='color: #FF6B35; font-weight: bold;'>{player_data.get('Passes décisives', 0)}</span>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class='dashboard-card'>
+                <h4 style='color: #00C896; margin-bottom: 15px;'>🎨 Qualité Technique</h4>
+                <div style='margin: 15px 0;'>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>
+                        <span style='color: #E2E8F0;'>Précision passes:</span>
+                        <span style='color: #00C896; font-weight: bold;'>{efficacite_passes:.1f}%</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>
+                        <span style='color: #E2E8F0;'>Touches de balle:</span>
+                        <span style='color: #00C896; font-weight: bold;'>{player_data.get('Touches de balle', 0)}</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 10px;'>
+                        <span style='color: #E2E8F0;'>Dribbles réussis:</span>
+                        <span style='color: #00C896; font-weight: bold;'>{player_data.get('Dribbles réussis', 0)}</span>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_loading_animation():
+        """Affiche une animation de chargement stylée"""
+        st.markdown("""
+        <div style='text-align: center; padding: 40px;'>
+            <div style='display: inline-block; width: 60px; height: 60px; border: 6px solid #4A5568; 
+                        border-radius: 50%; border-top-color: #FF6B35; animation: spin 1s ease-in-out infinite;'>
+            </div>
+            <p style='color: #E2E8F0; margin-top: 20px; font-size: 1.1em;'>
+                Chargement des données du joueur...
+            </p>
+        </div>
+        
+        <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        </style>
+        """, unsafe_allow_html=True)
             <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;'>
                 <div class='metric-card'>
                     <div class='metric-value'>{player_data['Âge']}</div>
@@ -1198,191 +1600,403 @@ class TabManager:
     
     @staticmethod
     def render_comparison_tab(df: pd.DataFrame, selected_player: str):
-        """Rendu de l'onglet comparaison"""
+        """Rendu de l'onglet comparaison avec pizza charts"""
         st.markdown("<h2 class='section-title'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)
         
-        # Mode de visualisation
+        # Mode de visualisation avec design amélioré
+        st.markdown("""
+        <div class='dashboard-card animated-card' style='text-align: center; padding: 20px; margin-bottom: 30px;'>
+            <h3 style='color: #FF6B35; margin-bottom: 15px;'>📊 Mode de Visualisation</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
         mode = st.radio(
-            "Mode de visualisation",
+            "Choisissez votre type d'analyse :",
             ["Radar individuel", "Radar comparatif"],
-            horizontal=True
+            horizontal=True,
+            help="Le radar individuel montre les percentiles d'un joueur. Le radar comparatif permet de comparer deux joueurs directement."
         )
         
         competitions = sorted(df['Compétition'].dropna().unique())
         
         if mode == "Radar individuel":
-            TabManager._render_individual_radar(df, selected_player, competitions)
+            TabManager._render_individual_pizza_chart(df, selected_player, competitions)
         else:
-            TabManager._render_comparative_radar(df, competitions)
+            TabManager._render_comparative_pizza_chart(df, competitions)
     
     @staticmethod
-    def _render_individual_radar(df: pd.DataFrame, selected_player: str, competitions: List[str]):
-        """Rendu du radar individuel"""
-        st.markdown(f"<h3 class='subsection-title'>🎯 Radar individuel : {selected_player}</h3>", unsafe_allow_html=True)
+    def _render_individual_pizza_chart(df: pd.DataFrame, selected_player: str, competitions: List[str]):
+        """Rendu du pizza chart individuel avec les couleurs de l'interface"""
+        st.markdown(f"<h3 class='subsection-title'>🎯 Pizza Chart Individuel : {selected_player}</h3>", unsafe_allow_html=True)
+        
+        # Section de configuration
+        col_config1, col_config2 = st.columns(2)
+        
+        with col_config1:
+            st.markdown("""
+            <div class='dashboard-card' style='padding: 20px;'>
+                <h4 style='color: #00C896; margin-bottom: 15px;'>⚙️ Configuration</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            competition = st.selectbox(
+                "🏆 Compétition de référence :",
+                competitions,
+                help="Sélectionnez la compétition pour calculer les percentiles"
+            )
+        
+        with col_config2:
+            # Informations sur le joueur sélectionné
+            player_info = df[df['Joueur'] == selected_player].iloc[0]
+            st.markdown(f"""
+            <div class='dashboard-card' style='padding: 20px;'>
+                <h4 style='color: #00C896; margin-bottom: 15px;'>👤 Joueur Analysé</h4>
+                <p style='color: #E2E8F0; margin: 5px 0;'><strong>Nom :</strong> {selected_player}</p>
+                <p style='color: #E2E8F0; margin: 5px 0;'><strong>Équipe :</strong> {player_info['Équipe']}</p>
+                <p style='color: #E2E8F0; margin: 5px 0;'><strong>Position :</strong> {player_info['Position']}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         try:
-            # Sélection de la compétition pour comparaison
-            competition = st.selectbox("Compétition de référence", competitions)
             df_comp = df[df['Compétition'] == competition]
-            
             values = MetricsCalculator.calculate_percentiles(selected_player, df_comp)
             
+            # Charger les polices
             font_normal = FontManager()
             font_bold = FontManager()
             font_italic = FontManager()
             
+            # Créer le pizza chart avec les couleurs de l'interface
             baker = PyPizza(
                 params=list(AppConfig.RAW_STATS.keys()),
-                background_color="#0E1117",
+                background_color="#0E1117",  # Fond sombre de l'interface
                 straight_line_color="#FFFFFF",
-                straight_line_lw=1,
-                last_circle_color="#FFFFFF",
-                last_circle_lw=1,
-                other_circle_lw=0,
-                inner_circle_size=11
+                straight_line_lw=2,
+                last_circle_color="#FF6B35",  # Couleur primaire
+                last_circle_lw=3,
+                other_circle_lw=1,
+                other_circle_color="#4A5568",  # Couleur secondaire
+                inner_circle_size=12
             )
+            
+            # Couleurs des tranches avec dégradé inspiré de l'interface
+            slice_colors = [AppConfig.COLORS['primary']] * len(values)
             
             fig, ax = baker.make_pizza(
                 values,
-                figsize=(14, 16),
+                figsize=(16, 18),
                 param_location=110,
                 color_blank_space="same",
-                slice_colors=[AppConfig.COLORS['primary']] * len(values),
-                value_colors=["#ffffff"] * len(values),
+                slice_colors=slice_colors,
+                value_colors=["#FFFFFF"] * len(values),
                 value_bck_colors=[AppConfig.COLORS['primary']] * len(values),
-                kwargs_slices=dict(edgecolor="#FFFFFF", zorder=2, linewidth=2),
-                kwargs_params=dict(color="#ffffff", fontsize=14, fontproperties=font_bold.prop),
+                kwargs_slices=dict(
+                    edgecolor="#FFFFFF", 
+                    zorder=2, 
+                    linewidth=2,
+                    alpha=0.8
+                ),
+                kwargs_params=dict(
+                    color="#FFFFFF", 
+                    fontsize=13, 
+                    fontproperties=font_bold.prop,
+                    weight='bold'
+                ),
                 kwargs_values=dict(
-                    color="#ffffff", 
+                    color="#FFFFFF", 
                     fontsize=12, 
                     fontproperties=font_normal.prop,
+                    weight='bold',
                     bbox=dict(
                         edgecolor="#FFFFFF", 
                         facecolor=AppConfig.COLORS['primary'], 
                         boxstyle="round,pad=0.3", 
-                        lw=2
+                        lw=2,
+                        alpha=0.9
                     )
                 )
             )
             
-            # Titre et sous-titre
-            fig.text(0.515, 0.97, selected_player, size=32, ha="center", 
-                    fontproperties=font_bold.prop, color="#ffffff", weight='bold')
-            fig.text(0.515, 0.94, f"Radar Individuel | Percentiles vs {competition} | Saison 2024-25", 
-                    size=16, ha="center", fontproperties=font_bold.prop, color="#ffffff")
+            # Personnalisation du fond avec dégradé visuel
+            fig.patch.set_facecolor('#0E1117')
+            ax.set_facecolor('#0E1117')
             
-            # Footer
+            # Titre principal avec style interface
+            fig.text(0.515, 0.975, selected_player, 
+                    size=36, ha="center", fontproperties=font_bold.prop, 
+                    color="#FFFFFF", weight='bold')
+            
+            # Sous-titre avec couleurs de l'interface
+            fig.text(0.515, 0.945, f"Pizza Chart Individuel | Percentiles vs {competition}", 
+                    size=18, ha="center", fontproperties=font_bold.prop, 
+                    color="#FF6B35")
+            
+            fig.text(0.515, 0.925, "Saison 2024-25", 
+                    size=16, ha="center", fontproperties=font_normal.prop, 
+                    color="#00C896")
+            
+            # Légende explicative avec style interface
+            fig.text(0.515, 0.05, 
+                    "Les valeurs représentent les percentiles par rapport aux autres joueurs de la compétition", 
+                    size=12, ha="center", fontproperties=font_italic.prop, 
+                    color="#A0AEC0", style='italic')
+            
+            # Footer avec branding cohérent
             fig.text(0.99, 0.01, "Dashboard Football Pro | Données: FBRef", 
-                    size=10, ha="right", fontproperties=font_italic.prop, color="#dddddd")
+                    size=10, ha="right", fontproperties=font_italic.prop, 
+                    color="#718096")
+            
+            # Ajout d'informations contextuelles
+            nb_joueurs = len(df_comp)
+            fig.text(0.01, 0.01, f"Comparé à {nb_joueurs} joueurs en {competition}", 
+                    size=10, ha="left", fontproperties=font_italic.prop, 
+                    color="#718096")
             
             st.pyplot(fig, use_container_width=True)
             
+            # Légende explicative sous le graphique
+            st.markdown("""
+            <div class='dashboard-card animated-card' style='text-align: center; padding: 20px; margin-top: 20px;'>
+                <h4 style='color: #00C896; margin-bottom: 15px;'>📖 Guide de Lecture</h4>
+                <div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px;'>
+                    <div>
+                        <div style='background: #FF6B35; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; border: 2px solid white;'></div>
+                        <p style='color: #E2E8F0; margin: 0; font-size: 0.9em;'><strong>Percentile élevé</strong><br>Performance supérieure</p>
+                    </div>
+                    <div>
+                        <div style='background: linear-gradient(45deg, #FF6B35, #F7B801); width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; border: 2px solid white;'></div>
+                        <p style='color: #E2E8F0; margin: 0; font-size: 0.9em;'><strong>Couleurs interface</strong><br>Design cohérent</p>
+                    </div>
+                    <div>
+                        <div style='background: #4A5568; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; border: 2px solid white;'></div>
+                        <p style='color: #E2E8F0; margin: 0; font-size: 0.9em;'><strong>Zones vides</strong><br>Percentiles plus faibles</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
         except Exception as e:
-            st.error(f"Erreur lors de la création du radar individuel : {str(e)}")
+            st.error(f"❌ Erreur lors de la création du pizza chart individuel : {str(e)}")
+            st.info("💡 Vérifiez que le joueur existe dans la compétition sélectionnée.")
     
     @staticmethod
-    def _render_comparative_radar(df: pd.DataFrame, competitions: List[str]):
-        """Rendu du radar comparatif"""
+    def _render_comparative_pizza_chart(df: pd.DataFrame, competitions: List[str]):
+        """Rendu du pizza chart comparatif avec les couleurs de l'interface"""
+        st.markdown("<h3 class='subsection-title'>⚔️ Pizza Chart Comparatif</h3>", unsafe_allow_html=True)
+        
+        # Section de configuration des joueurs
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("**👤 Joueur 1**")
+            st.markdown("""
+            <div class='dashboard-card' style='padding: 20px; border-color: #FF6B35;'>
+                <h4 style='color: #FF6B35; margin-bottom: 15px;'>👤 Joueur 1</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
             ligue1 = st.selectbox("🏆 Compétition", competitions, key="ligue1_comp")
             df_j1 = df[df['Compétition'] == ligue1]
             joueur1 = st.selectbox("Joueur", df_j1['Joueur'].sort_values(), key="joueur1_comp")
         
         with col2:
-            st.markdown("**👤 Joueur 2**")
+            st.markdown("""
+            <div class='dashboard-card' style='padding: 20px; border-color: #004E89;'>
+                <h4 style='color: #004E89; margin-bottom: 15px;'>👤 Joueur 2</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
             ligue2 = st.selectbox("🏆 Compétition", competitions, key="ligue2_comp")
             df_j2 = df[df['Compétition'] == ligue2]
             joueur2 = st.selectbox("Joueur", df_j2['Joueur'].sort_values(), key="joueur2_comp")
         
         if joueur1 and joueur2:
-            st.markdown(f"<h3 class='subsection-title'>⚔️ {joueur1} vs {joueur2}</h3>", unsafe_allow_html=True)
+            # Informations des joueurs
+            player1_info = df_j1[df_j1['Joueur'] == joueur1].iloc[0]
+            player2_info = df_j2[df_j2['Joueur'] == joueur2].iloc[0]
+            
+            st.markdown(f"""
+            <div class='dashboard-card animated-card' style='text-align: center; padding: 25px; margin: 20px 0;'>
+                <h3 style='color: #FF6B35; margin-bottom: 20px;'>⚔️ Comparaison : {joueur1} vs {joueur2}</h3>
+                <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 30px;'>
+                    <div style='border-left: 4px solid #FF6B35; padding-left: 15px;'>
+                        <h4 style='color: #FF6B35; margin-bottom: 10px;'>{joueur1}</h4>
+                        <p style='color: #E2E8F0; margin: 5px 0;'>🏟️ {player1_info['Équipe']}</p>
+                        <p style='color: #E2E8F0; margin: 5px 0;'>⚽ {player1_info['Position']}</p>
+                        <p style='color: #E2E8F0; margin: 5px 0;'>🏆 {ligue1}</p>
+                    </div>
+                    <div style='border-left: 4px solid #004E89; padding-left: 15px;'>
+                        <h4 style='color: #004E89; margin-bottom: 10px;'>{joueur2}</h4>
+                        <p style='color: #E2E8F0; margin: 5px 0;'>🏟️ {player2_info['Équipe']}</p>
+                        <p style='color: #E2E8F0; margin: 5px 0;'>⚽ {player2_info['Position']}</p>
+                        <p style='color: #E2E8F0; margin: 5px 0;'>🏆 {ligue2}</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             try:
                 values1 = MetricsCalculator.calculate_percentiles(joueur1, df_j1)
                 values2 = MetricsCalculator.calculate_percentiles(joueur2, df_j2)
                 
+                # Charger les polices
                 font_normal = FontManager()
                 font_bold = FontManager()
                 font_italic = FontManager()
                 
+                # Configuration avancée du pizza chart comparatif
+                params_offset = [False] * len(AppConfig.RAW_STATS)
+                if len(params_offset) > 9:
+                    params_offset[9] = True
+                if len(params_offset) > 10:
+                    params_offset[10] = True
+                
+                # Créer le pizza chart avec les couleurs de l'interface
                 baker = PyPizza(
                     params=list(AppConfig.RAW_STATS.keys()),
                     background_color="#0E1117",
                     straight_line_color="#FFFFFF",
-                    straight_line_lw=1,
-                    last_circle_color="#FFFFFF",
-                    last_circle_lw=1,
+                    straight_line_lw=2,
+                    last_circle_color="#FF6B35",
+                    last_circle_lw=3,
                     other_circle_ls="-.",
-                    other_circle_lw=1
+                    other_circle_lw=1,
+                    other_circle_color="#4A5568"
                 )
                 
                 fig, ax = baker.make_pizza(
                     values1,
                     compare_values=values2,
-                    figsize=(14, 14),
+                    figsize=(16, 16),
                     kwargs_slices=dict(
                         facecolor=AppConfig.COLORS['primary'], 
                         edgecolor="#FFFFFF", 
                         linewidth=2, 
-                        zorder=2
+                        zorder=2,
+                        alpha=0.8
                     ),
                     kwargs_compare=dict(
                         facecolor=AppConfig.COLORS['secondary'], 
                         edgecolor="#FFFFFF", 
                         linewidth=2, 
-                        zorder=2
+                        zorder=2,
+                        alpha=0.8
                     ),
                     kwargs_params=dict(
-                        color="#ffffff", 
-                        fontsize=14, 
-                        fontproperties=font_bold.prop
+                        color="#FFFFFF", 
+                        fontsize=13, 
+                        fontproperties=font_bold.prop,
+                        weight='bold'
                     ),
                     kwargs_values=dict(
-                        color="#ffffff", 
-                        fontsize=12, 
+                        color="#FFFFFF", 
+                        fontsize=11, 
                         fontproperties=font_normal.prop, 
                         zorder=3,
+                        weight='bold',
                         bbox=dict(
                             edgecolor="#FFFFFF", 
                             facecolor=AppConfig.COLORS['primary'], 
-                            boxstyle="round,pad=0.3", 
-                            lw=2
+                            boxstyle="round,pad=0.25", 
+                            lw=2,
+                            alpha=0.9
                         )
                     ),
                     kwargs_compare_values=dict(
-                        color="#ffffff", 
-                        fontsize=12, 
+                        color="#FFFFFF", 
+                        fontsize=11, 
                         fontproperties=font_normal.prop, 
                         zorder=3,
+                        weight='bold',
                         bbox=dict(
                             edgecolor="#FFFFFF", 
                             facecolor=AppConfig.COLORS['secondary'], 
-                            boxstyle="round,pad=0.3", 
-                            lw=2
+                            boxstyle="round,pad=0.25", 
+                            lw=2,
+                            alpha=0.9
                         )
                     )
                 )
                 
-                # Titre
-                fig.text(0.515, 0.97, "Radar Comparatif | Percentiles | Saison 2024-25",
-                         size=18, ha="center", fontproperties=font_bold.prop, color="#ffffff")
+                # Ajustement des textes si la méthode existe
+                try:
+                    baker.adjust_texts(params_offset, offset=-0.17, adj_comp_values=True)
+                except:
+                    pass  # Si la méthode n'existe pas, on continue sans ajustement
                 
-                # Légende
-                legend_p1 = mpatches.Patch(color=AppConfig.COLORS['primary'], label=joueur1)
-                legend_p2 = mpatches.Patch(color=AppConfig.COLORS['secondary'], label=joueur2)
-                ax.legend(handles=[legend_p1, legend_p2], loc="upper right", bbox_to_anchor=(1.3, 1.0))
+                # Personnalisation du fond
+                fig.patch.set_facecolor('#0E1117')
+                ax.set_facecolor('#0E1117')
                 
-                # Footer
-                fig.text(0.99, 0.01, "Dashboard Football Pro | Source: FBRef",
-                         size=10, ha="right", fontproperties=font_italic.prop, color="#dddddd")
+                # Titre principal
+                fig.text(0.515, 0.97, "Pizza Chart Comparatif | Percentiles | Saison 2024-25",
+                         size=20, ha="center", fontproperties=font_bold.prop, color="#FFFFFF")
+                
+                # Sous-titre avec informations
+                fig.text(0.515, 0.945, f"{ligue1} vs {ligue2}",
+                         size=16, ha="center", fontproperties=font_bold.prop, color="#00C896")
+                
+                # Légende avec couleurs de l'interface
+                legend_p1 = mpatches.Patch(
+                    color=AppConfig.COLORS['primary'], 
+                    label=f"{joueur1} ({ligue1})"
+                )
+                legend_p2 = mpatches.Patch(
+                    color=AppConfig.COLORS['secondary'], 
+                    label=f"{joueur2} ({ligue2})"
+                )
+                
+                legend = ax.legend(
+                    handles=[legend_p1, legend_p2], 
+                    loc="upper right", 
+                    bbox_to_anchor=(1.35, 1.0),
+                    fontsize=12,
+                    fancybox=True,
+                    shadow=True,
+                    framealpha=0.9
+                )
+                legend.get_frame().set_facecolor('#1E2640')
+                legend.get_frame().set_edgecolor('#FF6B35')
+                
+                # Footer stylé
+                fig.text(0.99, 0.01, "Dashboard Football Pro | Source: FBRef\nInspiration: @Worville, @FootballSlices",
+                         size=10, ha="right", fontproperties=font_italic.prop, color="#718096")
+                
+                # Informations contextuelles
+                fig.text(0.01, 0.01, f"Percentiles calculés sur leurs compétitions respectives",
+                         size=10, ha="left", fontproperties=font_italic.prop, color="#718096")
                 
                 st.pyplot(fig, use_container_width=True)
                 
+                # Guide de lecture pour la comparaison
+                st.markdown(f"""
+                <div class='dashboard-card animated-card' style='text-align: center; padding: 25px; margin-top: 20px;'>
+                    <h4 style='color: #00C896; margin-bottom: 20px;'>📊 Analyse Comparative</h4>
+                    <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 30px;'>
+                        <div style='background: linear-gradient(135deg, #FF6B35, rgba(255,107,53,0.2)); padding: 20px; border-radius: 15px; border: 2px solid #FF6B35;'>
+                            <h5 style='color: #FFFFFF; margin-bottom: 15px;'>{joueur1}</h5>
+                            <p style='color: #FFFFFF; margin: 0; font-size: 0.9em;'>
+                                Représenté par la couleur <strong>orange primaire</strong><br>
+                                Percentiles calculés vs {ligue1}
+                            </p>
+                        </div>
+                        <div style='background: linear-gradient(135deg, #004E89, rgba(0,78,137,0.2)); padding: 20px; border-radius: 15px; border: 2px solid #004E89;'>
+                            <h5 style='color: #FFFFFF; margin-bottom: 15px;'>{joueur2}</h5>
+                            <p style='color: #FFFFFF; margin: 0; font-size: 0.9em;'>
+                                Représenté par la couleur <strong>bleu marine</strong><br>
+                                Percentiles calculés vs {ligue2}
+                            </p>
+                        </div>
+                    </div>
+                    <p style='color: #A0AEC0; margin-top: 20px; font-style: italic;'>
+                        Les zones où les couleurs se chevauchent montrent des performances similaires
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+                
             except Exception as e:
-                st.error(f"Erreur lors de la création du radar comparatif : {str(e)}")
+                st.error(f"❌ Erreur lors de la création du pizza chart comparatif : {str(e)}")
+                st.info("💡 Vérifiez que les deux joueurs existent dans leurs compétitions respectives.")
+        else:
     
     @staticmethod
     def _render_detailed_metrics(metrics: Dict[str, float], title: str):
@@ -1491,8 +2105,12 @@ class SidebarManager:
             # Sélection du joueur
             selected_player = SidebarManager._render_player_selection(df_filtered_minutes)
             
-            # Informations additionnelles
+            # Informations additionnelles avec achievements
             SidebarManager._render_sidebar_footer()
+            
+            # Si un joueur est sélectionné, afficher ses achievements
+            if selected_player:
+                UIComponents.render_player_achievements_sidebar()
             
             return selected_competition, selected_player, df_filtered_minutes
     
@@ -1596,10 +2214,28 @@ class FootballDashboard:
             # Récupération des données du joueur
             player_data = df_filtered[df_filtered['Joueur'] == selected_player].iloc[0]
             
-            # Affichage de la carte du joueur
+            # Affichage de l'animation de chargement temporaire
+            loading_placeholder = st.empty()
+            with loading_placeholder:
+                UIComponents.render_loading_animation()
+            
+            # Simulation d'un temps de chargement pour l'effet
+            import time
+            time.sleep(0.5)  # Délai très court pour l'effet visuel
+            
+            # Effacer l'animation et afficher le contenu
+            loading_placeholder.empty()
+            
+            # Affichage de la carte du joueur avec toutes les informations
             UIComponents.render_player_card(player_data, selected_competition)
             
-            # Métriques de base
+            # Comparaison rapide
+            UIComponents.render_player_comparison_preview(player_data)
+            
+            # Résumé statistique avancé
+            UIComponents.render_player_stats_summary(player_data)
+            
+            # Métriques de base (version simplifiée maintenant)
             self._render_basic_metrics(player_data)
             
             st.markdown("---")

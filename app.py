@@ -452,7 +452,10 @@ class UIComponents:
                     <div class='metric-value'>{player_data['Nationalité']}</div>
                     <div class='metric-label'>Nationalité</div>
                 </div>
-            </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Valeur marchande']}</div>
+                    <div class='metric-value'>{player_data['Valeur Marchande']}</div>
+                </div>
         </div>
         """, unsafe_allow_html=True)
     

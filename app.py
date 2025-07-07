@@ -301,6 +301,34 @@ class StyleManager:
             .subsection-title {
                 font-size: 1.4em;
             }
+            
+            .metric-card-compact {
+                padding: 8px 4px;
+                min-height: 70px;
+            }
+            
+            .metric-value-compact {
+                font-size: 1.2em;
+            }
+            
+            .metric-label-compact {
+                font-size: 0.7em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .metric-card-compact {
+                padding: 6px 2px;
+                min-height: 60px;
+            }
+            
+            .metric-value-compact {
+                font-size: 1em;
+            }
+            
+            .metric-label-compact {
+                font-size: 0.65em;
+            }
         }
         </style>
         """
@@ -415,16 +443,20 @@ class UIComponents:
     @staticmethod
     def render_player_card(player_data: pd.Series, competition: str):
         """Affiche la carte complète du joueur"""
-        col1, col2, col3 = st.columns([1, 2, 1])
+        # Layout responsive avec containers
+        container = st.container()
         
-        with col1:
-            UIComponents._render_player_photo(player_data['Joueur'])
-        
-        with col2:
-            UIComponents._render_player_info(player_data)
-        
-        with col3:
-            UIComponents._render_club_logo(player_data['Équipe'], competition)
+        with container:
+            col1, col2, col3 = st.columns([1, 2.5, 1], gap="medium")
+            
+            with col1:
+                UIComponents._render_player_photo(player_data['Joueur'])
+            
+            with col2:
+                UIComponents._render_player_info(player_data)
+            
+            with col3:
+                UIComponents._render_club_logo(player_data['Équipe'], competition)
     
     @staticmethod
     def _render_player_photo(player_name: str):
@@ -477,8 +509,43 @@ class UIComponents:
         valeur_marchande = "N/A"
         if 'Valeur marchande' in player_data.index and pd.notna(player_data['Valeur marchande']):
             vm = player_data['Valeur marchande']
-            # Si la valeur est numérique, on la formate
-            if isinstance(vm, (int, float)):
+            
+            # Si c'est une chaîne, essayer de la convertir en nombre
+            if isinstance(vm, str):
+                # Nettoyer la chaîne : supprimer les espaces, € et autres caractères
+                vm_clean = vm.replace('€', '').replace(' ', '').replace(',', '').strip()
+                
+                # Gérer les abréviations M, K, etc.
+                if vm_clean.upper().endswith('M'):
+                    try:
+                        valeur_numerique = float(vm_clean[:-1]) * 1000000
+                    except:
+                        valeur_marchande = vm
+                        valeur_numerique = None
+                elif vm_clean.upper().endswith('K'):
+                    try:
+                        valeur_numerique = float(vm_clean[:-1]) * 1000
+                    except:
+                        valeur_marchande = vm
+                        valeur_numerique = None
+                else:
+                    try:
+                        valeur_numerique = float(vm_clean)
+                    except:
+                        valeur_marchande = vm
+                        valeur_numerique = None
+                
+                # Formater la valeur si conversion réussie
+                if valeur_numerique is not None:
+                    if valeur_numerique >= 1000000:
+                        valeur_marchande = f"{valeur_numerique/1000000:.1f}M€"
+                    elif valeur_numerique >= 1000:
+                        valeur_marchande = f"{valeur_numerique/1000:.0f}K€"
+                    else:
+                        valeur_marchande = f"{valeur_numerique:.0f}€"
+                        
+            # Si c'est déjà un nombre
+            elif isinstance(vm, (int, float)):
                 if vm >= 1000000:
                     valeur_marchande = f"{vm/1000000:.1f}M€"
                 elif vm >= 1000:
@@ -486,7 +553,7 @@ class UIComponents:
                 else:
                     valeur_marchande = f"{vm:.0f}€"
             else:
-                # Si c'est déjà une chaîne formatée
+                # Si ce n'est ni string ni nombre, garder la valeur originale
                 valeur_marchande = str(vm)
         
         # Tronquer les textes longs pour éviter le débordement
@@ -517,7 +584,7 @@ class UIComponents:
                     <div class='metric-label-compact'>Minutes</div>
                 </div>
                 <div class='metric-card-compact'>
-                    <div class='metric-value-compact' style='color: #F7B801;'>{valeur_marchande}</div>
+                    <div class='metric-value-compact' style='color: #F7B801;' title='{player_data.get('Valeur marchande', 'N/A')}'>{valeur_marchande}</div>
                     <div class='metric-label-compact'>Val. Marchande</div>
                 </div>
                 <div class='metric-card-compact'>

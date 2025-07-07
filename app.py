@@ -509,70 +509,52 @@ class UIComponents:
         valeur_marchande = "N/A"
         if 'Valeur marchande' in player_data.index and pd.notna(player_data['Valeur marchande']):
             vm = player_data['Valeur marchande']
-            valeur_numerique = None
             
-            try:
-                # Essayer de convertir directement en float si c'est déjà un nombre
-                if isinstance(vm, (int, float)):
-                    vm_float = float(vm)
-                    
-                    # Correction pour les valeurs aberrantes dans le dataset
-                    # Si la valeur est > 1 milliard, diviser par 100 000 000 pour corriger l'erreur d'encodage
-                    if vm_float >= 1000000000:  # Plus de 1 milliard = erreur d'encodage
-                        valeur_numerique = vm_float / 100000000
-                    # Si la valeur est très grande mais < 1 milliard, diviser par 10 000
-                    elif vm_float >= 100000000:  # Plus de 100 millions
-                        valeur_numerique = vm_float / 10000
-                    # Si la valeur semble raisonnable, l'utiliser directement
-                    else:
-                        valeur_numerique = vm_float
-                        
-                else:
-                    # Si c'est une chaîne, analyser le format
-                    vm_str = str(vm).strip()
-                    
-                    import re
-                    
-                    # Cas 1: Format avec M ou K explicite (ex: "25M €", "500K", "1.5M")
-                    match_mk = re.search(r'([\d,.]+)\s*([MK])', vm_str.upper())
-                    if match_mk:
-                        nombre = float(match_mk.group(1).replace(',', ''))
-                        unite = match_mk.group(2).upper()
-                        if unite == 'M':
-                            valeur_numerique = nombre * 1000000
-                        elif unite == 'K':
-                            valeur_numerique = nombre * 1000
-                    else:
-                        # Cas 2: Nombre pur en string
-                        vm_clean = re.sub(r'[^\d.]', '', vm_str)
-                        if vm_clean:
-                            vm_float = float(vm_clean)
-                            # Appliquer la même logique de correction
-                            if vm_float >= 1000000000:
-                                valeur_numerique = vm_float / 100000000
-                            elif vm_float >= 100000000:
-                                valeur_numerique = vm_float / 10000
-                            else:
-                                valeur_numerique = vm_float
+            # Si c'est une chaîne, essayer de la convertir en nombre
+            if isinstance(vm, str):
+                # Nettoyer la chaîne : supprimer les espaces, € et autres caractères
+                vm_clean = vm.replace('€', '').replace(' ', '').replace(',', '').strip()
                 
-                # Formater selon la valeur numérique obtenue
-                if valeur_numerique is not None and valeur_numerique > 0:
-                    # Logique ajustée pour tenir compte des corrections
+                # Gérer les abréviations M, K, etc.
+                if vm_clean.upper().endswith('M'):
+                    try:
+                        valeur_numerique = float(vm_clean[:-1]) * 1000000
+                    except:
+                        valeur_marchande = vm
+                        valeur_numerique = None
+                elif vm_clean.upper().endswith('K'):
+                    try:
+                        valeur_numerique = float(vm_clean[:-1]) * 1000
+                    except:
+                        valeur_marchande = vm
+                        valeur_numerique = None
+                else:
+                    try:
+                        valeur_numerique = float(vm_clean)
+                    except:
+                        valeur_marchande = vm
+                        valeur_numerique = None
+                
+                # Formater la valeur si conversion réussie
+                if valeur_numerique is not None:
                     if valeur_numerique >= 1000000:
-                        valeur_marchande = f"{valeur_numerique/1000000:.0f}M €"
-                    elif valeur_numerique >= 100:  # Valeurs corrigées qui représentent des millions
-                        valeur_marchande = f"{valeur_numerique:.0f}M €"
+                        valeur_marchande = f"{valeur_numerique/1000000:.1f}M €"
                     elif valeur_numerique >= 1000:
                         valeur_marchande = f"{valeur_numerique/1000:.0f}K €"
                     else:
                         valeur_marchande = f"{valeur_numerique:.0f} €"
+                        
+            # Si c'est déjà un nombre
+            elif isinstance(vm, (int, float)):
+                if vm >= 1000000:
+                    valeur_marchande = f"{vm/1000000:.1f}M €"
+                elif vm >= 1000:
+                    valeur_marchande = f"{vm/1000:.0f}K €"
                 else:
-                    # Si conversion échoue, garder la valeur originale
-                    valeur_marchande = str(vm)
-                    
-            except Exception as e:
-                # En cas d'erreur, afficher la valeur originale
-                valeur_marchande = str(vm) if vm else "N/A"
+                    valeur_marchande = f"{vm:.0f} €"
+            else:
+                # Si ce n'est ni string ni nombre, garder la valeur originale
+                valeur_marchande = str(vm)
         
         # Tronquer les textes longs pour éviter le débordement
         equipe_display = player_data['Équipe'][:15] + "..." if len(str(player_data['Équipe'])) > 15 else player_data['Équipe']
@@ -602,7 +584,7 @@ class UIComponents:
                     <div class='metric-label-compact'>Minutes</div>
                 </div>
                 <div class='metric-card-compact'>
-                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur brute: {player_data.get("Valeur marchande", "N/A")}'>{valeur_marchande}</div>
+                    <div class='metric-value-compact' style='color: #F7B801;' title='{player_data.get('Valeur marchande', 'N/A')}'>{valeur_marchande}</div>
                     <div class='metric-label-compact'>Val. Marchande</div>
                 </div>
                 <div class='metric-card-compact'>

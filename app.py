@@ -514,7 +514,9 @@ class UIComponents:
             try:
                 # Essayer de convertir directement en float si c'est déjà un nombre
                 if isinstance(vm, (int, float)):
-                    valeur_numerique = float(vm)
+                    # Les valeurs dans le dataset sont en dizaines de milliers d'euros
+                    # 17000 = 170 millions d'euros
+                    valeur_numerique = float(vm) * 10000
                 else:
                     # Si c'est une chaîne, analyser le format
                     vm_str = str(vm).strip()
@@ -531,20 +533,15 @@ class UIComponents:
                         elif unite == 'K':
                             valeur_numerique = nombre * 1000
                     else:
-                        # Cas 2: Nombre pur - déterminer l'unité selon la magnitude
+                        # Cas 2: Nombre pur - en dizaines de milliers d'euros
                         vm_clean = re.sub(r'[^\d.]', '', vm_str)
                         if vm_clean:
-                            valeur_numerique = float(vm_clean)
+                            valeur_numerique = float(vm_clean) * 10000
                 
                 # Formater selon la valeur numérique obtenue
                 if valeur_numerique is not None and valeur_numerique > 0:
-                    # Logique corrigée : ne pas re-multiplier si déjà en millions
                     if valeur_numerique >= 1000000:
-                        # Si la valeur est très grande (> 1 milliard), c'est probablement en euros
-                        if valeur_numerique >= 1000000000:
-                            valeur_marchande = f"{valeur_numerique/1000000000:.1f}Md €"
-                        else:
-                            valeur_marchande = f"{valeur_numerique/1000000:.1f}M €"
+                        valeur_marchande = f"{valeur_numerique/1000000:.0f}M €"
                     elif valeur_numerique >= 1000:
                         valeur_marchande = f"{valeur_numerique/1000:.0f}K €"
                     else:
@@ -585,7 +582,7 @@ class UIComponents:
                     <div class='metric-label-compact'>Minutes</div>
                 </div>
                 <div class='metric-card-compact'>
-                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur brute: {player_data.get("Valeur marchande", "N/A")}'>{valeur_marchande}</div>
+                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur dataset: {player_data.get("Valeur marchande", "N/A")} (×10K €)'>{valeur_marchande}</div>
                     <div class='metric-label-compact'>Val. Marchande</div>
                 </div>
                 <div class='metric-card-compact'>

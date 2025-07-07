@@ -1,4 +1,3 @@
-Dans ce code, je veux ajouter les valeurs marchandes 'Valeur marchande' des joueurs dans les informations centrales du joueur
 
 
 import streamlit as st

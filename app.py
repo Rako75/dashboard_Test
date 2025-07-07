@@ -149,6 +149,49 @@ class StyleManager:
             box-shadow: 0 8px 20px rgba(0, 200, 150, 0.2);
         }
         
+        .metric-card-compact {
+            background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+            padding: 12px 8px;
+            border-radius: 12px;
+            border: 1px solid #718096;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        
+        .metric-card-compact:hover {
+            border-color: #00C896;
+            box-shadow: 0 6px 15px rgba(0, 200, 150, 0.2);
+        }
+        
+        .metric-value-compact {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: #FF6B35;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+        
+        .metric-label-compact {
+            font-size: 0.75em;
+            color: #A0AEC0;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
         /* ===== CONTENEURS D'IMAGES ===== */
         .image-container {
             background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
@@ -446,35 +489,40 @@ class UIComponents:
                 # Si c'est déjà une chaîne formatée
                 valeur_marchande = str(vm)
         
+        # Tronquer les textes longs pour éviter le débordement
+        equipe_display = player_data['Équipe'][:15] + "..." if len(str(player_data['Équipe'])) > 15 else player_data['Équipe']
+        nationalite_display = player_data['Nationalité'][:10] + "..." if len(str(player_data['Nationalité'])) > 10 else player_data['Nationalité']
+        position_display = player_data['Position'][:8] + "..." if len(str(player_data['Position'])) > 8 else player_data['Position']
+        
         st.markdown(f"""
         <div class='dashboard-card animated-card' style='text-align: center;'>
-            <h2 class='section-title' style='margin-bottom: 30px;'>
+            <h2 class='section-title' style='margin-bottom: 25px; font-size: 2.2em;'>
                 {player_data['Joueur']}
             </h2>
-            <div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px;'>
-                <div class='metric-card'>
-                    <div class='metric-value'>{player_data['Âge']}</div>
-                    <div class='metric-label'>Ans</div>
+            <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; max-width: 100%;'>
+                <div class='metric-card-compact'>
+                    <div class='metric-value-compact'>{player_data['Âge']}</div>
+                    <div class='metric-label-compact'>Âge</div>
                 </div>
-                <div class='metric-card'>
-                    <div class='metric-value'>{player_data['Position']}</div>
-                    <div class='metric-label'>Position</div>
+                <div class='metric-card-compact'>
+                    <div class='metric-value-compact' title='{player_data['Position']}'>{position_display}</div>
+                    <div class='metric-label-compact'>Position</div>
                 </div>
-                <div class='metric-card'>
-                    <div class='metric-value'>{player_data['Nationalité']}</div>
-                    <div class='metric-label'>Nationalité</div>
+                <div class='metric-card-compact'>
+                    <div class='metric-value-compact' title='{player_data['Nationalité']}'>{nationalite_display}</div>
+                    <div class='metric-label-compact'>Nationalité</div>
                 </div>
-                <div class='metric-card'>
-                    <div class='metric-value'>{int(player_data['Minutes jouées'])}</div>
-                    <div class='metric-label'>Minutes</div>
+                <div class='metric-card-compact'>
+                    <div class='metric-value-compact'>{int(player_data['Minutes jouées'])}</div>
+                    <div class='metric-label-compact'>Minutes</div>
                 </div>
-                <div class='metric-card'>
-                    <div class='metric-value' style='color: #F7B801;'>{valeur_marchande}</div>
-                    <div class='metric-label'>Valeur Marchande</div>
+                <div class='metric-card-compact'>
+                    <div class='metric-value-compact' style='color: #F7B801;'>{valeur_marchande}</div>
+                    <div class='metric-label-compact'>Val. Marchande</div>
                 </div>
-                <div class='metric-card'>
-                    <div class='metric-value'>{player_data['Équipe']}</div>
-                    <div class='metric-label'>Équipe</div>
+                <div class='metric-card-compact'>
+                    <div class='metric-value-compact' title='{player_data['Équipe']}'>{equipe_display}</div>
+                    <div class='metric-label-compact'>Équipe</div>
                 </div>
             </div>
         </div>

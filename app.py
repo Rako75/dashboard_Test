@@ -622,6 +622,9 @@ class MetricsCalculator:
             '% Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0)
         }
 
+# Le reste du code reste identique...
+# [Code continuant avec ChartManager, PerformanceAnalyzer, TabManager, etc.]
+
 
 
 

@@ -519,7 +519,7 @@ class UIComponents:
                 
                 # Formatage selon la magnitude
                 if valeur_numerique >= 1000000000:  # Milliards
-                    valeur_marchande = f"{valeur_numerique/1000000000:.1f}Md €"
+                    valeur_marchande = f"{valeur_numerique/1000000000:.0f}Md €"
                 elif valeur_numerique >= 1000000:  # Millions
                     valeur_marchande = f"{valeur_numerique/1000000:.0f}M €"
                 elif valeur_numerique >= 1000:  # Milliers

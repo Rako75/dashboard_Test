@@ -557,8 +557,11 @@ class UIComponents:
                 
                 # Formater selon la valeur numérique obtenue
                 if valeur_numerique is not None and valeur_numerique > 0:
+                    # Logique ajustée pour tenir compte des corrections
                     if valeur_numerique >= 1000000:
                         valeur_marchande = f"{valeur_numerique/1000000:.0f}M €"
+                    elif valeur_numerique >= 100:  # Valeurs corrigées qui représentent des millions
+                        valeur_marchande = f"{valeur_numerique:.0f}M €"
                     elif valeur_numerique >= 1000:
                         valeur_marchande = f"{valeur_numerique/1000:.0f}K €"
                     else:

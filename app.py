@@ -430,12 +430,28 @@ class UIComponents:
     @staticmethod
     def _render_player_info(player_data: pd.Series):
         """Affiche les informations centrales du joueur"""
+        # Récupération et formatage de la valeur marchande
+        valeur_marchande = "N/A"
+        if 'Valeur marchande' in player_data.index and pd.notna(player_data['Valeur marchande']):
+            vm = player_data['Valeur marchande']
+            # Si la valeur est numérique, on la formate
+            if isinstance(vm, (int, float)):
+                if vm >= 1000000:
+                    valeur_marchande = f"{vm/1000000:.1f}M€"
+                elif vm >= 1000:
+                    valeur_marchande = f"{vm/1000:.0f}K€"
+                else:
+                    valeur_marchande = f"{vm:.0f}€"
+            else:
+                # Si c'est déjà une chaîne formatée
+                valeur_marchande = str(vm)
+        
         st.markdown(f"""
         <div class='dashboard-card animated-card' style='text-align: center;'>
             <h2 class='section-title' style='margin-bottom: 30px;'>
                 {player_data['Joueur']}
             </h2>
-            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;'>
+            <div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px;'>
                 <div class='metric-card'>
                     <div class='metric-value'>{player_data['Âge']}</div>
                     <div class='metric-label'>Ans</div>
@@ -445,12 +461,20 @@ class UIComponents:
                     <div class='metric-label'>Position</div>
                 </div>
                 <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Nationalité']}</div>
+                    <div class='metric-label'>Nationalité</div>
+                </div>
+                <div class='metric-card'>
                     <div class='metric-value'>{int(player_data['Minutes jouées'])}</div>
                     <div class='metric-label'>Minutes</div>
                 </div>
                 <div class='metric-card'>
-                    <div class='metric-value'>{player_data['Nationalité']}</div>
-                    <div class='metric-label'>Nationalité</div>
+                    <div class='metric-value' style='color: #F7B801;'>{valeur_marchande}</div>
+                    <div class='metric-label'>Valeur Marchande</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Équipe']}</div>
+                    <div class='metric-label'>Équipe</div>
                 </div>
             </div>
         </div>
@@ -597,6 +621,8 @@ class MetricsCalculator:
             '% Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
             '% Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0)
         }
+
+
 
 # ================================================================================================
 # GESTIONNAIRE DE GRAPHIQUES

@@ -514,9 +514,19 @@ class UIComponents:
             try:
                 # Essayer de convertir directement en float si c'est déjà un nombre
                 if isinstance(vm, (int, float)):
-                    # Les valeurs dans le dataset sont en dizaines de milliers d'euros
-                    # 17000 = 170 millions d'euros
-                    valeur_numerique = float(vm) * 10000
+                    vm_float = float(vm)
+                    
+                    # Correction pour les valeurs aberrantes dans le dataset
+                    # Si la valeur est > 1 milliard, diviser par 100 000 000 pour corriger l'erreur d'encodage
+                    if vm_float >= 1000000000:  # Plus de 1 milliard = erreur d'encodage
+                        valeur_numerique = vm_float / 100000000
+                    # Si la valeur est très grande mais < 1 milliard, diviser par 10 000
+                    elif vm_float >= 100000000:  # Plus de 100 millions
+                        valeur_numerique = vm_float / 10000
+                    # Si la valeur semble raisonnable, l'utiliser directement
+                    else:
+                        valeur_numerique = vm_float
+                        
                 else:
                     # Si c'est une chaîne, analyser le format
                     vm_str = str(vm).strip()
@@ -533,10 +543,17 @@ class UIComponents:
                         elif unite == 'K':
                             valeur_numerique = nombre * 1000
                     else:
-                        # Cas 2: Nombre pur - en dizaines de milliers d'euros
+                        # Cas 2: Nombre pur en string
                         vm_clean = re.sub(r'[^\d.]', '', vm_str)
                         if vm_clean:
-                            valeur_numerique = float(vm_clean) * 10000
+                            vm_float = float(vm_clean)
+                            # Appliquer la même logique de correction
+                            if vm_float >= 1000000000:
+                                valeur_numerique = vm_float / 100000000
+                            elif vm_float >= 100000000:
+                                valeur_numerique = vm_float / 10000
+                            else:
+                                valeur_numerique = vm_float
                 
                 # Formater selon la valeur numérique obtenue
                 if valeur_numerique is not None and valeur_numerique > 0:
@@ -582,7 +599,7 @@ class UIComponents:
                     <div class='metric-label-compact'>Minutes</div>
                 </div>
                 <div class='metric-card-compact'>
-                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur dataset: {player_data.get("Valeur marchande", "N/A")} (×10K €)'>{valeur_marchande}</div>
+                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur brute: {player_data.get("Valeur marchande", "N/A")}'>{valeur_marchande}</div>
                     <div class='metric-label-compact'>Val. Marchande</div>
                 </div>
                 <div class='metric-card-compact'>

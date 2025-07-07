@@ -47,28 +47,46 @@ class AppConfig:
 class ColumnMapper:
     """Gestionnaire pour mapper les noms de colonnes possibles"""
     
-    # Mapping des colonnes essentielles avec plusieurs variantes possibles
+    # Mapping des colonnes essentielles avec les noms exacts du fichier CSV
     COLUMN_MAPPINGS = {
-        'competition': ['Compétition', 'Competition', 'League', 'Ligue', 'Championnat'],
+        'competition': ['CompÃ©tition', 'Compétition', 'Competition', 'League', 'Ligue', 'Championnat'],
         'player': ['Joueur', 'Player', 'Nom', 'Name'],
-        'team': ['Équipe', 'Equipe', 'Team', 'Club'],
-        'age': ['Âge', 'Age'],
+        'team': ['Ã‰quipe', 'Équipe', 'Equipe', 'Team', 'Club'],
+        'age': ['Ã‚ge', 'Âge', 'Age'],
         'position': ['Position', 'Pos'],
-        'nationality': ['Nationalité', 'Nationality', 'Nation'],
-        'minutes': ['Minutes jouées', 'Minutes', 'Min'],
+        'nationality': ['NationalitÃ©', 'Nationalité', 'Nationality', 'Nation'],
+        'minutes': ['Minutes jouÃ©es', 'Minutes jouées', 'Minutes', 'Min'],
         'market_value': ['Valeur marchande', 'Market Value', 'Valeur', 'Value'],
         'goals': ['Buts', 'Goals'],
-        'assists': ['Passes décisives', 'Assists'],
+        'assists': ['Passes dÃ©cisives', 'Passes décisives', 'Assists'],
         'yellow_cards': ['Cartons jaunes', 'Yellow Cards'],
         'red_cards': ['Cartons rouges', 'Red Cards'],
-        'passes': ['Passes tentées', 'Passes'],
-        'key_passes': ['Passes clés', 'Key Passes'],
+        'passes_attempted': ['Passes tentÃ©es', 'Passes tentées', 'Passes'],
+        'key_passes': ['Passes clÃ©s', 'Passes clés', 'Key Passes'],
         'touches': ['Touches de balle', 'Touches'],
-        'dribbles': ['Dribbles tentés', 'Dribbles'],
-        'successful_dribbles': ['Dribbles réussis', 'Successful Dribbles'],
+        'dribbles_attempted': ['Dribbles tentÃ©s', 'Dribbles tentés', 'Dribbles'],
+        'successful_dribbles': ['Dribbles rÃ©ussis', 'Dribbles réussis', 'Successful Dribbles'],
         'tackles': ['Tacles gagnants', 'Tackles'],
         'interceptions': ['Interceptions'],
-        'clearances': ['Dégagements', 'Clearances']
+        'clearances': ['DÃ©gagements', 'Dégagements', 'Clearances'],
+        'matches_played': ['Matchs jouÃ©s', 'Matchs joués', 'Matches'],
+        'starts': ['Titularisations', 'Starts'],
+        'goals_per_90': ['Buts par 90 minutes'],
+        'assists_per_90': ['Passes dÃ©cisives par 90 minutes', 'Passes décisives par 90 minutes'],
+        'shots': ['Tirs', 'Shots'],
+        'shots_on_target': ['Tirs cadrÃ©s', 'Tirs cadrés'],
+        'shots_per_90': ['Tirs par 90 minutes'],
+        'xg': ['Buts attendus (xG)', 'xG'],
+        'xa': ['Passes dÃ©cisives attendues (xAG)', 'xA'],
+        'xg_per_90': ['Buts attendus par 90 minutes'],
+        'xa_per_90': ['Passes dÃ©cisives attendues par 90 minutes'],
+        'aerial_duels_won': ['Duels aÃ©riens gagnÃ©s', 'Duels aériens gagnés'],
+        'aerial_duels_win_pct': ['Pourcentage de duels aÃ©riens gagnÃ©s', 'Pourcentage de duels aériens gagnés'],
+        'pass_completion_pct': ['Pourcentage de passes rÃ©ussies', 'Pourcentage de passes réussies'],
+        'dribble_success_pct': ['Pourcentage de dribbles rÃ©ussis', 'Pourcentage de dribbles réussis'],
+        'recoveries': ['Ballons rÃ©cupÃ©rÃ©s', 'Ballons récupérés'],
+        'duels_defensive_won': ['Duels dÃ©fensifs gagnÃ©s', 'Duels défensifs gagnés'],
+        'duels_won_pct': ['Pourcentage de duels gagnÃ©s', 'Pourcentage de duels gagnés']
     }
     
     @staticmethod
@@ -794,26 +812,88 @@ class SimpleMetricsCalculator:
         """Calcule les métriques de base disponibles"""
         metrics = {}
         
-        # Métriques offensives
+        # Métriques offensives de base
         goals_col = column_mapping.get('goals')
         assists_col = column_mapping.get('assists')
         minutes_col = column_mapping.get('minutes')
+        goals_per_90_col = column_mapping.get('goals_per_90')
+        assists_per_90_col = column_mapping.get('assists_per_90')
+        shots_col = column_mapping.get('shots')
+        key_passes_col = column_mapping.get('key_passes')
         
+        # Statistiques totales
         if goals_col and goals_col in player_data.index:
             metrics['Buts'] = ColumnMapper.get_safe_value(player_data[goals_col], 0)
         
         if assists_col and assists_col in player_data.index:
             metrics['Passes décisives'] = ColumnMapper.get_safe_value(player_data[assists_col], 0)
         
-        if minutes_col and minutes_col in player_data.index:
+        if shots_col and shots_col in player_data.index:
+            metrics['Tirs'] = ColumnMapper.get_safe_value(player_data[shots_col], 0)
+        
+        if key_passes_col and key_passes_col in player_data.index:
+            metrics['Passes clés'] = ColumnMapper.get_safe_value(player_data[key_passes_col], 0)
+        
+        # Statistiques par 90 minutes (directement depuis les colonnes si disponibles)
+        if goals_per_90_col and goals_per_90_col in player_data.index:
+            metrics['Buts/90'] = ColumnMapper.get_safe_value(player_data[goals_per_90_col], 0)
+        elif goals_col and minutes_col and goals_col in player_data.index and minutes_col in player_data.index:
             minutes = ColumnMapper.get_safe_value(player_data[minutes_col], 1)
             minutes_90 = minutes / 90 if minutes > 0 else 1
-            
-            if goals_col and goals_col in player_data.index:
-                metrics['Buts/90'] = metrics.get('Buts', 0) / minutes_90
-            
-            if assists_col and assists_col in player_data.index:
-                metrics['Passes D./90'] = metrics.get('Passes décisives', 0) / minutes_90
+            metrics['Buts/90'] = metrics.get('Buts', 0) / minutes_90
+        
+        if assists_per_90_col and assists_per_90_col in player_data.index:
+            metrics['Passes D./90'] = ColumnMapper.get_safe_value(player_data[assists_per_90_col], 0)
+        elif assists_col and minutes_col and assists_col in player_data.index and minutes_col in player_data.index:
+            minutes = ColumnMapper.get_safe_value(player_data[minutes_col], 1)
+            minutes_90 = minutes / 90 if minutes > 0 else 1
+            metrics['Passes D./90'] = metrics.get('Passes décisives', 0) / minutes_90
+        
+        # Métriques xG si disponibles
+        xg_col = column_mapping.get('xg')
+        xa_col = column_mapping.get('xa')
+        xg_per_90_col = column_mapping.get('xg_per_90')
+        xa_per_90_col = column_mapping.get('xa_per_90')
+        
+        if xg_col and xg_col in player_data.index:
+            metrics['xG'] = ColumnMapper.get_safe_value(player_data[xg_col], 0)
+        
+        if xa_col and xa_col in player_data.index:
+            metrics['xA'] = ColumnMapper.get_safe_value(player_data[xa_col], 0)
+        
+        if xg_per_90_col and xg_per_90_col in player_data.index:
+            metrics['xG/90'] = ColumnMapper.get_safe_value(player_data[xg_per_90_col], 0)
+        
+        if xa_per_90_col and xa_per_90_col in player_data.index:
+            metrics['xA/90'] = ColumnMapper.get_safe_value(player_data[xa_per_90_col], 0)
+        
+        # Métriques défensives
+        tackles_col = column_mapping.get('tackles')
+        interceptions_col = column_mapping.get('interceptions')
+        recoveries_col = column_mapping.get('recoveries')
+        
+        if tackles_col and tackles_col in player_data.index:
+            metrics['Tacles'] = ColumnMapper.get_safe_value(player_data[tackles_col], 0)
+        
+        if interceptions_col and interceptions_col in player_data.index:
+            metrics['Interceptions'] = ColumnMapper.get_safe_value(player_data[interceptions_col], 0)
+        
+        if recoveries_col and recoveries_col in player_data.index:
+            metrics['Ballons récupérés'] = ColumnMapper.get_safe_value(player_data[recoveries_col], 0)
+        
+        # Métriques techniques
+        touches_col = column_mapping.get('touches')
+        dribbles_col = column_mapping.get('dribbles_attempted')
+        passes_col = column_mapping.get('passes_attempted')
+        
+        if touches_col and touches_col in player_data.index:
+            metrics['Touches'] = ColumnMapper.get_safe_value(player_data[touches_col], 0)
+        
+        if dribbles_col and dribbles_col in player_data.index:
+            metrics['Dribbles tentés'] = ColumnMapper.get_safe_value(player_data[dribbles_col], 0)
+        
+        if passes_col and passes_col in player_data.index:
+            metrics['Passes tentées'] = ColumnMapper.get_safe_value(player_data[passes_col], 0)
         
         return metrics
 

@@ -9,6 +9,4 @@ requests
 Pillow
 beautifulsoup4
 lxml
-glob
-os
 typing-extensions

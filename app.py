@@ -516,13 +516,12 @@ class UIComponents:
                 if isinstance(vm, (int, float)):
                     valeur_numerique = float(vm)
                 else:
-                    # Si c'est une chaîne, nettoyer et convertir
+                    # Si c'est une chaîne, analyser le format
                     vm_str = str(vm).strip()
                     
-                    # Supprimer tous les caractères non numériques sauf le point et les lettres M/K
                     import re
                     
-                    # Cas 1: Format avec M ou K (ex: "25M", "500K", "1.5M")
+                    # Cas 1: Format avec M ou K explicite (ex: "25M €", "500K", "1.5M")
                     match_mk = re.search(r'([\d,.]+)\s*([MK])', vm_str.upper())
                     if match_mk:
                         nombre = float(match_mk.group(1).replace(',', ''))
@@ -532,15 +531,20 @@ class UIComponents:
                         elif unite == 'K':
                             valeur_numerique = nombre * 1000
                     else:
-                        # Cas 2: Nombre pur (ex: "25000000", "500000")
+                        # Cas 2: Nombre pur - déterminer l'unité selon la magnitude
                         vm_clean = re.sub(r'[^\d.]', '', vm_str)
                         if vm_clean:
                             valeur_numerique = float(vm_clean)
                 
                 # Formater selon la valeur numérique obtenue
                 if valeur_numerique is not None and valeur_numerique > 0:
+                    # Logique corrigée : ne pas re-multiplier si déjà en millions
                     if valeur_numerique >= 1000000:
-                        valeur_marchande = f"{valeur_numerique/1000000:.1f}M €"
+                        # Si la valeur est très grande (> 1 milliard), c'est probablement en euros
+                        if valeur_numerique >= 1000000000:
+                            valeur_marchande = f"{valeur_numerique/1000000000:.1f}Md €"
+                        else:
+                            valeur_marchande = f"{valeur_numerique/1000000:.1f}M €"
                     elif valeur_numerique >= 1000:
                         valeur_marchande = f"{valeur_numerique/1000:.0f}K €"
                     else:
@@ -581,7 +585,7 @@ class UIComponents:
                     <div class='metric-label-compact'>Minutes</div>
                 </div>
                 <div class='metric-card-compact'>
-                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur originale: {player_data.get("Valeur marchande", "N/A")}'>{valeur_marchande}</div>
+                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur brute: {player_data.get("Valeur marchande", "N/A")}'>{valeur_marchande}</div>
                     <div class='metric-label-compact'>Val. Marchande</div>
                 </div>
                 <div class='metric-card-compact'>

@@ -517,12 +517,14 @@ class UIComponents:
                 else:
                     valeur_numerique = float(str(vm))
                 
-                # Formatage simple selon la magnitude (sans conversion)
-                if valeur_numerique >= 1000000:
-                    valeur_marchande = f"{valeur_numerique/1000000:.1f}M €"
-                elif valeur_numerique >= 1000:
+                # Formatage selon la magnitude
+                if valeur_numerique >= 1000000000:  # Milliards
+                    valeur_marchande = f"{valeur_numerique/1000000000:.1f}Md €"
+                elif valeur_numerique >= 1000000:  # Millions
+                    valeur_marchande = f"{valeur_numerique/1000000:.0f}M €"
+                elif valeur_numerique >= 1000:  # Milliers
                     valeur_marchande = f"{valeur_numerique/1000:.0f}K €"
-                else:
+                else:  # Euros simples
                     valeur_marchande = f"{valeur_numerique:.0f} €"
                     
             except (ValueError, TypeError):
@@ -557,7 +559,7 @@ class UIComponents:
                     <div class='metric-label-compact'>Minutes</div>
                 </div>
                 <div class='metric-card-compact'>
-                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur: {player_data.get("Valeur marchande", "N/A")} €'>{valeur_marchande}</div>
+                    <div class='metric-value-compact' style='color: #F7B801;' title='Valeur exacte: {player_data.get("Valeur marchande", "N/A")} €'>{valeur_marchande}</div>
                     <div class='metric-label-compact'>Val. Marchande</div>
                 </div>
                 <div class='metric-card-compact'>

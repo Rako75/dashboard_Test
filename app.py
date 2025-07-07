@@ -430,55 +430,55 @@ class UIComponents:
     @staticmethod
     def _render_player_info(player_data: pd.Series):
         """Affiche les informations centrales du joueur"""
-    # Récupération et formatage de la valeur marchande
-    valeur_marchande = "N/A"
-    if 'Valeur marchande' in player_data.index and pd.notna(player_data['Valeur marchande']):
-        vm = player_data['Valeur marchande']
-        # Si la valeur est numérique, on la formate
-        if isinstance(vm, (int, float)):
-            if vm >= 1000000:
-                valeur_marchande = f"{vm/1000000:.1f}M€"
-            elif vm >= 1000:
-                valeur_marchande = f"{vm/1000:.0f}K€"
+        # Récupération et formatage de la valeur marchande
+        valeur_marchande = "N/A"
+        if 'Valeur marchande' in player_data.index and pd.notna(player_data['Valeur marchande']):
+            vm = player_data['Valeur marchande']
+            # Si la valeur est numérique, on la formate
+            if isinstance(vm, (int, float)):
+                if vm >= 1000000:
+                    valeur_marchande = f"{vm/1000000:.1f}M€"
+                elif vm >= 1000:
+                    valeur_marchande = f"{vm/1000:.0f}K€"
+                else:
+                    valeur_marchande = f"{vm:.0f}€"
             else:
-                valeur_marchande = f"{vm:.0f}€"
-        else:
-            # Si c'est déjà une chaîne formatée
-            valeur_marchande = str(vm)
-    
-    st.markdown(f"""
-    <div class='dashboard-card animated-card' style='text-align: center;'>
-        <h2 class='section-title' style='margin-bottom: 30px;'>
-            {player_data['Joueur']}
-        </h2>
-        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;'>
-            <div class='metric-card'>
-                <div class='metric-value'>{player_data['Âge']}</div>
-                <div class='metric-label'>Ans</div>
-            </div>
-            <div class='metric-card'>
-                <div class='metric-value'>{player_data['Position']}</div>
-                <div class='metric-label'>Position</div>
-            </div>
-            <div class='metric-card'>
-                <div class='metric-value'>{player_data['Nationalité']}</div>
-                <div class='metric-label'>Nationalité</div>
-            </div>
-            <div class='metric-card'>
-                <div class='metric-value'>{player_data['Équipe']}</div>
-                <div class='metric-label'>Équipe</div>
-            </div>
-            <div class='metric-card'>
-                <div class='metric-value'>{int(player_data['Minutes jouées'])}</div>
-                <div class='metric-label'>Minutes Jouées</div>
-            </div>
-            <div class='metric-card'>
-                <div class='metric-value' style='color: #F7B801;'>{valeur_marchande}</div>
-                <div class='metric-label'>Valeur Marchande</div>
+                # Si c'est déjà une chaîne formatée
+                valeur_marchande = str(vm)
+        
+        st.markdown(f"""
+        <div class='dashboard-card animated-card' style='text-align: center;'>
+            <h2 class='section-title' style='margin-bottom: 30px;'>
+                {player_data['Joueur']}
+            </h2>
+            <div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px;'>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Âge']}</div>
+                    <div class='metric-label'>Ans</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Position']}</div>
+                    <div class='metric-label'>Position</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Nationalité']}</div>
+                    <div class='metric-label'>Nationalité</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{int(player_data['Minutes jouées'])}</div>
+                    <div class='metric-label'>Minutes</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value' style='color: #F7B801;'>{valeur_marchande}</div>
+                    <div class='metric-label'>Valeur Marchande</div>
+                </div>
+                <div class='metric-card'>
+                    <div class='metric-value'>{player_data['Équipe']}</div>
+                    <div class='metric-label'>Équipe</div>
+                </div>
             </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
     
     @staticmethod
     def _render_photo_placeholder(player_name: str):
@@ -621,8 +621,6 @@ class MetricsCalculator:
             '% Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
             '% Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0)
         }
-
-
 
 # ================================================================================================
 # GESTIONNAIRE DE GRAPHIQUES
@@ -1603,9 +1601,38 @@ class FootballDashboard:
         """Chargement des styles CSS"""
         st.markdown(StyleManager.load_custom_css(), unsafe_allow_html=True)
     
-
-    
-    
+    def run(self):
+        """Méthode principale d'exécution de l'application"""
+        # Chargement des données
+        df = DataManager.load_data()
+        
+        if df is None:
+            self._render_error_page()
+            return
+        
+        # Rendu de l'en-tête
+        UIComponents.render_header()
+        
+        # Rendu de la sidebar et récupération des sélections
+        selected_competition, selected_player, df_filtered = SidebarManager.render_sidebar(df)
+        
+        if selected_player:
+            # Récupération des données du joueur
+            player_data = df_filtered[df_filtered['Joueur'] == selected_player].iloc[0]
+            
+            # Affichage de la carte du joueur
+            UIComponents.render_player_card(player_data, selected_competition)
+            
+            st.markdown("---")
+            
+            # Onglets principaux
+            self._render_main_tabs(player_data, df_filtered, selected_player, df)
+        
+        else:
+            self._render_no_player_message()
+        
+        # Footer
+        UIComponents.render_footer()
     
     def _render_main_tabs(self, player_data: pd.Series, df_filtered: pd.DataFrame, 
                          selected_player: str, df_full: pd.DataFrame):

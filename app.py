@@ -429,7 +429,7 @@ class UIComponents:
     
     @staticmethod
     def _render_player_info(player_data: pd.Series):
-    """Affiche les informations centrales du joueur"""
+        """Affiche les informations centrales du joueur"""
     # Récupération et formatage de la valeur marchande
     valeur_marchande = "N/A"
     if 'Valeur marchande' in player_data.index and pd.notna(player_data['Valeur marchande']):

@@ -538,20 +538,20 @@ class UIComponents:
                 # Formater la valeur si conversion réussie
                 if valeur_numerique is not None:
                     if valeur_numerique >= 1000000:
-                        valeur_marchande = f"{valeur_numerique/1000000:.1f}M€"
+                        valeur_marchande = f"{valeur_numerique/1000000:.1f}M €"
                     elif valeur_numerique >= 1000:
-                        valeur_marchande = f"{valeur_numerique/1000:.0f}K€"
+                        valeur_marchande = f"{valeur_numerique/1000:.0f}K €"
                     else:
-                        valeur_marchande = f"{valeur_numerique:.0f}€"
+                        valeur_marchande = f"{valeur_numerique:.0f} €"
                         
             # Si c'est déjà un nombre
             elif isinstance(vm, (int, float)):
                 if vm >= 1000000:
-                    valeur_marchande = f"{vm/1000000:.1f}M€"
+                    valeur_marchande = f"{vm/1000000:.1f}M €"
                 elif vm >= 1000:
-                    valeur_marchande = f"{vm/1000:.0f}K€"
+                    valeur_marchande = f"{vm/1000:.0f}K €"
                 else:
-                    valeur_marchande = f"{vm:.0f}€"
+                    valeur_marchande = f"{vm:.0f} €"
             else:
                 # Si ce n'est ni string ni nombre, garder la valeur originale
                 valeur_marchande = str(vm)

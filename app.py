@@ -1,4 +1,4 @@
-import streamlit as st
+mport streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -20,48 +20,37 @@ import base64
 def format_market_value(value):
     """
     Formate une valeur marchande avec des sigles comme 'M' ou 'K' et le symbole Euro.
-    
-    Args:
-        value: La valeur à formater (peut être int, float, ou string)
-    
-    Returns:
-        str: La valeur formatée (ex: "17.0M€", "500.0K€", "1.2B€")
     """
     if pd.isna(value) or value is None:
         return "N/A"
     
-    # Conversion en nombre si c'est une chaîne
     if isinstance(value, str):
         try:
-            # Nettoyer la chaîne si elle contient déjà des caractères non numériques
             clean_value = ''.join(c for c in value if c.isdigit() or c == '.')
             if clean_value:
                 value = float(clean_value)
             else:
                 return "N/A"
         except (ValueError, TypeError):
-            return str(value)  # Retourner la chaîne telle quelle si conversion impossible
+            return str(value)
     
-    # Conversion en float pour les calculs
     try:
         value = float(value)
     except (ValueError, TypeError):
         return "N/A"
     
-    # Formatage selon les seuils
-    if value >= 1_000_000_000:  # Milliards
+    if value >= 1_000_000_000:
         return f"{value/1_000_000_000:.1f}B€"
-    elif value >= 1_000_000:  # Millions
+    elif value >= 1_000_000:
         return f"{value/1_000_000:.1f}M€"
-    elif value >= 1_000:  # Milliers
+    elif value >= 1_000:
         return f"{value/1_000:.1f}K€"
-    else:  # Moins de 1000
+    else:
         return f"{value:.0f}€"
 
 class AppConfig:
     """Configuration centralisée de l'application"""
     
-    # Configuration de la page
     PAGE_CONFIG = {
         "page_title": "Football Dashboard Pro",
         "page_icon": "⚽",
@@ -69,20 +58,18 @@ class AppConfig:
         "initial_sidebar_state": "expanded"
     }
     
-    # Palette de couleurs moderne
     COLORS = {
-        'primary': '#0078FF',           # Bleu moderne
-        'secondary': '#1E40AF',         # Bleu marine
-        'accent': '#3B82F6',           # Bleu clair
-        'success': '#10B981',          # Vert emeraude
-        'warning': '#F59E0B',          # Orange
-        'danger': '#EF4444',           # Rouge
-        'dark': '#111827',             # Gris foncé
-        'light': '#F9FAFB',            # Blanc cassé
+        'primary': '#0078FF',
+        'secondary': '#1E40AF',
+        'accent': '#3B82F6',
+        'success': '#10B981',
+        'warning': '#F59E0B',
+        'danger': '#EF4444',
+        'dark': '#111827',
+        'light': '#F9FAFB',
         'gradient': ['#0078FF', '#1E40AF', '#3B82F6', '#10B981', '#F59E0B']
     }
     
-    # Configuration des radars
     RAW_STATS = {
         "Buts\nsans pénalty": "Buts (sans penalty)",
         "Passes déc.": "Passes décisives", 
@@ -118,10 +105,8 @@ class StyleManager:
         """Charge les styles CSS personnalisés avec les dernières fonctionnalités"""
         return """
         <style>
-        /* Import Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
-        /* ===== VARIABLES CSS ===== */
         :root {
             --primary-color: #0078FF;
             --secondary-color: #1E40AF;
@@ -142,7 +127,6 @@ class StyleManager:
             --border-radius-lg: 16px;
         }
         
-        /* ===== STYLES GLOBAUX ===== */
         * {
             transition: all 0.2s ease-in-out;
         }
@@ -157,7 +141,6 @@ class StyleManager:
             background: linear-gradient(135deg, var(--dark-color) 0%, var(--surface-color) 100%);
         }
         
-        /* ===== HEADER MODERNE ===== */
         .modern-header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             padding: 2rem;
@@ -185,7 +168,6 @@ class StyleManager:
             font-weight: 500;
         }
         
-        /* ===== SIDEBAR MODERNE ===== */
         .sidebar-modern {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             padding: 1.5rem;
@@ -209,7 +191,6 @@ class StyleManager:
             font-size: 0.9rem;
         }
         
-        /* ===== CARTES MODERNES ===== */
         .modern-card {
             background: var(--card-color);
             padding: 1.5rem;
@@ -248,7 +229,6 @@ class StyleManager:
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        /* ===== MÉTRIQUES MODERNES ===== */
         .metric-card-modern {
             background: var(--surface-color);
             padding: 1rem;
@@ -292,7 +272,6 @@ class StyleManager:
             letter-spacing: 0.05em;
         }
         
-        /* ===== CONTENEURS D'IMAGES MODERNES ===== */
         .image-container-modern {
             background: var(--card-color);
             border-radius: var(--border-radius-lg);
@@ -340,7 +319,6 @@ class StyleManager:
             background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
         }
         
-        /* ===== TEXTE MODERNE ===== */
         .section-title-modern {
             color: var(--primary-color);
             font-size: 2.5rem;
@@ -359,7 +337,6 @@ class StyleManager:
             border-left: 4px solid var(--accent-color);
         }
         
-        /* ===== ONGLETS MODERNES ===== */
         .stTabs [data-baseweb="tab-list"] {
             background: var(--surface-color);
             border-radius: var(--border-radius-lg);
@@ -390,19 +367,16 @@ class StyleManager:
             color: var(--text-primary);
         }
         
-        /* ===== SELECTBOX MODERNE ===== */
         .stSelectbox > div > div > div {
             background: var(--surface-color);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
         }
         
-        /* ===== SLIDER MODERNE ===== */
         .stSlider > div > div > div > div {
             background: var(--primary-color);
         }
         
-        /* ===== FOOTER MODERNE ===== */
         .footer-modern {
             background: var(--surface-color);
             padding: 2rem;
@@ -413,7 +387,6 @@ class StyleManager:
             box-shadow: var(--shadow);
         }
         
-        /* ===== ANIMATIONS MODERNES ===== */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -429,7 +402,6 @@ class StyleManager:
             animation: fadeInUp 0.6s ease-out;
         }
         
-        /* ===== UTILITÉS ===== */
         .glass-effect {
             backdrop-filter: blur(10px);
             background: rgba(255, 255, 255, 0.05);
@@ -443,7 +415,19 @@ class StyleManager:
             background-clip: text;
         }
         
-        /* ===== RESPONSIVITÉ AMÉLIORÉE ===== */
+        .team-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.03;
+            background-size: 200px 200px;
+            background-repeat: repeat;
+            background-position: center;
+        }
+        
         @media (max-width: 768px) {
             .modern-header h1 {
                 font-size: 2rem;
@@ -462,25 +446,10 @@ class StyleManager:
             }
         }
         
-        /* ===== ÉTATS DE FOCUS ===== */
         .stSelectbox:focus-within > div > div > div,
         .stSlider:focus-within > div > div > div > div {
             outline: 2px solid var(--primary-color);
             outline-offset: 2px;
-        }
-        
-        /* ===== BACKGROUND DYNAMIQUE ===== */
-        .team-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.03;
-            background-size: 200px 200px;
-            background-repeat: repeat;
-            background-position: center;
         }
         </style>
         """
@@ -502,14 +471,12 @@ class ImageManager:
             if os.path.exists(photo_path):
                 return photo_path
         
-        # Recherche plus flexible
         for ext in extensions:
             pattern = f"images_joueurs/**{player_name}*{ext}"
             files = glob.glob(pattern)
             if files:
                 return files[0]
                 
-            # Essayer avec nom inversé
             if " " in player_name:
                 parts = player_name.split(" ")
                 if len(parts) >= 2:
@@ -543,14 +510,12 @@ class ImageManager:
             if os.path.exists(logo_path):
                 return logo_path
         
-        # Recherche plus flexible
         for ext in extensions:
             pattern = f"{folder}/**{team_name}*{ext}"
             files = glob.glob(pattern)
             if files:
                 return files[0]
                 
-            # Variations de nom
             clean_team = team_name.replace(" ", "_").replace("'", "").replace("-", "_")
             pattern = f"{folder}/**{clean_team}*{ext}"
             files = glob.glob(pattern)
@@ -604,10 +569,8 @@ class UIComponents:
     @staticmethod
     def render_player_card(player_data: pd.Series, competition: str):
         """Affiche la carte complète du joueur avec design moderne"""
-        # Ajouter le background de l'équipe
         UIComponents.add_team_background(player_data['Équipe'], competition)
         
-        # Layout responsive avec containers
         container = st.container()
         
         with container:
@@ -669,12 +632,10 @@ class UIComponents:
     @staticmethod
     def _render_player_info_modern(player_data: pd.Series):
         """Affiche les informations centrales du joueur avec design moderne"""
-        # Récupération et formatage de la valeur marchande
         valeur_marchande = "N/A"
         if 'Valeur marchande' in player_data.index:
             valeur_marchande = format_market_value(player_data['Valeur marchande'])
         
-        # Tronquer les textes longs pour éviter le débordement
         equipe_display = player_data['Équipe'][:15] + "..." if len(str(player_data['Équipe'])) > 15 else player_data['Équipe']
         nationalite_display = player_data['Nationalité'][:10] + "..." if len(str(player_data['Nationalité'])) > 10 else player_data['Nationalité']
         position_display = player_data['Position'][:8] + "..." if len(str(player_data['Position'])) > 8 else player_data['Position']
@@ -743,7 +704,6 @@ class UIComponents:
     def _image_to_base64(image: Image.Image) -> str:
         """Convertit une image PIL en base64"""
         import io
-        import base64
         
         buffer = io.BytesIO()
         image.save(buffer, format='PNG')
@@ -792,7 +752,10 @@ class MetricsCalculator:
                     else:
                         percentile = round((dist < val).mean() * 100)
                 else:
-                    matches = player.get("Matchs en 90 min", player.get("Matchs joués", 1))
+                    matches = player
+
+
+matches = player.get("Matchs en 90 min", player.get("Matchs joués", 1))
                     if matches == 0:
                         percentile = 0
                     else:
@@ -962,7 +925,6 @@ class ChartManager:
             margin=dict(t=80, b=40, l=40, r=40)
         )
         
-        # Mise à jour des sous-titres
         fig.update_annotations(font=dict(color='white', size=14, family='Inter'))
         
         return fig
@@ -1040,7 +1002,6 @@ class ChartManager:
         """Crée un radar chart moderne et professionnel"""
         fig = go.Figure()
         
-        # Performance du joueur
         fig.add_trace(go.Scatterpolar(
             r=percentiles,
             theta=list(metrics.keys()),
@@ -1053,7 +1014,6 @@ class ChartManager:
             customdata=list(metrics.values())
         ))
         
-        # Moyenne de la compétition
         fig.add_trace(go.Scatterpolar(
             r=avg_percentiles,
             theta=list(metrics.keys()),
@@ -1127,7 +1087,6 @@ class PerformanceAnalyzer:
         """Analyse complète de la performance offensive"""
         metrics = MetricsCalculator.calculate_offensive_metrics(player_data)
         
-        # Calcul des moyennes de la compétition
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1140,7 +1099,6 @@ class PerformanceAnalyzer:
         avg_metrics['Dribbles réussis/90'] = (df_comparison['Dribbles réussis'] / minutes_90_comp).mean()
         avg_metrics['Actions → Tir/90'] = df_comparison['Actions menant à un tir par 90 minutes'].mean()
         
-        # Calcul des percentiles
         percentiles = []
         avg_percentiles = []
         
@@ -1179,7 +1137,6 @@ class PerformanceAnalyzer:
         """Analyse complète de la performance défensive"""
         metrics = MetricsCalculator.calculate_defensive_metrics(player_data)
         
-        # Calcul des moyennes de la compétition
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1192,7 +1149,6 @@ class PerformanceAnalyzer:
         avg_metrics['% Duels aériens'] = df_comparison['Pourcentage de duels aériens gagnés'].mean()
         avg_metrics['Tirs bloqués/90'] = (df_comparison.get('Tirs bloqués', pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
         
-        # Calcul des percentiles
         percentiles = []
         avg_percentiles = []
         
@@ -1239,7 +1195,6 @@ class PerformanceAnalyzer:
         """Analyse complète de la performance technique"""
         metrics = MetricsCalculator.calculate_technical_metrics(player_data)
         
-        # Calcul des moyennes de la compétition
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1251,7 +1206,6 @@ class PerformanceAnalyzer:
         avg_metrics['% Passes réussies'] = df_comparison.get('Pourcentage de passes réussies', pd.Series([0]*len(df_comparison))).mean()
         avg_metrics['% Dribbles réussis'] = df_comparison.get('Pourcentage de dribbles réussis', pd.Series([0]*len(df_comparison))).mean()
         
-        # Calcul des percentiles
         percentiles = []
         avg_percentiles = []
         
@@ -1292,6 +1246,161 @@ class PerformanceAnalyzer:
         }
 
 # ================================================================================================
+# GESTIONNAIRE DE DONNÉES
+# ================================================================================================
+
+class DataManager:
+    """Gestionnaire centralisé pour les données"""
+    
+    @staticmethod
+    @st.cache_data
+    def load_data(file_path: str = 'df_BIG2025.csv') -> Optional[pd.DataFrame]:
+        """Charge les données depuis le fichier CSV"""
+        try:
+            df = pd.read_csv("df_BIG2025.csv", encoding='utf-8', delimiter=',')
+            return df
+        except FileNotFoundError:
+            st.error(f"❌ Fichier '{file_path}' non trouvé. Veuillez vous assurer que le fichier est dans le même répertoire.")
+            return None
+        except Exception as e:
+            st.error(f"❌ Erreur lors du chargement des données : {str(e)}")
+            return None
+    
+    @staticmethod
+    def filter_data_by_competition(df: pd.DataFrame, competition: str) -> pd.DataFrame:
+        """Filtre les données par compétition"""
+        return df[df['Compétition'] == competition]
+    
+    @staticmethod
+    def filter_data_by_minutes(df: pd.DataFrame, min_minutes: int) -> pd.DataFrame:
+        """Filtre les données par minutes jouées"""
+        return df[df['Minutes jouées'] >= min_minutes]
+    
+    @staticmethod
+    def get_competitions(df: pd.DataFrame) -> List[str]:
+        """Récupère la liste des compétitions"""
+        return sorted(df['Compétition'].dropna().unique())
+    
+    @staticmethod
+    def get_players(df: pd.DataFrame) -> List[str]:
+        """Récupère la liste des joueurs"""
+        return sorted(df['Joueur'].dropna().unique())
+
+# ================================================================================================
+# GESTIONNAIRE DE SIDEBAR
+# ================================================================================================
+
+class SidebarManager:
+    """Gestionnaire moderne pour la sidebar"""
+    
+    @staticmethod
+    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
+        """Rendu complet de la sidebar moderne"""
+        with st.sidebar:
+            UIComponents.render_sidebar_header()
+            
+            st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
+            competitions = DataManager.get_competitions(df)
+            selected_competition = st.selectbox(
+                "🏆 **Choisir une compétition**",
+                competitions,
+                index=0,
+                help="Sélectionnez la compétition pour filtrer les joueurs"
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            df_filtered = DataManager.filter_data_by_competition(df, selected_competition)
+            
+            st.markdown("---")
+            
+            SidebarManager._render_minutes_filter_modern(df_filtered)
+            
+            min_minutes_filter = st.session_state.get('min_minutes_filter', 0)
+            df_filtered_minutes = DataManager.filter_data_by_minutes(df_filtered, min_minutes_filter)
+            
+            SidebarManager._render_filter_info_modern(df_filtered_minutes)
+            
+            st.markdown("---")
+            
+            selected_player = SidebarManager._render_player_selection_modern(df_filtered_minutes)
+            
+            SidebarManager._render_sidebar_footer_modern()
+            
+            return selected_competition, selected_player, df_filtered_minutes
+    
+    @staticmethod
+    def _render_minutes_filter_modern(df_filtered: pd.DataFrame):
+        """Rendu moderne du filtre par minutes"""
+        if not df_filtered['Minutes jouées'].empty:
+            min_minutes = int(df_filtered['Minutes jouées'].min())
+            max_minutes = int(df_filtered['Minutes jouées'].max())
+            
+            st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
+            st.markdown("**⏱️ Filtrer par minutes jouées**")
+            
+            min_minutes_filter = st.slider(
+                "Minutes minimum",
+                min_value=min_minutes,
+                max_value=max_minutes,
+                value=min_minutes,
+                step=90,
+                help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes",
+                key='min_minutes_filter'
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+    
+    @staticmethod
+    def _render_filter_info_modern(df_filtered: pd.DataFrame):
+        """Affiche les informations de filtrage modernes"""
+        nb_joueurs = len(df_filtered)
+        
+        st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
+        if nb_joueurs > 0:
+            st.success(f"✅ **{nb_joueurs} joueurs** correspondent aux critères")
+        else:
+            st.warning("⚠️ Aucun joueur ne correspond aux critères")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    @staticmethod
+    def _render_player_selection_modern(df_filtered: pd.DataFrame) -> Optional[str]:
+        """Rendu moderne de la sélection de joueur"""
+        if not df_filtered.empty:
+            joueurs = DataManager.get_players(df_filtered)
+            if joueurs:
+                st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
+                selected_player = st.selectbox(
+                    "👤 **Choisir un joueur**",
+                    joueurs,
+                    index=0,
+                    help="Sélectionnez le joueur à analyser"
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+                return selected_player
+        
+        st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
+        st.error("❌ Aucun joueur disponible avec ces critères.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return None
+    
+    @staticmethod
+    def _render_sidebar_footer_modern():
+        """Rendu moderne du footer de la sidebar"""
+        st.markdown("---")
+        st.markdown("""
+        <div class='modern-card glass-effect' style='text-align: center;'>
+            <h4 style='color: var(--primary-color); margin: 0 0 10px 0; font-weight: 800;'>
+                📊 Dashboard Pro
+            </h4>
+            <p style='color: var(--text-primary); margin: 0; font-size: 0.9rem; font-weight: 500;'>
+                Analyse Football Avancée
+            </p>
+            <p style='color: var(--text-secondary); margin: 8px 0 0 0; font-size: 0.8rem;'>
+                Interface moderne & intuitive
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ================================================================================================
 # GESTIONNAIRE DE TABS
 # ================================================================================================
 
@@ -1308,7 +1417,6 @@ class TabManager:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Graphique en barres des actions offensives
             basic_actions = {
                 'Buts': player_data['Buts'],
                 'Passes décisives': player_data['Passes décisives'],
@@ -1323,7 +1431,6 @@ class TabManager:
             )
             st.plotly_chart(fig_bar, use_container_width=True)
             
-            # Radar offensif
             st.markdown("<h3 class='subsection-title-modern'>🎯 Radar Offensif</h3>", unsafe_allow_html=True)
             fig_radar = ChartManager.create_radar_chart(
                 analysis['metrics'],
@@ -1336,7 +1443,6 @@ class TabManager:
             st.plotly_chart(fig_radar, use_container_width=True)
         
         with col2:
-            # Jauges de pourcentages
             efficiency_data = {
                 'Conversion': (player_data['Buts'] / player_data['Tirs'] * 100) if player_data['Tirs'] > 0 else 0,
                 'Précision tirs': player_data.get('Pourcentage de tirs cadrés', 0),
@@ -1346,7 +1452,6 @@ class TabManager:
             fig_gauge = ChartManager.create_gauge_chart(efficiency_data, "Efficacité Offensive")
             st.plotly_chart(fig_gauge, use_container_width=True)
             
-            # Comparaison par 90 minutes
             comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
             avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
             
@@ -1358,7 +1463,6 @@ class TabManager:
             )
             st.plotly_chart(fig_comp, use_container_width=True)
         
-        # Métriques détaillées
         TabManager._render_detailed_metrics(analysis['metrics'], "📊 Métriques Offensives Détaillées")
     
     @staticmethod
@@ -1371,7 +1475,6 @@ class TabManager:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Actions défensives
             basic_actions = {
                 'Tacles': player_data['Tacles gagnants'],
                 'Interceptions': player_data['Interceptions'],
@@ -1386,7 +1489,6 @@ class TabManager:
             )
             st.plotly_chart(fig_bar, use_container_width=True)
             
-            # Radar défensif
             st.markdown("<h3 class='subsection-title-modern'>🛡️ Radar Défensif</h3>", unsafe_allow_html=True)
             fig_radar = ChartManager.create_radar_chart(
                 analysis['metrics'],
@@ -1399,7 +1501,6 @@ class TabManager:
             st.plotly_chart(fig_radar, use_container_width=True)
         
         with col2:
-            # Pourcentages de réussite
             success_data = {
                 'Duels défensifs': player_data.get('Pourcentage de duels gagnés', 0),
                 'Duels aériens': player_data['Pourcentage de duels aériens gagnés'],
@@ -1409,7 +1510,6 @@ class TabManager:
             fig_gauge = ChartManager.create_gauge_chart(success_data, "Pourcentages de Réussite")
             st.plotly_chart(fig_gauge, use_container_width=True)
             
-            # Comparaison défensive
             comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
             avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
             
@@ -1433,7 +1533,6 @@ class TabManager:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Actions techniques
             basic_actions = {
                 'Passes tentées': player_data['Passes tentées'],
                 'Dribbles tentés': player_data['Dribbles tentés'],
@@ -1448,7 +1547,6 @@ class TabManager:
             )
             st.plotly_chart(fig_bar, use_container_width=True)
             
-            # Radar technique
             st.markdown("<h3 class='subsection-title-modern'>🎨 Radar Technique</h3>", unsafe_allow_html=True)
             fig_radar = ChartManager.create_radar_chart(
                 analysis['metrics'],
@@ -1461,7 +1559,6 @@ class TabManager:
             st.plotly_chart(fig_radar, use_container_width=True)
         
         with col2:
-            # Pourcentages techniques
             technical_success = {
                 'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
                 'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
@@ -1471,7 +1568,6 @@ class TabManager:
             fig_gauge = ChartManager.create_gauge_chart(technical_success, "Précision Technique")
             st.plotly_chart(fig_gauge, use_container_width=True)
             
-            # Comparaison technique
             comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
             avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
             
@@ -1490,7 +1586,6 @@ class TabManager:
         """Rendu de l'onglet comparaison"""
         st.markdown("<h2 class='section-title-modern'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)
         
-        # Mode de visualisation avec design moderne
         st.markdown("<div class='modern-card animate-in'>", unsafe_allow_html=True)
         mode = st.radio(
             "**Mode de visualisation**",
@@ -1513,7 +1608,6 @@ class TabManager:
         st.markdown(f"<h3 class='subsection-title-modern'>🎯 Radar individuel : {selected_player}</h3>", unsafe_allow_html=True)
         
         try:
-            # Conteneur moderne pour la sélection
             with st.container():
                 col1, col2 = st.columns([1, 2])
                 with col1:
@@ -1566,13 +1660,11 @@ class TabManager:
                 )
             )
             
-            # Titre moderne
             fig.text(0.515, 0.97, selected_player, size=32, ha="center", 
                     fontproperties=font_bold.prop, color="#ffffff", weight='bold')
             fig.text(0.515, 0.94, f"Radar Individuel | Percentiles vs {competition} | Saison 2024-25", 
                     size=16, ha="center", fontproperties=font_bold.prop, color="#ffffff")
             
-            # Footer moderne
             fig.text(0.99, 0.01, "Football Dashboard Pro | Données: FBRef", 
                     size=10, ha="right", fontproperties=font_italic.prop, color="#dddddd")
             
@@ -1671,17 +1763,14 @@ class TabManager:
                     )
                 )
                 
-                # Titre moderne
                 fig.text(0.515, 0.97, "Radar Comparatif | Percentiles | Saison 2024-25",
                          size=18, ha="center", fontproperties=font_bold.prop, color="#ffffff")
                 
-                # Légende moderne
                 legend_p1 = mpatches.Patch(color=AppConfig.COLORS['primary'], label=joueur1)
                 legend_p2 = mpatches.Patch(color=AppConfig.COLORS['accent'], label=joueur2)
                 ax.legend(handles=[legend_p1, legend_p2], loc="upper right", bbox_to_anchor=(1.3, 1.0),
                          facecolor='#374151', edgecolor='white')
                 
-                # Footer moderne
                 fig.text(0.99, 0.01, "Football Dashboard Pro | Source: FBRef",
                          size=10, ha="right", fontproperties=font_italic.prop, color="#dddddd")
                 
@@ -1695,10 +1784,8 @@ class TabManager:
         """Affiche les métriques détaillées avec design moderne"""
         st.markdown(f"<h3 class='subsection-title-modern'>{title}</h3>", unsafe_allow_html=True)
         
-        # Conteneur moderne pour les métriques
         st.markdown("<div class='modern-card animate-in'>", unsafe_allow_html=True)
         
-        # Créer des colonnes pour afficher les métriques
         cols = st.columns(min(len(metrics), 4))
         
         for i, (metric, value) in enumerate(metrics.items()):
@@ -1718,168 +1805,6 @@ class TabManager:
                 """, unsafe_allow_html=True)
         
         st.markdown("</div>", unsafe_allow_html=True)
-
-# ================================================================================================
-# GESTIONNAIRE DE DONNÉES
-# ================================================================================================
-
-class DataManager:
-    """Gestionnaire centralisé pour les données"""
-    
-    @staticmethod
-    @st.cache_data
-    def load_data(file_path: str = 'df_BIG2025.csv') -> Optional[pd.DataFrame]:
-        """Charge les données depuis le fichier CSV"""
-        try:
-            df = pd.read_csv("df_BIG2025.csv", encoding='utf-8', delimiter=',')
-            return df
-        except FileNotFoundError:
-            st.error(f"❌ Fichier '{file_path}' non trouvé. Veuillez vous assurer que le fichier est dans le même répertoire.")
-            return None
-        except Exception as e:
-            st.error(f"❌ Erreur lors du chargement des données : {str(e)}")
-            return None
-    
-    @staticmethod
-    def filter_data_by_competition(df: pd.DataFrame, competition: str) -> pd.DataFrame:
-        """Filtre les données par compétition"""
-        return df[df['Compétition'] == competition]
-    
-    @staticmethod
-    def filter_data_by_minutes(df: pd.DataFrame, min_minutes: int) -> pd.DataFrame:
-        """Filtre les données par minutes jouées"""
-        return df[df['Minutes jouées'] >= min_minutes]
-    
-    @staticmethod
-    def get_competitions(df: pd.DataFrame) -> List[str]:
-        """Récupère la liste des compétitions"""
-        return sorted(df['Compétition'].dropna().unique())
-    
-    @staticmethod
-    def get_players(df: pd.DataFrame) -> List[str]:
-        """Récupère la liste des joueurs"""
-        return sorted(df['Joueur'].dropna().unique())
-
-# ================================================================================================
-# GESTIONNAIRE DE SIDEBAR
-# ================================================================================================
-
-class SidebarManager:
-    """Gestionnaire moderne pour la sidebar"""
-    
-    @staticmethod
-    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
-        """Rendu complet de la sidebar moderne"""
-        with st.sidebar:
-            UIComponents.render_sidebar_header()
-            
-            # Sélection de la compétition avec style moderne
-            st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
-            competitions = DataManager.get_competitions(df)
-            selected_competition = st.selectbox(
-                "🏆 **Choisir une compétition**",
-                competitions,
-                index=0,
-                help="Sélectionnez la compétition pour filtrer les joueurs"
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Filtrage par compétition
-            df_filtered = DataManager.filter_data_by_competition(df, selected_competition)
-            
-            st.markdown("---")
-            
-            # Filtre par minutes jouées moderne
-            SidebarManager._render_minutes_filter_modern(df_filtered)
-            
-            # Application du filtre minutes
-            min_minutes_filter = st.session_state.get('min_minutes_filter', 0)
-            df_filtered_minutes = DataManager.filter_data_by_minutes(df_filtered, min_minutes_filter)
-            
-            # Informations sur le filtrage moderne
-            SidebarManager._render_filter_info_modern(df_filtered_minutes)
-            
-            st.markdown("---")
-            
-            # Sélection du joueur moderne
-            selected_player = SidebarManager._render_player_selection_modern(df_filtered_minutes)
-            
-            # Informations additionnelles modernes
-            SidebarManager._render_sidebar_footer_modern()
-            
-            return selected_competition, selected_player, df_filtered_minutes
-    
-    @staticmethod
-    def _render_minutes_filter_modern(df_filtered: pd.DataFrame):
-        """Rendu moderne du filtre par minutes"""
-        if not df_filtered['Minutes jouées'].empty:
-            min_minutes = int(df_filtered['Minutes jouées'].min())
-            max_minutes = int(df_filtered['Minutes jouées'].max())
-            
-            st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
-            st.markdown("**⏱️ Filtrer par minutes jouées**")
-            
-            min_minutes_filter = st.slider(
-                "Minutes minimum",
-                min_value=min_minutes,
-                max_value=max_minutes,
-                value=min_minutes,
-                step=90,
-                help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes",
-                key='min_minutes_filter'
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
-    
-    @staticmethod
-    def _render_filter_info_modern(df_filtered: pd.DataFrame):
-        """Affiche les informations de filtrage modernes"""
-        nb_joueurs = len(df_filtered)
-        
-        st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
-        if nb_joueurs > 0:
-            st.success(f"✅ **{nb_joueurs} joueurs** correspondent aux critères")
-        else:
-            st.warning("⚠️ Aucun joueur ne correspond aux critères")
-        st.markdown("</div>", unsafe_allow_html=True)
-    
-    @staticmethod
-    def _render_player_selection_modern(df_filtered: pd.DataFrame) -> Optional[str]:
-        """Rendu moderne de la sélection de joueur"""
-        if not df_filtered.empty:
-            joueurs = DataManager.get_players(df_filtered)
-            if joueurs:
-                st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
-                selected_player = st.selectbox(
-                    "👤 **Choisir un joueur**",
-                    joueurs,
-                    index=0,
-                    help="Sélectionnez le joueur à analyser"
-                )
-                st.markdown("</div>", unsafe_allow_html=True)
-                return selected_player
-        
-        st.markdown("<div class='modern-card'>", unsafe_allow_html=True)
-        st.error("❌ Aucun joueur disponible avec ces critères.")
-        st.markdown("</div>", unsafe_allow_html=True)
-        return None
-    
-    @staticmethod
-    def _render_sidebar_footer_modern():
-        """Rendu moderne du footer de la sidebar"""
-        st.markdown("---")
-        st.markdown("""
-        <div class='modern-card glass-effect' style='text-align: center;'>
-            <h4 style='color: var(--primary-color); margin: 0 0 10px 0; font-weight: 800;'>
-                📊 Dashboard Pro
-            </h4>
-            <p style='color: var(--text-primary); margin: 0; font-size: 0.9rem; font-weight: 500;'>
-                Analyse Football Avancée
-            </p>
-            <p style='color: var(--text-secondary); margin: 8px 0 0 0; font-size: 0.8rem;'>
-                Interface moderne & intuitive
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
 
 # ================================================================================================
 # APPLICATION PRINCIPALE
@@ -1903,35 +1828,28 @@ class FootballDashboard:
     
     def run(self):
         """Méthode principale d'exécution de l'application"""
-        # Chargement des données
         df = DataManager.load_data()
         
         if df is None:
             self._render_error_page()
             return
         
-        # Rendu de l'en-tête moderne
         UIComponents.render_header()
         
-        # Rendu de la sidebar et récupération des sélections
         selected_competition, selected_player, df_filtered = SidebarManager.render_sidebar(df)
         
         if selected_player:
-            # Récupération des données du joueur
             player_data = df_filtered[df_filtered['Joueur'] == selected_player].iloc[0]
             
-            # Affichage de la carte du joueur moderne
             UIComponents.render_player_card(player_data, selected_competition)
             
             st.markdown("---")
             
-            # Onglets principaux modernes
             self._render_main_tabs(player_data, df_filtered, selected_player, df)
         
         else:
             self._render_no_player_message()
         
-        # Footer moderne
         UIComponents.render_footer()
     
     def _render_main_tabs(self, player_data: pd.Series, df_filtered: pd.DataFrame, 
@@ -1970,6 +1888,27 @@ class FootballDashboard:
                 <div class='metric-card-modern' style='text-align: center; padding: 2rem;'>
                     <div style='font-size: 3rem; margin-bottom: 1rem;'>🎯</div>
                     <h4 style='color: var(--primary-color); margin: 0;'>Analyse Offensive</h4>
+                    <p style='color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
+                        Buts, passes, créativité
+                    </p>
+                </div>
+                <div class='metric-card-modern' style='text-align: center; padding: 2rem;'>
+                    <div style='font-size: 3rem; margin-bottom: 1rem;'>🛡️</div>
+                    <h4 style='color: var(--accent-color); margin: 0;'>Analyse Défensive</h4>
+                    <p style='color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
+                        Tacles, interceptions, duels
+                    </p>
+                </div>
+                <div class='metric-card-modern' style='text-align: center; padding: 2rem;'>
+                    <div style='font-size: 3rem; margin-bottom: 1rem;'>🎨</div>
+                    <h4 style='color: var(--success-color); margin: 0;'>Analyse Technique</h4>
+                    <p style='color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
+                        Passes, dribbles, précision
+                    </p>
+                </div>
+                <div class='metric-card-modern' style='text-align: center; padding: 2rem;'>
+                    <div style='font-size: 3rem; margin-bottom: 1rem;'>🔄</div>
+                    <h4 style='color: var(--warning-color); margin: 0;'>Comparaison</h4>
                     <p style='color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
                         Radars comparatifs
                     </p>
@@ -2018,28 +1957,3 @@ def main():
     """Point d'entrée principal de l'application"""
     dashboard = FootballDashboard()
     dashboard.run()
-
-# Exécution de l'application
-if __name__ == "__main__":
-    main(); font-size: 0.9rem;'>
-                        Buts, passes, créativité
-                    </p>
-                </div>
-                <div class='metric-card-modern' style='text-align: center; padding: 2rem;'>
-                    <div style='font-size: 3rem; margin-bottom: 1rem;'>🛡️</div>
-                    <h4 style='color: var(--accent-color); margin: 0;'>Analyse Défensive</h4>
-                    <p style='color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
-                        Tacles, interceptions, duels
-                    </p>
-                </div>
-                <div class='metric-card-modern' style='text-align: center; padding: 2rem;'>
-                    <div style='font-size: 3rem; margin-bottom: 1rem;'>🎨</div>
-                    <h4 style='color: var(--success-color); margin: 0;'>Analyse Technique</h4>
-                    <p style='color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.9rem;'>
-                        Passes, dribbles, précision
-                    </p>
-                </div>
-                <div class='metric-card-modern' style='text-align: center; padding: 2rem;'>
-                    <div style='font-size: 3rem; margin-bottom: 1rem;'>🔄</div>
-                    <h4 style='color: var(--warning-color); margin: 0;'>Comparaison</h4>
-                    <p style='color: var(--text-secondary); margin: 0.5rem 0 0 0

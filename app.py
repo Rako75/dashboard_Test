@@ -1924,7 +1924,7 @@ class FootballDashboard:
             TabManager.render_comparison_tab(df_full, selected_player)
     
     def _render_no_player_message(self):
-        """Affiche un message moderne quand aucun joueur n'est sélectionné"""
+    """Affiche un message moderne quand aucun joueur n'est sélectionné"""
         st.markdown("""
         <div class='dashboard-card animated-card' style='text-align: center; padding: 48px;'>
             <h2 style='color: #1E40AF; margin-bottom: 24px; font-weight: 700;'>Aucun joueur sélectionné</h2>

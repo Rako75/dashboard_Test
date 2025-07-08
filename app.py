@@ -567,7 +567,7 @@ class UIComponents:
     # Récupération et formatage de la valeur marchande avec la nouvelle fonction
         valeur_marchande = "N/A"
         if 'Valeur marchande' in player_data.index:
-        valeur_marchande = format_market_value(player_data['Valeur marchande'])
+            valeur_marchande = format_market_value(player_data['Valeur marchande'])
     
     # Tronquer les textes longs pour éviter le débordement
     equipe_display = player_data['Équipe'][:15] + "..." if len(str(player_data['Équipe'])) > 15 else player_data['Équipe']

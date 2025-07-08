@@ -2005,6 +2005,472 @@ class SidebarManager:
         </div>
         """, unsafe_allow_html=True)
 
+
+# AMÉLIORATIONS POUR LA VISIBILITÉ ET L'ERGONOMIE
+
+# ================================================================================================
+# 1. NAVIGATION AMÉLIORÉE AVEC BREADCRUMBS
+# ================================================================================================
+
+class NavigationManager:
+    """Gestionnaire de navigation amélioré"""
+    
+    @staticmethod
+    def render_breadcrumbs(competition: str, team: str, player: str):
+        """Affiche un fil d'Ariane pour la navigation"""
+        st.markdown(f"""
+        <div style='
+            background: var(--background-surface);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        '>
+            <span style='color: var(--text-secondary); font-size: 0.9em;'>
+                🏆 {competition} › ⚽ {team} › 👤 {player}
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_quick_actions():
+        """Boutons d'actions rapides"""
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            if st.button("📊 Exporter Données", use_container_width=True):
+                # Logique d'export
+                pass
+                
+        with col2:
+            if st.button("🔄 Comparer Joueur", use_container_width=True):
+                # Logique de comparaison
+                pass
+                
+        with col3:
+            if st.button("📈 Tendances", use_container_width=True):
+                # Logique des tendances
+                pass
+                
+        with col4:
+            if st.button("⭐ Favoris", use_container_width=True):
+                # Logique des favoris
+                pass
+
+# ================================================================================================
+# 2. SIDEBAR AMÉLIORÉE AVEC FAVORIS ET HISTORIQUE
+# ================================================================================================
+
+class EnhancedSidebarManager:
+    """Sidebar améliorée avec fonctionnalités avancées"""
+    
+    @staticmethod
+    def render_enhanced_sidebar(df: pd.DataFrame):
+        """Sidebar avec fonctionnalités améliorées"""
+        with st.sidebar:
+            # En-tête avec statistiques rapides
+            st.markdown("""
+            <div style='
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                padding: 20px;
+                border-radius: 12px;
+                text-align: center;
+                margin-bottom: 20px;
+            '>
+                <h2 style='color: white; margin: 0; font-weight: 700;'>⚙️ Configuration</h2>
+                <p style='color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 0.9em;'>
+                    {len(df)} joueurs disponibles
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Filtres rapides
+            st.markdown("### 🎯 Filtres Rapides")
+            
+            # Position filter
+            positions = sorted(df['Position'].unique())
+            selected_positions = st.multiselect(
+                "Positions", 
+                positions, 
+                default=positions,
+                help="Filtrer par position de jeu"
+            )
+            
+            # Age range
+            min_age, max_age = st.slider(
+                "Tranche d'âge",
+                min_value=int(df['Âge'].min()),
+                max_value=int(df['Âge'].max()),
+                value=(int(df['Âge'].min()), int(df['Âge'].max())),
+                help="Filtrer par âge du joueur"
+            )
+            
+            # Minutes played threshold
+            min_minutes = st.number_input(
+                "Minutes minimum",
+                min_value=0,
+                max_value=int(df['Minutes jouées'].max()),
+                value=0,
+                step=90,
+                help="Minimum de minutes jouées"
+            )
+            
+            st.markdown("---")
+            
+            # Favoris
+            EnhancedSidebarManager._render_favorites()
+            
+            # Historique récent
+            EnhancedSidebarManager._render_recent_players()
+            
+            # Statistiques de session
+            EnhancedSidebarManager._render_session_stats()
+    
+    @staticmethod
+    def _render_favorites():
+        """Section des joueurs favoris"""
+        st.markdown("### ⭐ Favoris")
+        
+        if 'favorites' not in st.session_state:
+            st.session_state.favorites = []
+        
+        if st.session_state.favorites:
+            for i, fav in enumerate(st.session_state.favorites):
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    if st.button(f"👤 {fav}", key=f"fav_{i}", use_container_width=True):
+                        # Logique pour sélectionner le favori
+                        pass
+                with col2:
+                    if st.button("🗑️", key=f"del_fav_{i}"):
+                        st.session_state.favorites.remove(fav)
+                        st.rerun()
+        else:
+            st.info("Aucun favori ajouté")
+    
+    @staticmethod
+    def _render_recent_players():
+        """Section des joueurs récents"""
+        st.markdown("### 🕒 Récemment consultés")
+        
+        if 'recent_players' not in st.session_state:
+            st.session_state.recent_players = []
+        
+        if st.session_state.recent_players:
+            for player in st.session_state.recent_players[:3]:
+                if st.button(f"🔄 {player}", use_container_width=True):
+                    # Logique pour sélectionner le joueur récent
+                    pass
+        else:
+            st.info("Aucun historique")
+    
+    @staticmethod
+    def _render_session_stats():
+        """Statistiques de la session"""
+        st.markdown("### 📊 Session")
+        
+        if 'session_stats' not in st.session_state:
+            st.session_state.session_stats = {
+                'players_viewed': 0,
+                'start_time': pd.Timestamp.now()
+            }
+        
+        duration = pd.Timestamp.now() - st.session_state.session_stats['start_time']
+        
+        st.metric("Joueurs consultés", st.session_state.session_stats['players_viewed'])
+        st.metric("Durée session", f"{duration.seconds // 60}min")
+
+# ================================================================================================
+# 3. MÉTRIQUES AMÉLIORÉES AVEC CONTEXTE
+# ================================================================================================
+
+class EnhancedMetrics:
+    """Métriques améliorées avec contexte et comparaisons"""
+    
+    @staticmethod
+    def render_contextual_metric(label: str, value: float, comparison_value: float, 
+                                format_func=None, help_text: str = ""):
+        """Métrique avec contexte et aide"""
+        
+        if format_func:
+            display_value = format_func(value)
+            comparison_display = format_func(comparison_value)
+        else:
+            display_value = f"{value:.2f}"
+            comparison_display = f"{comparison_value:.2f}"
+        
+        delta = value - comparison_value
+        delta_color = "green" if delta > 0 else "red" if delta < 0 else "gray"
+        
+        # Calcul du percentile
+        percentile = (value / comparison_value * 100) if comparison_value != 0 else 100
+        
+        # Badge de performance
+        if percentile >= 120:
+            badge = "🟢 Excellent"
+            badge_color = "#00C896"
+        elif percentile >= 110:
+            badge = "🟡 Très bon"
+            badge_color = "#F7B801"
+        elif percentile >= 90:
+            badge = "🟠 Bon"
+            badge_color = "#FF7F0E"
+        else:
+            badge = "🔴 À améliorer"
+            badge_color = "#D62828"
+        
+        st.markdown(f"""
+        <div style='
+            background: var(--background-surface);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin: 8px 0;
+            position: relative;
+        '>
+            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;'>
+                <span style='font-size: 0.85em; color: var(--text-secondary); font-weight: 500;'>{label}</span>
+                <span style='
+                    background: {badge_color};
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 0.7em;
+                    font-weight: 600;
+                '>{badge}</span>
+            </div>
+            
+            <div style='font-size: 1.8em; font-weight: 700; color: var(--primary-color); margin-bottom: 4px;'>
+                {display_value}
+            </div>
+            
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <span style='font-size: 0.8em; color: var(--text-secondary);'>
+                    Moyenne: {comparison_display}
+                </span>
+                <span style='font-size: 0.8em; color: {delta_color}; font-weight: 600;'>
+                    {"+" if delta > 0 else ""}{delta:.2f}
+                </span>
+            </div>
+            
+            {f"<div style='font-size: 0.75em; color: var(--text-secondary); margin-top: 4px; font-style: italic;'>{help_text}</div>" if help_text else ""}
+        </div>
+        """, unsafe_allow_html=True)
+
+# ================================================================================================
+# 4. TOOLTIPS ET AIDE CONTEXTUELLE
+# ================================================================================================
+
+class HelpSystem:
+    """Système d'aide et tooltips"""
+    
+    @staticmethod
+    def render_help_button(content: str, position: str = "right"):
+        """Bouton d'aide avec tooltip"""
+        help_id = f"help_{hash(content)}"
+        
+        st.markdown(f"""
+        <div style='display: inline-block; position: relative;'>
+            <span style='
+                background: var(--primary-color);
+                color: white;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: bold;
+                cursor: help;
+                margin-left: 8px;
+            ' title='{content}'>?</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_metric_explanation(metric_name: str):
+        """Explication des métriques"""
+        explanations = {
+            "xG": "Expected Goals - Probabilité qu'un tir soit un but basée sur les données historiques",
+            "xA": "Expected Assists - Probabilité qu'une passe mène à un but",
+            "Percentile": "Position du joueur par rapport aux autres (0-100, 100 = meilleur)",
+            "Passes progressives": "Passes qui font avancer le ballon vers le but adverse",
+            "Duels gagnés": "Pourcentage de duels physiques remportés par le joueur"
+        }
+        
+        if metric_name in explanations:
+            HelpSystem.render_help_button(explanations[metric_name])
+
+# ================================================================================================
+# 5. ALERTES ET NOTIFICATIONS
+# ================================================================================================
+
+class NotificationSystem:
+    """Système de notifications et alertes"""
+    
+    @staticmethod
+    def show_performance_alert(player_name: str, metrics: dict):
+        """Alerte sur les performances exceptionnelles"""
+        exceptional_metrics = []
+        
+        for metric, value in metrics.items():
+            if isinstance(value, (int, float)) and value > 90:  # Percentile > 90
+                exceptional_metrics.append(metric)
+        
+        if exceptional_metrics:
+            st.success(f"🌟 **{player_name}** excelle en: {', '.join(exceptional_metrics)}")
+    
+    @staticmethod
+    def show_comparison_insight(player1: str, player2: str, better_metrics: list):
+        """Insight sur la comparaison"""
+        if len(better_metrics) > len(AppConfig.RAW_STATS) // 2:
+            st.info(f"💡 **{player1}** domine la comparaison avec {len(better_metrics)} métriques supérieures")
+        else:
+            st.info(f"⚖️ Comparaison équilibrée entre **{player1}** et **{player2}**")
+
+# ================================================================================================
+# 6. THÈMES ET PERSONNALISATION
+# ================================================================================================
+
+class ThemeManager:
+    """Gestionnaire de thèmes"""
+    
+    @staticmethod
+    def render_theme_selector():
+        """Sélecteur de thème"""
+        themes = {
+            "Professionnel": {
+                "primary": "#1f77b4",
+                "secondary": "#2ca02c",
+                "accent": "#ff7f0e"
+            },
+            "Sport": {
+                "primary": "#28a745",
+                "secondary": "#007bff", 
+                "accent": "#ffc107"
+            },
+            "Élégant": {
+                "primary": "#6f42c1",
+                "secondary": "#e83e8c",
+                "accent": "#fd7e14"
+            }
+        }
+        
+        selected_theme = st.selectbox("🎨 Thème", list(themes.keys()))
+        
+        if selected_theme:
+            theme_colors = themes[selected_theme]
+            st.markdown(f"""
+            <style>
+            :root {{
+                --primary-color: {theme_colors['primary']};
+                --secondary-color: {theme_colors['secondary']};
+                --accent-color: {theme_colors['accent']};
+            }}
+            </style>
+            """, unsafe_allow_html=True)
+
+# ================================================================================================
+# 7. ACCESSIBILITÉ
+# ================================================================================================
+
+class AccessibilityManager:
+    """Gestionnaire d'accessibilité"""
+    
+    @staticmethod
+    def add_accessibility_features():
+        """Ajoute les fonctionnalités d'accessibilité"""
+        st.markdown("""
+        <style>
+        /* Focus visible pour la navigation au clavier */
+        .stSelectbox > div > div, .stButton > button {
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .stSelectbox > div > div:focus-within, .stButton > button:focus {
+            box-shadow: 0 0 0 3px rgba(31, 119, 180, 0.5) !important;
+            outline: none;
+        }
+        
+        /* Contraste élevé pour les textes importants */
+        .metric-value {
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Taille de police minimale */
+        .metric-label-compact {
+            font-size: max(0.75rem, 12px);
+        }
+        
+        /* Hover states plus visibles */
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(31, 119, 180, 0.3);
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+# ================================================================================================
+# 8. RACCOURCIS CLAVIER
+# ================================================================================================
+
+class KeyboardShortcuts:
+    """Gestionnaire de raccourcis clavier"""
+    
+    @staticmethod
+    def add_keyboard_shortcuts():
+        """Ajoute les raccourcis clavier"""
+        st.markdown("""
+        <script>
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + 1-4 pour changer d'onglet
+            if (e.ctrlKey && e.key >= '1' && e.key <= '4') {
+                e.preventDefault();
+                const tabIndex = parseInt(e.key) - 1;
+                const tabs = document.querySelectorAll('[data-baseweb="tab"]');
+                if (tabs[tabIndex]) {
+                    tabs[tabIndex].click();
+                }
+            }
+            
+            // Ctrl + F pour focus sur la recherche
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                const searchInput = document.querySelector('input[placeholder*="Rechercher"]');
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }
+        });
+        </script>
+        """, unsafe_allow_html=True)
+
+# ================================================================================================
+# INTÉGRATION DANS LE DASHBOARD PRINCIPAL
+# ================================================================================================
+
+def integrate_improvements():
+    """Intègre toutes les améliorations dans le dashboard"""
+    
+    # Accessibilité
+    AccessibilityManager.add_accessibility_features()
+    
+    # Raccourcis clavier
+    KeyboardShortcuts.add_keyboard_shortcuts()
+    
+    # Sélecteur de thème dans la sidebar
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("### ⚙️ Préférences")
+        ThemeManager.render_theme_selector()
+    
+    # Navigation améliorée
+    NavigationManager.render_quick_actions()
+    
+    return True
+
+
 # ================================================================================================
 # APPLICATION PRINCIPALE MODERNE
 # ================================================================================================

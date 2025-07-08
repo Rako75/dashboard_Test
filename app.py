@@ -16,6 +16,61 @@ from typing import Dict, List, Optional, Tuple
 # CONFIGURATION DE L'APPLICATION
 # ================================================================================================
 
+def format_market_value(value):
+    """
+    Formate une valeur marchande avec des sigles comme 'M' ou 'K' et le symbole Euro.
+    
+    Args:
+        value: La valeur à formater (peut être int, float, ou string)
+    
+    Returns:
+        str: La valeur formatée (ex: "17.0M€", "500.0K€", "1.2B€")
+    
+    Examples:
+        >>> format_market_value(17000000000)
+        '17.0B€'
+        >>> format_market_value(170000000)
+        '170.0M€'
+        >>> format_market_value(2500000)
+        '2.5M€'
+        >>> format_market_value(750000)
+        '750.0K€'
+        >>> format_market_value(50000)
+        '50.0K€'
+        >>> format_market_value(999)
+        '999€'
+    """
+    if pd.isna(value) or value is None:
+        return "N/A"
+    
+    # Conversion en nombre si c'est une chaîne
+    if isinstance(value, str):
+        try:
+            # Nettoyer la chaîne si elle contient déjà des caractères non numériques
+            clean_value = ''.join(c for c in value if c.isdigit() or c == '.')
+            if clean_value:
+                value = float(clean_value)
+            else:
+                return "N/A"
+        except (ValueError, TypeError):
+            return str(value)  # Retourner la chaîne telle quelle si conversion impossible
+    
+    # Conversion en float pour les calculs
+    try:
+        value = float(value)
+    except (ValueError, TypeError):
+        return "N/A"
+    
+    # Formatage selon les seuils
+    if value >= 1_000_000_000:  # Milliards
+        return f"{value/1_000_000_000:.1f}B€"
+    elif value >= 1_000_000:  # Millions
+        return f"{value/1_000_000:.1f}M€"
+    elif value >= 1_000:  # Milliers
+        return f"{value/1_000:.1f}K€"
+    else:  # Moins de 1000
+        return f"{value:.0f}€"
+
 class AppConfig:
     """Configuration centralisée de l'application"""
     
@@ -503,62 +558,52 @@ class UIComponents:
             UIComponents._render_logo_placeholder(team_name)
     
     @staticmethod
-    def _render_player_info(player_data: pd.Series):
-        """Affiche les informations centrales du joueur"""
-        # Récupération et formatage de la valeur marchande
+    def _render_player_info_updated(player_data: pd.Series):
+        """Affiche les informations centrales du joueur avec formatage amélioré de la valeur marchande"""
+    
+    # Récupération et formatage de la valeur marchande avec la nouvelle fonction
         valeur_marchande = "N/A"
-        if 'Valeur marchande' in player_data.index and pd.notna(player_data['Valeur marchande']):
-            vm = player_data['Valeur marchande']
-            # Si la valeur est numérique, on la formate
-            if isinstance(vm, (int, float)):
-                if vm >= 1000000:
-                    valeur_marchande = f"{vm/1000000:.1f}M€"
-                elif vm >= 1000:
-                    valeur_marchande = f"{vm/1000:.0f}K€"
-                else:
-                    valeur_marchande = f"{vm:.0f}€"
-            else:
-                # Si c'est déjà une chaîne formatée
-                valeur_marchande = str(vm)
-        
-        # Tronquer les textes longs pour éviter le débordement
-        equipe_display = player_data['Équipe'][:15] + "..." if len(str(player_data['Équipe'])) > 15 else player_data['Équipe']
-        nationalite_display = player_data['Nationalité'][:10] + "..." if len(str(player_data['Nationalité'])) > 10 else player_data['Nationalité']
-        position_display = player_data['Position'][:8] + "..." if len(str(player_data['Position'])) > 8 else player_data['Position']
-        
-        st.markdown(f"""
-        <div class='dashboard-card animated-card' style='text-align: center;'>
-            <h2 class='section-title' style='margin-bottom: 25px; font-size: 2.2em;'>
-                {player_data['Joueur']}
-            </h2>
-            <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; max-width: 100%;'>
-                <div class='metric-card-compact'>
-                    <div class='metric-value-compact'>{player_data['Âge']}</div>
-                    <div class='metric-label-compact'>Âge</div>
-                </div>
-                <div class='metric-card-compact'>
-                    <div class='metric-value-compact' title='{player_data['Position']}'>{position_display}</div>
-                    <div class='metric-label-compact'>Position</div>
-                </div>
-                <div class='metric-card-compact'>
-                    <div class='metric-value-compact' title='{player_data['Nationalité']}'>{nationalite_display}</div>
-                    <div class='metric-label-compact'>Nationalité</div>
-                </div>
-                <div class='metric-card-compact'>
-                    <div class='metric-value-compact'>{int(player_data['Minutes jouées'])}</div>
-                    <div class='metric-label-compact'>Minutes</div>
-                </div>
-                <div class='metric-card-compact'>
-                    <div class='metric-value-compact' style='color: #F7B801;'>{valeur_marchande}</div>
-                    <div class='metric-label-compact'>Val. Marchande</div>
-                </div>
-                <div class='metric-card-compact'>
-                    <div class='metric-value-compact' title='{player_data['Équipe']}'>{equipe_display}</div>
-                    <div class='metric-label-compact'>Équipe</div>
-                </div>
+        if 'Valeur marchande' in player_data.index:
+        valeur_marchande = format_market_value(player_data['Valeur marchande'])
+    
+    # Tronquer les textes longs pour éviter le débordement
+    equipe_display = player_data['Équipe'][:15] + "..." if len(str(player_data['Équipe'])) > 15 else player_data['Équipe']
+    nationalite_display = player_data['Nationalité'][:10] + "..." if len(str(player_data['Nationalité'])) > 10 else player_data['Nationalité']
+    position_display = player_data['Position'][:8] + "..." if len(str(player_data['Position'])) > 8 else player_data['Position']
+    
+    st.markdown(f"""
+    <div class='dashboard-card animated-card' style='text-align: center;'>
+        <h2 class='section-title' style='margin-bottom: 25px; font-size: 2.2em;'>
+            {player_data['Joueur']}
+        </h2>
+        <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; max-width: 100%;'>
+            <div class='metric-card-compact'>
+                <div class='metric-value-compact'>{player_data['Âge']}</div>
+                <div class='metric-label-compact'>Âge</div>
+            </div>
+            <div class='metric-card-compact'>
+                <div class='metric-value-compact' title='{player_data['Position']}'>{position_display}</div>
+                <div class='metric-label-compact'>Position</div>
+            </div>
+            <div class='metric-card-compact'>
+                <div class='metric-value-compact' title='{player_data['Nationalité']}'>{nationalite_display}</div>
+                <div class='metric-label-compact'>Nationalité</div>
+            </div>
+            <div class='metric-card-compact'>
+                <div class='metric-value-compact'>{int(player_data['Minutes jouées'])}</div>
+                <div class='metric-label-compact'>Minutes</div>
+            </div>
+            <div class='metric-card-compact'>
+                <div class='metric-value-compact' style='color: #F7B801;'>{valeur_marchande}</div>
+                <div class='metric-label-compact'>Val. Marchande</div>
+            </div>
+            <div class='metric-card-compact'>
+                <div class='metric-value-compact' title='{player_data['Équipe']}'>{equipe_display}</div>
+                <div class='metric-label-compact'>Équipe</div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
     
     @staticmethod
     def _render_photo_placeholder(player_name: str):

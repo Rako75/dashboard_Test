@@ -1273,17 +1273,7 @@ class UIComponents:
         </div>
         """, unsafe_allow_html=True)
     
-    @staticmethod
-    def render_quick_navigation():
-        """Navigation rapide entre sections"""
-        st.markdown("""
-        <div class='quick-nav'>
-            <a href='#offensive' class='quick-nav-item'>🎯 Offensif</a>
-            <a href='#defensive' class='quick-nav-item'>🛡️ Défensif</a>
-            <a href='#technique' class='quick-nav-item'>🎨 Technique</a>
-            <a href='#comparaison' class='quick-nav-item'>🔄 Comparaison</a>
-        </div>
-        """, unsafe_allow_html=True)
+
     
     @staticmethod
     def render_breadcrumbs(competition: str, team: str, player: str):
@@ -2010,8 +2000,6 @@ class FootballDashboard:
         # Rendu de l'en-tête
         UIComponents.render_header()
         
-        # Navigation rapide
-        UIComponents.render_quick_navigation()
         
         # Rendu de la sidebar et récupération des sélections
         selected_competition, selected_player, df_filtered = SidebarManager.render_sidebar(df)

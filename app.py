@@ -685,8 +685,8 @@ class MetricsCalculator:
             'Passes tentées/90': player_data.get('Passes tentées', 0) / minutes_90,
             'Passes prog./90': player_data.get('Passes progressives', 0) / minutes_90,
             'Dribbles/90': player_data.get('Dribbles tentés', 0) / minutes_90,
-            'Centres/90': player_data.get('Centres', 0) / minutes_90,
             'Passes clés/90': player_data.get('Passes clés', 0) / minutes_90,
+            'Ballons perdus/90': player_data.get('Ballons perdus', 0) / minutes_90,
             '% Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
             '% Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0)
         }
@@ -1087,8 +1087,10 @@ class PerformanceAnalyzer:
                     column_name = 'Passes progressives'
                 elif base_metric == 'Dribbles':
                     column_name = 'Dribbles tentés'
-                elif base_metric == 'Centres':
-                    column_name = 'Centres'
+                elif base_metric == 'Passes clés':
+                    column_name = 'Passes clés'
+                elif base_metric == 'Ballons perdus':
+                    column_name = 'Ballons perdus'
                 
                 avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
             else:
@@ -1107,8 +1109,10 @@ class PerformanceAnalyzer:
                     column_name = 'Passes progressives'
                 elif base_metric == 'Dribbles':
                     column_name = 'Dribbles tentés'
-                elif base_metric == 'Centres':
-                    column_name = 'Centres'
+                elif base_metric == 'Passes clés':
+                    column_name = 'Passes clés'
+                elif base_metric == 'Ballons perdus':
+                    column_name = 'Ballons perdus'
                 
                 distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp
             else:
@@ -1673,8 +1677,8 @@ class TabManager:
             basic_actions = {
                 'Passes tentées': player_data.get('Passes tentées', 0),
                 'Dribbles tentés': player_data.get('Dribbles tentés', 0),
-                'Centres': player_data.get('Centres', 0),
-                'Passes clés': player_data.get('Passes clés', 0)
+                'Passes clés': player_data.get('Passes clés', 0),
+                'Ballons perdus': player_data.get('Ballons perdus', 0)
             }
             
             fig_bar = ChartManager.create_bar_chart(
@@ -1696,10 +1700,10 @@ class TabManager:
                     help="Nombre de passes tentées par 90 minutes de jeu"
                 )
                 st.metric(
-                    label="Centres par 90min",
-                    value=f"{analysis['metrics']['Centres/90']:.1f}",
-                    delta=f"{analysis['metrics']['Centres/90'] - analysis['avg_metrics']['Centres/90']:.1f}",
-                    help="Nombre de centres effectués par 90 minutes de jeu"
+                    label="Passes clés par 90min",
+                    value=f"{analysis['metrics']['Passes clés/90']:.1f}",
+                    delta=f"{analysis['metrics']['Passes clés/90'] - analysis['avg_metrics']['Passes clés/90']:.1f}",
+                    help="Passes menant directement à une occasion de tir par 90 minutes"
                 )
             
             with metric_col2:

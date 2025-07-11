@@ -2604,13 +2604,13 @@ class FootballDashboard:
         ])
         
         with tab1:
-            TabManager.render_offensive_tab(player_data, df_filtered, selected_player)
+            TabManager.render_offensive_tab(player_data, df_filtered, selected_player, df_full)
         
         with tab2:
-            TabManager.render_defensive_tab(player_data, df_filtered, selected_player)
+            TabManager.render_defensive_tab(player_data, df_filtered, selected_player, df_full)
         
         with tab3:
-            TabManager.render_technical_tab(player_data, df_filtered, selected_player)
+            TabManager.render_technical_tab(player_data, df_filtered, selected_player, df_full)
         
         with tab4:
             TabManager.render_comparison_tab(df_full, selected_player)

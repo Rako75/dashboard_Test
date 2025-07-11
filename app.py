@@ -1544,8 +1544,8 @@ class TabManager:
     
     @staticmethod
     def render_defensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str):
-        """Rendu de l'onglet performance défensive"""
-        st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
+            """Rendu de l'onglet performance défensive"""
+            st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
         
         analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison)
         

@@ -685,8 +685,8 @@ class MetricsCalculator:
             'Passes tentées/90': player_data.get('Passes tentées', 0) / minutes_90,
             'Passes prog./90': player_data.get('Passes progressives', 0) / minutes_90,
             'Dribbles/90': player_data.get('Dribbles tentés', 0) / minutes_90,
+            'Centres/90': player_data.get('Centres', 0) / minutes_90,
             'Passes clés/90': player_data.get('Passes clés', 0) / minutes_90,
-            'Ballons perdus/90': player_data.get('Ballons perdus', 0) / minutes_90,
             '% Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
             '% Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0)
         }
@@ -805,13 +805,11 @@ class ChartManager:
         return fig
     
     @staticmethod
-    def create_multi_comparison_chart(player_data: Dict[str, float], avg_data: Dict[str, float], 
-                                    other_leagues_avg: Dict[str, float], player_name: str, 
-                                    current_competition: str, title: str) -> go.Figure:
-        """Crée un graphique de comparaison multi-ligues"""
+    def create_comparison_chart(player_data: Dict[str, float], avg_data: Dict[str, float], 
+                              player_name: str, title: str) -> go.Figure:
+        """Crée un graphique de comparaison"""
         fig = go.Figure()
         
-        # Joueur
         fig.add_trace(go.Bar(
             name=player_name,
             x=list(player_data.keys()),
@@ -820,71 +818,11 @@ class ChartManager:
             marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
             text=[f"{v:.2f}" for v in player_data.values()],
             textposition='outside',
-            textfont=dict(size=10, family='Inter', weight=600)
+            textfont=dict(size=11, family='Inter', weight=600)
         ))
         
-        # Moyenne compétition actuelle
         fig.add_trace(go.Bar(
-            name=f'Moyenne {current_competition}',
-            x=list(avg_data.keys()),
-            y=list(avg_data.values()),
-            marker_color=Config.COLORS['secondary'],
-            marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
-            text=[f"{v:.2f}" for v in avg_data.values()],
-            textposition='outside',
-            textfont=dict(size=10, family='Inter', weight=600)
-        ))
-        
-        # Moyenne autres ligues
-        if other_leagues_avg:
-            fig.add_trace(go.Bar(
-                name='Moyenne Autres Ligues',
-                x=list(other_leagues_avg.keys()),
-                y=list(other_leagues_avg.values()),
-                marker_color=Config.COLORS['accent'],
-                marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
-                text=[f"{v:.2f}" for v in other_leagues_avg.values()],
-                textposition='outside',
-                textfont=dict(size=10, family='Inter', weight=600)
-            ))
-        
-        fig.update_layout(
-            title=dict(
-                text=title,
-                font=dict(color='white', size=18, family='Inter', weight=700),
-                x=0.5
-            ),
-            barmode='group',
-            bargap=0.15,
-            bargroupgap=0.1,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
-            xaxis=dict(
-                tickfont=dict(color='white', size=10),
-                showgrid=False
-            ),
-            yaxis=dict(
-                tickfont=dict(color='white', size=11), 
-                gridcolor='rgba(255,255,255,0.15)',
-                showgrid=True
-            ),
-            height=450,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5,
-                font=dict(size=11, family='Inter'),
-                bgcolor='rgba(26, 29, 35, 0.8)',
-                bordercolor='rgba(255,255,255,0.2)',
-                borderwidth=1
-            ),
-            margin=dict(t=120, b=60, l=60, r=60)
-        )
-        
-        return fig',
+            name='Moyenne compétition',
             x=list(avg_data.keys()),
             y=list(avg_data.values()),
             marker_color=Config.COLORS['secondary'],
@@ -1019,7 +957,7 @@ class PerformanceAnalyzer:
     """Analyseur de performance pour différents aspects du jeu"""
     
     @staticmethod
-    def analyze_offensive_performance(player_data: pd.Series, df_comparison: pd.DataFrame, df_full: pd.DataFrame = None) -> Dict:
+    def analyze_offensive_performance(player_data: pd.Series, df_comparison: pd.DataFrame) -> Dict:
         """Analyse complète de la performance offensive"""
         metrics = MetricsCalculator.calculate_offensive_metrics(player_data)
         
@@ -1035,23 +973,6 @@ class PerformanceAnalyzer:
         avg_metrics['Passes clés/90'] = (df_comparison.get('Passes clés', pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
         avg_metrics['Dribbles réussis/90'] = (df_comparison.get('Dribbles réussis', pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
         avg_metrics['Actions → Tir/90'] = df_comparison.get('Actions menant à un tir par 90 minutes', pd.Series([0]*len(df_comparison))).mean()
-        
-        # Calcul des moyennes des autres ligues
-        other_leagues_avg = {}
-        if df_full is not None:
-            current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else None
-            other_leagues = df_full[df_full['Compétition'] != current_competition] if current_competition else pd.DataFrame()
-            
-            if len(other_leagues) > 0:
-                minutes_90_other = other_leagues['Minutes jouées'] / 90
-                other_leagues_avg['Buts/90'] = other_leagues.get('Buts par 90 minutes', pd.Series([0]*len(other_leagues))).mean()
-                other_leagues_avg['Passes D./90'] = other_leagues.get('Passes décisives par 90 minutes', pd.Series([0]*len(other_leagues))).mean()
-                other_leagues_avg['xG/90'] = other_leagues.get('Buts attendus par 90 minutes', pd.Series([0]*len(other_leagues))).mean()
-                other_leagues_avg['xA/90'] = other_leagues.get('Passes décisives attendues par 90 minutes', pd.Series([0]*len(other_leagues))).mean()
-                other_leagues_avg['Tirs/90'] = other_leagues.get('Tirs par 90 minutes', pd.Series([0]*len(other_leagues))).mean()
-                other_leagues_avg['Passes clés/90'] = (other_leagues.get('Passes clés', pd.Series([0]*len(other_leagues))) / minutes_90_other).mean()
-                other_leagues_avg['Dribbles réussis/90'] = (other_leagues.get('Dribbles réussis', pd.Series([0]*len(other_leagues))) / minutes_90_other).mean()
-                other_leagues_avg['Actions → Tir/90'] = other_leagues.get('Actions menant à un tir par 90 minutes', pd.Series([0]*len(other_leagues))).mean()
         
         # Calcul des percentiles
         percentiles = []
@@ -1081,13 +1002,12 @@ class PerformanceAnalyzer:
         return {
             'metrics': metrics,
             'avg_metrics': avg_metrics,
-            'other_leagues_avg': other_leagues_avg,
             'percentiles': percentiles,
             'avg_percentiles': avg_percentiles
         }
     
     @staticmethod
-    def analyze_defensive_performance(player_data: pd.Series, df_comparison: pd.DataFrame, df_full: pd.DataFrame = None) -> Dict:
+    def analyze_defensive_performance(player_data: pd.Series, df_comparison: pd.DataFrame) -> Dict:
         """Analyse complète de la performance défensive"""
         metrics = MetricsCalculator.calculate_defensive_metrics(player_data)
         
@@ -1109,29 +1029,6 @@ class PerformanceAnalyzer:
                 avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
             else:
                 avg_metrics[metric_key] = df_comparison.get(metric_key.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés'), pd.Series([0]*len(df_comparison))).mean()
-        
-        # Calcul des moyennes des autres ligues
-        other_leagues_avg = {}
-        if df_full is not None:
-            current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else None
-            other_leagues = df_full[df_full['Compétition'] != current_competition] if current_competition else pd.DataFrame()
-            
-            if len(other_leagues) > 0:
-                minutes_90_other = other_leagues['Minutes jouées'] / 90
-                for metric_key in metrics.keys():
-                    if metric_key.endswith('/90'):
-                        base_metric = metric_key.replace('/90', '')
-                        column_name = base_metric
-                        if base_metric == 'Tacles':
-                            column_name = 'Tacles gagnants'
-                        elif base_metric == 'Duels aériens':
-                            column_name = 'Duels aériens gagnés'
-                        elif base_metric == 'Tirs bloqués':
-                            column_name = 'Tirs bloqués'
-                        
-                        other_leagues_avg[metric_key] = (other_leagues.get(column_name, pd.Series([0]*len(other_leagues))) / minutes_90_other).mean()
-                    else:
-                        other_leagues_avg[metric_key] = other_leagues.get(metric_key.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés'), pd.Series([0]*len(other_leagues))).mean()
         
         # Calcul des percentiles
         percentiles = []
@@ -1169,13 +1066,12 @@ class PerformanceAnalyzer:
         return {
             'metrics': metrics,
             'avg_metrics': avg_metrics,
-            'other_leagues_avg': other_leagues_avg,
             'percentiles': percentiles,
             'avg_percentiles': avg_percentiles
         }
     
     @staticmethod
-    def analyze_technical_performance(player_data: pd.Series, df_comparison: pd.DataFrame, df_full: pd.DataFrame = None) -> Dict:
+    def analyze_technical_performance(player_data: pd.Series, df_comparison: pd.DataFrame) -> Dict:
         """Analyse complète de la performance technique"""
         metrics = MetricsCalculator.calculate_technical_metrics(player_data)
         
@@ -1191,41 +1087,13 @@ class PerformanceAnalyzer:
                     column_name = 'Passes progressives'
                 elif base_metric == 'Dribbles':
                     column_name = 'Dribbles tentés'
-                elif base_metric == 'Passes clés':
-                    column_name = 'Passes clés'
-                elif base_metric == 'Ballons perdus':
-                    column_name = 'Ballons perdus'
+                elif base_metric == 'Centres':
+                    column_name = 'Centres'
                 
                 avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
             else:
                 column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
                 avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
-        
-        # Calcul des moyennes des autres ligues
-        other_leagues_avg = {}
-        if df_full is not None:
-            current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else None
-            other_leagues = df_full[df_full['Compétition'] != current_competition] if current_competition else pd.DataFrame()
-            
-            if len(other_leagues) > 0:
-                minutes_90_other = other_leagues['Minutes jouées'] / 90
-                for metric_key in metrics.keys():
-                    if metric_key.endswith('/90'):
-                        base_metric = metric_key.replace('/90', '')
-                        column_name = base_metric
-                        if base_metric == 'Passes prog.':
-                            column_name = 'Passes progressives'
-                        elif base_metric == 'Dribbles':
-                            column_name = 'Dribbles tentés'
-                        elif base_metric == 'Passes clés':
-                            column_name = 'Passes clés'
-                        elif base_metric == 'Ballons perdus':
-                            column_name = 'Ballons perdus'
-                        
-                        other_leagues_avg[metric_key] = (other_leagues.get(column_name, pd.Series([0]*len(other_leagues))) / minutes_90_other).mean()
-                    else:
-                        column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
-                        other_leagues_avg[metric_key] = other_leagues.get(column_name, pd.Series([0]*len(other_leagues))).mean()
         
         # Calcul des percentiles
         percentiles = []
@@ -1239,10 +1107,8 @@ class PerformanceAnalyzer:
                     column_name = 'Passes progressives'
                 elif base_metric == 'Dribbles':
                     column_name = 'Dribbles tentés'
-                elif base_metric == 'Passes clés':
-                    column_name = 'Passes clés'
-                elif base_metric == 'Ballons perdus':
-                    column_name = 'Ballons perdus'
+                elif base_metric == 'Centres':
+                    column_name = 'Centres'
                 
                 distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp
             else:
@@ -1265,7 +1131,6 @@ class PerformanceAnalyzer:
         return {
             'metrics': metrics,
             'avg_metrics': avg_metrics,
-            'other_leagues_avg': other_leagues_avg,
             'percentiles': percentiles,
             'avg_percentiles': avg_percentiles
         }
@@ -1575,12 +1440,11 @@ class TabManager:
     """Gestionnaire pour les différents onglets"""
     
     @staticmethod
-    def render_offensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, df_full: pd.DataFrame = None):
+    def render_offensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str):
         """Rendu de l'onglet performance offensive"""
         st.markdown("<h2 class='section-title-enhanced'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
         
-        analysis = PerformanceAnalyzer.analyze_offensive_performance(player_data, df_comparison, df_full)
-        current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else "Compétition"
+        analysis = PerformanceAnalyzer.analyze_offensive_performance(player_data, df_comparison)
         
         col1, col2 = st.columns([1, 1], gap="large")
         
@@ -1670,615 +1534,19 @@ class TabManager:
             )
             st.plotly_chart(fig_radar, use_container_width=True)
         
-        # Options de comparaison
+        # Comparaison détaillée
         st.markdown("---")
         st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
-        
-        # Toggle pour choisir le type de comparaison
-        comparison_type = st.radio(
-            "Type de comparaison :",
-            ["Compétition actuelle", "Multi-ligues"],
-            horizontal=True,
-            help="Comparez avec la moyenne de sa compétition ou avec toutes les autres ligues"
-        )
         
         comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
         avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
         
-        if comparison_type == "Multi-ligues" and analysis['other_leagues_avg']:
-            other_leagues_comparison = {k: v for k, v in list(analysis['other_leagues_avg'].items())[:4]}
-            fig_comp = ChartManager.create_multi_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                other_leagues_comparison,
-                selected_player,
-                current_competition,
-                "Performance Offensive : Comparaison Multi-Ligues"
-            )
-            
-            # Statistiques supplémentaires
-            col_stat1, col_stat2 = st.columns(2)
-            with col_stat1:
-                avg_current = sum(avg_comparison.values()) / len(avg_comparison)
-                st.info(f"📊 Moyenne {current_competition}: {avg_current:.2f}")
-            with col_stat2:
-                avg_other = sum(other_leagues_comparison.values()) / len(other_leagues_comparison)
-                st.info(f"🌍 Moyenne Autres Ligues: {avg_other:.2f}")
-                
-        else:
-            fig_comp = ChartManager.create_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                selected_player,
-                f"Performance par 90min vs Moyenne {current_competition}"
-            )
-        
-    @staticmethod
-    def render_defensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, df_full: pd.DataFrame = None):
-        """Rendu de l'onglet performance défensive"""
-        st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
-        
-        analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison, df_full)
-        current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else "Compétition"
-        
-        col1, col2 = st.columns([1, 1], gap="large")
-        
-        with col1:
-            # Actions défensives
-            basic_actions = {
-                'Tacles': player_data.get('Tacles gagnants', 0),
-                'Interceptions': player_data.get('Interceptions', 0),
-                'Ballons récupérés': player_data.get('Ballons récupérés', 0),
-                'Duels aériens': player_data.get('Duels aériens gagnés', 0)
-            }
-            
-            fig_bar = ChartManager.create_bar_chart(
-                basic_actions,
-                "Actions Défensives Totales",
-                Config.COLORS['gradient']
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-            # Métriques défensives
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Défensives</h3>", unsafe_allow_html=True)
-            
-            metric_col1, metric_col2 = st.columns(2)
-            with metric_col1:
-                st.metric(
-                    label="Tacles par 90min",
-                    value=f"{analysis['metrics']['Tacles/90']:.2f}",
-                    delta=f"{analysis['metrics']['Tacles/90'] - analysis['avg_metrics']['Tacles/90']:.2f}",
-                    help="Nombre de tacles gagnants par 90 minutes de jeu"
-                )
-                st.metric(
-                    label="Interceptions par 90min",
-                    value=f"{analysis['metrics']['Interceptions/90']:.2f}",
-                    delta=f"{analysis['metrics']['Interceptions/90'] - analysis['avg_metrics']['Interceptions/90']:.2f}",
-                    help="Nombre d'interceptions par 90 minutes de jeu"
-                )
-            
-            with metric_col2:
-                st.metric(
-                    label="% Duels gagnés",
-                    value=f"{analysis['metrics']['% Duels gagnés']:.1f}%",
-                    delta=f"{analysis['metrics']['% Duels gagnés'] - analysis['avg_metrics']['% Duels gagnés']:.1f}%",
-                    help="Pourcentage de duels défensifs remportés"
-                )
-                st.metric(
-                    label="% Duels aériens",
-                    value=f"{analysis['metrics']['% Duels aériens']:.1f}%",
-                    delta=f"{analysis['metrics']['% Duels aériens'] - analysis['avg_metrics']['% Duels aériens']:.1f}%",
-                    help="Pourcentage de duels aériens remportés"
-                )
-        
-        with col2:
-            # Pourcentages de réussite
-            success_data = {
-                'Duels défensifs': player_data.get('Pourcentage de duels gagnés', 0),
-                'Duels aériens': player_data.get('Pourcentage de duels aériens gagnés', 0),
-                'Passes': player_data.get('Pourcentage de passes réussies', 0)
-            }
-            
-            fig_gauge = ChartManager.create_gauge_chart(success_data, "Pourcentages de Réussite (%)")
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Radar défensif
-            st.markdown("<h3 class='subsection-title-enhanced'>🛡️ Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--accent-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne compétition</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            fig_radar = ChartManager.create_radar_chart(
-                analysis['metrics'],
-                analysis['percentiles'],
-                analysis['avg_percentiles'],
-                selected_player,
-                "compétition",
-                Config.COLORS['accent']
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-        
-        # Options de comparaison
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
-        
-        # Toggle pour choisir le type de comparaison
-        comparison_type = st.radio(
-            "Type de comparaison :",
-            ["Compétition actuelle", "Multi-ligues"],
-            horizontal=True,
-            help="Comparez avec la moyenne de sa compétition ou avec toutes les autres ligues",
-            key="defensive_comparison"
+        fig_comp = ChartManager.create_comparison_chart(
+            comparison_metrics,
+            avg_comparison,
+            selected_player,
+            "Performance par 90min vs Moyenne de la Compétition"
         )
-        
-        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
-        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
-        
-        if comparison_type == "Multi-ligues" and analysis['other_leagues_avg']:
-            other_leagues_comparison = {k: v for k, v in list(analysis['other_leagues_avg'].items())[:4]}
-            fig_comp = ChartManager.create_multi_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                other_leagues_comparison,
-                selected_player,
-                current_competition,
-                "Performance Défensive : Comparaison Multi-Ligues"
-            )
-            
-            # Statistiques supplémentaires
-            col_stat1, col_stat2 = st.columns(2)
-            with col_stat1:
-                avg_current = sum(avg_comparison.values()) / len(avg_comparison)
-                st.info(f"📊 Moyenne {current_competition}: {avg_current:.2f}")
-            with col_stat2:
-                avg_other = sum(other_leagues_comparison.values()) / len(other_leagues_comparison)
-                st.info(f"🌍 Moyenne Autres Ligues: {avg_other:.2f}")
-                
-        else:
-            fig_comp = ChartManager.create_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                selected_player,
-                f"Performance par 90min vs Moyenne {current_competition}"
-            )
-        
-        st.plotly_chart(fig_comp, use_container_width=True)
-    
-    @staticmethod
-    def render_technical_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, df_full: pd.DataFrame = None):
-        """Rendu de l'onglet performance technique"""
-        st.markdown("<h2 class='section-title-enhanced'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
-        
-        analysis = PerformanceAnalyzer.analyze_technical_performance(player_data, df_comparison, df_full)
-        current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else "Compétition"
-        
-        col1, col2 = st.columns([1, 1], gap="large")
-        
-        with col1:
-            # Actions techniques
-            basic_actions = {
-                'Passes tentées': player_data.get('Passes tentées', 0),
-                'Dribbles tentés': player_data.get('Dribbles tentés', 0),
-                'Passes clés': player_data.get('Passes clés', 0),
-                'Ballons perdus': player_data.get('Ballons perdus', 0)
-            }
-            
-            fig_bar = ChartManager.create_bar_chart(
-                basic_actions,
-                "Actions Techniques Totales",
-                Config.COLORS['gradient']
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-            # Métriques techniques
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Techniques</h3>", unsafe_allow_html=True)
-            
-            metric_col1, metric_col2 = st.columns(2)
-            with metric_col1:
-                st.metric(
-                    label="Passes par 90min",
-                    value=f"{analysis['metrics']['Passes tentées/90']:.1f}",
-                    delta=f"{analysis['metrics']['Passes tentées/90'] - analysis['avg_metrics']['Passes tentées/90']:.1f}",
-                    help="Nombre de passes tentées par 90 minutes de jeu"
-                )
-                st.metric(
-                    label="Passes clés par 90min",
-                    value=f"{analysis['metrics']['Passes clés/90']:.1f}",
-                    delta=f"{analysis['metrics']['Passes clés/90'] - analysis['avg_metrics']['Passes clés/90']:.1f}",
-                    help="Passes menant directement à une occasion de tir par 90 minutes"
-                )
-            
-            with metric_col2:
-                st.metric(
-                    label="% Passes réussies",
-                    value=f"{analysis['metrics']['% Passes réussies']:.1f}%",
-                    delta=f"{analysis['metrics']['% Passes réussies'] - analysis['avg_metrics']['% Passes réussies']:.1f}%",
-                    help="Pourcentage de passes réussies"
-                )
-                st.metric(
-                    label="% Dribbles réussis",
-                    value=f"{analysis['metrics']['% Dribbles réussis']:.1f}%",
-                    delta=f"{analysis['metrics']['% Dribbles réussis'] - analysis['avg_metrics']['% Dribbles réussis']:.1f}%",
-                    help="Pourcentage de dribbles réussis"
-                )
-        
-        with col2:
-            # Pourcentages techniques
-            technical_success = {
-                'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
-                'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
-                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0)
-            }
-            
-            fig_gauge = ChartManager.create_gauge_chart(technical_success, "Précision Technique (%)")
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Radar technique
-            st.markdown("<h3 class='subsection-title-enhanced'>🎨 Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--secondary-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne compétition</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            fig_radar = ChartManager.create_radar_chart(
-                analysis['metrics'],
-                analysis['percentiles'],
-                analysis['avg_percentiles'],
-                selected_player,
-                "compétition",
-                Config.COLORS['secondary']
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-        
-        # Options de comparaison
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
-        
-        # Toggle pour choisir le type de comparaison
-        comparison_type = st.radio(
-            "Type de comparaison :",
-            ["Compétition actuelle", "Multi-ligues"],
-            horizontal=True,
-            help="Comparez avec la moyenne de sa compétition ou avec toutes les autres ligues",
-            key="technical_comparison"
-        )
-        
-        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
-        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
-        
-        if comparison_type == "Multi-ligues" and analysis['other_leagues_avg']:
-            other_leagues_comparison = {k: v for k, v in list(analysis['other_leagues_avg'].items())[:4]}
-            fig_comp = ChartManager.create_multi_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                other_leagues_comparison,
-                selected_player,
-                current_competition,
-                "Performance Technique : Comparaison Multi-Ligues"
-            )
-            
-            # Statistiques supplémentaires
-            col_stat1, col_stat2 = st.columns(2)
-            with col_stat1:
-                avg_current = sum(avg_comparison.values()) / len(avg_comparison)
-                st.info(f"📊 Moyenne {current_competition}: {avg_current:.2f}")
-            with col_stat2:
-                avg_other = sum(other_leagues_comparison.values()) / len(other_leagues_comparison)
-                st.info(f"🌍 Moyenne Autres Ligues: {avg_other:.2f}")
-                
-        else:
-            fig_comp = ChartManager.create_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                selected_player,
-                f"Performance par 90min vs Moyenne {current_competition}"
-            )
-        
-        st.plotly_chart(fig_comp, use_container_width=True)
-    
-    @staticmethod
-    def render_defensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, df_full: pd.DataFrame = None):
-        """Rendu de l'onglet performance défensive"""
-        st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
-        
-        analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison, df_full)
-        current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else "Compétition"
-        
-        col1, col2 = st.columns([1, 1], gap="large")
-        
-        with col1:
-            # Actions défensives
-            basic_actions = {
-                'Tacles': player_data.get('Tacles gagnants', 0),
-                'Interceptions': player_data.get('Interceptions', 0),
-                'Ballons récupérés': player_data.get('Ballons récupérés', 0),
-                'Duels aériens': player_data.get('Duels aériens gagnés', 0)
-            }
-            
-            fig_bar = ChartManager.create_bar_chart(
-                basic_actions,
-                "Actions Défensives Totales",
-                Config.COLORS['gradient']
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-            # Métriques défensives
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Défensives</h3>", unsafe_allow_html=True)
-            
-            metric_col1, metric_col2 = st.columns(2)
-            with metric_col1:
-                st.metric(
-                    label="Tacles par 90min",
-                    value=f"{analysis['metrics']['Tacles/90']:.2f}",
-                    delta=f"{analysis['metrics']['Tacles/90'] - analysis['avg_metrics']['Tacles/90']:.2f}",
-                    help="Nombre de tacles gagnants par 90 minutes de jeu"
-                )
-                st.metric(
-                    label="Interceptions par 90min",
-                    value=f"{analysis['metrics']['Interceptions/90']:.2f}",
-                    delta=f"{analysis['metrics']['Interceptions/90'] - analysis['avg_metrics']['Interceptions/90']:.2f}",
-                    help="Nombre d'interceptions par 90 minutes de jeu"
-                )
-            
-            with metric_col2:
-                st.metric(
-                    label="% Duels gagnés",
-                    value=f"{analysis['metrics']['% Duels gagnés']:.1f}%",
-                    delta=f"{analysis['metrics']['% Duels gagnés'] - analysis['avg_metrics']['% Duels gagnés']:.1f}%",
-                    help="Pourcentage de duels défensifs remportés"
-                )
-                st.metric(
-                    label="% Duels aériens",
-                    value=f"{analysis['metrics']['% Duels aériens']:.1f}%",
-                    delta=f"{analysis['metrics']['% Duels aériens'] - analysis['avg_metrics']['% Duels aériens']:.1f}%",
-                    help="Pourcentage de duels aériens remportés"
-                )
-        
-        with col2:
-            # Pourcentages de réussite
-            success_data = {
-                'Duels défensifs': player_data.get('Pourcentage de duels gagnés', 0),
-                'Duels aériens': player_data.get('Pourcentage de duels aériens gagnés', 0),
-                'Passes': player_data.get('Pourcentage de passes réussies', 0)
-            }
-            
-            fig_gauge = ChartManager.create_gauge_chart(success_data, "Pourcentages de Réussite (%)")
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Radar défensif
-            st.markdown("<h3 class='subsection-title-enhanced'>🛡️ Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--accent-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne compétition</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            fig_radar = ChartManager.create_radar_chart(
-                analysis['metrics'],
-                analysis['percentiles'],
-                analysis['avg_percentiles'],
-                selected_player,
-                "compétition",
-                Config.COLORS['accent']
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-        
-        # Options de comparaison
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
-        
-        # Toggle pour choisir le type de comparaison
-        comparison_type = st.radio(
-            "Type de comparaison :",
-            ["Compétition actuelle", "Multi-ligues"],
-            horizontal=True,
-            help="Comparez avec la moyenne de sa compétition ou avec toutes les autres ligues",
-            key="defensive_comparison"
-        )
-        
-        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
-        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
-        
-        if comparison_type == "Multi-ligues" and analysis['other_leagues_avg']:
-            other_leagues_comparison = {k: v for k, v in list(analysis['other_leagues_avg'].items())[:4]}
-            fig_comp = ChartManager.create_multi_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                other_leagues_comparison,
-                selected_player,
-                current_competition,
-                "Performance Défensive : Comparaison Multi-Ligues"
-            )
-            
-            # Statistiques supplémentaires
-            col_stat1, col_stat2 = st.columns(2)
-            with col_stat1:
-                avg_current = sum(avg_comparison.values()) / len(avg_comparison)
-                st.info(f"📊 Moyenne {current_competition}: {avg_current:.2f}")
-            with col_stat2:
-                avg_other = sum(other_leagues_comparison.values()) / len(other_leagues_comparison)
-                st.info(f"🌍 Moyenne Autres Ligues: {avg_other:.2f}")
-                
-        else:
-            fig_comp = ChartManager.create_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                selected_player,
-                f"Performance par 90min vs Moyenne {current_competition}"
-            )
-        
-        st.plotly_chart(fig_comp, use_container_width=True)
-    
-    @staticmethod
-    def render_technical_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, df_full: pd.DataFrame = None):
-        """Rendu de l'onglet performance technique"""
-        st.markdown("<h2 class='section-title-enhanced'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
-        
-        analysis = PerformanceAnalyzer.analyze_technical_performance(player_data, df_comparison, df_full)
-        current_competition = df_comparison['Compétition'].iloc[0] if len(df_comparison) > 0 else "Compétition"
-        
-        col1, col2 = st.columns([1, 1], gap="large")
-        
-        with col1:
-            # Actions techniques
-            basic_actions = {
-                'Passes tentées': player_data.get('Passes tentées', 0),
-                'Dribbles tentés': player_data.get('Dribbles tentés', 0),
-                'Passes clés': player_data.get('Passes clés', 0),
-                'Ballons perdus': player_data.get('Ballons perdus', 0)
-            }
-            
-            fig_bar = ChartManager.create_bar_chart(
-                basic_actions,
-                "Actions Techniques Totales",
-                Config.COLORS['gradient']
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-            # Métriques techniques
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Techniques</h3>", unsafe_allow_html=True)
-            
-            metric_col1, metric_col2 = st.columns(2)
-            with metric_col1:
-                st.metric(
-                    label="Passes par 90min",
-                    value=f"{analysis['metrics']['Passes tentées/90']:.1f}",
-                    delta=f"{analysis['metrics']['Passes tentées/90'] - analysis['avg_metrics']['Passes tentées/90']:.1f}",
-                    help="Nombre de passes tentées par 90 minutes de jeu"
-                )
-                st.metric(
-                    label="Passes clés par 90min",
-                    value=f"{analysis['metrics']['Passes clés/90']:.1f}",
-                    delta=f"{analysis['metrics']['Passes clés/90'] - analysis['avg_metrics']['Passes clés/90']:.1f}",
-                    help="Passes menant directement à une occasion de tir par 90 minutes"
-                )
-            
-            with metric_col2:
-                st.metric(
-                    label="% Passes réussies",
-                    value=f"{analysis['metrics']['% Passes réussies']:.1f}%",
-                    delta=f"{analysis['metrics']['% Passes réussies'] - analysis['avg_metrics']['% Passes réussies']:.1f}%",
-                    help="Pourcentage de passes réussies"
-                )
-                st.metric(
-                    label="% Dribbles réussis",
-                    value=f"{analysis['metrics']['% Dribbles réussis']:.1f}%",
-                    delta=f"{analysis['metrics']['% Dribbles réussis'] - analysis['avg_metrics']['% Dribbles réussis']:.1f}%",
-                    help="Pourcentage de dribbles réussis"
-                )
-        
-        with col2:
-            # Pourcentages techniques
-            technical_success = {
-                'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
-                'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
-                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0)
-            }
-            
-            fig_gauge = ChartManager.create_gauge_chart(technical_success, "Précision Technique (%)")
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Radar technique
-            st.markdown("<h3 class='subsection-title-enhanced'>🎨 Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--secondary-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne compétition</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            fig_radar = ChartManager.create_radar_chart(
-                analysis['metrics'],
-                analysis['percentiles'],
-                analysis['avg_percentiles'],
-                selected_player,
-                "compétition",
-                Config.COLORS['secondary']
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-        
-        # Options de comparaison
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
-        
-        # Toggle pour choisir le type de comparaison
-        comparison_type = st.radio(
-            "Type de comparaison :",
-            ["Compétition actuelle", "Multi-ligues"],
-            horizontal=True,
-            help="Comparez avec la moyenne de sa compétition ou avec toutes les autres ligues",
-            key="technical_comparison"
-        )
-        
-        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
-        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
-        
-        if comparison_type == "Multi-ligues" and analysis['other_leagues_avg']:
-            other_leagues_comparison = {k: v for k, v in list(analysis['other_leagues_avg'].items())[:4]}
-            fig_comp = ChartManager.create_multi_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                other_leagues_comparison,
-                selected_player,
-                current_competition,
-                "Performance Technique : Comparaison Multi-Ligues"
-            )
-            
-            # Statistiques supplémentaires
-            col_stat1, col_stat2 = st.columns(2)
-            with col_stat1:
-                avg_current = sum(avg_comparison.values()) / len(avg_comparison)
-                st.info(f"📊 Moyenne {current_competition}: {avg_current:.2f}")
-            with col_stat2:
-                avg_other = sum(other_leagues_comparison.values()) / len(other_leagues_comparison)
-                st.info(f"🌍 Moyenne Autres Ligues: {avg_other:.2f}")
-                
-        else:
-            fig_comp = ChartManager.create_comparison_chart(
-                comparison_metrics,
-                avg_comparison,
-                selected_player,
-                f"Performance par 90min vs Moyenne {current_competition}"
-            )
-        
         st.plotly_chart(fig_comp, use_container_width=True)
     
     @staticmethod
@@ -2405,8 +1673,8 @@ class TabManager:
             basic_actions = {
                 'Passes tentées': player_data.get('Passes tentées', 0),
                 'Dribbles tentés': player_data.get('Dribbles tentés', 0),
-                'Passes clés': player_data.get('Passes clés', 0),
-                'Ballons perdus': player_data.get('Ballons perdus', 0)
+                'Centres': player_data.get('Centres', 0),
+                'Passes clés': player_data.get('Passes clés', 0)
             }
             
             fig_bar = ChartManager.create_bar_chart(
@@ -2428,10 +1696,10 @@ class TabManager:
                     help="Nombre de passes tentées par 90 minutes de jeu"
                 )
                 st.metric(
-                    label="Passes clés par 90min",
-                    value=f"{analysis['metrics']['Passes clés/90']:.1f}",
-                    delta=f"{analysis['metrics']['Passes clés/90'] - analysis['avg_metrics']['Passes clés/90']:.1f}",
-                    help="Passes menant directement à une occasion de tir par 90 minutes"
+                    label="Centres par 90min",
+                    value=f"{analysis['metrics']['Centres/90']:.1f}",
+                    delta=f"{analysis['metrics']['Centres/90'] - analysis['avg_metrics']['Centres/90']:.1f}",
+                    help="Nombre de centres effectués par 90 minutes de jeu"
                 )
             
             with metric_col2:
@@ -2886,13 +2154,13 @@ class FootballDashboard:
         ])
         
         with tab1:
-            TabManager.render_offensive_tab(player_data, df_filtered, selected_player, df_full)
+            TabManager.render_offensive_tab(player_data, df_filtered, selected_player)
         
         with tab2:
-            TabManager.render_defensive_tab(player_data, df_filtered, selected_player, df_full)
+            TabManager.render_defensive_tab(player_data, df_filtered, selected_player)
         
         with tab3:
-            TabManager.render_technical_tab(player_data, df_filtered, selected_player, df_full)
+            TabManager.render_technical_tab(player_data, df_filtered, selected_player)
         
         with tab4:
             TabManager.render_comparison_tab(df_full, selected_player)

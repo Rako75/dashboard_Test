@@ -1891,10 +1891,25 @@ class TabManager:
                 st.metric("Point Fort", f"{max_param.replace('\\n', ' ')}", f"{max_stat}%")
             
             with stats_col3:
-                min_stat = min(values)
-                min_index = values.index(min_stat)
-                min_param = list(Config.RADAR_METRICS.keys())[min_index]
-                st.metric("Axe d'Amélioration", f"{min_param.replace('\\n', ' ')}", f"{min_stat}%")
+                # Métriques où une valeur faible est positive (à exclure des axes d'amélioration)
+                negative_metrics = ["Cartons\njaunes", "Cartons\nrouges", "Ballons perdus\nsous pression", "Ballons perdus\nen conduite"]
+                
+                # Filtrer les métriques pour l'axe d'amélioration
+                filtered_values = []
+                filtered_params = []
+                
+                for i, (param, value) in enumerate(zip(Config.RADAR_METRICS.keys(), values)):
+                    if param not in negative_metrics:
+                        filtered_values.append(value)
+                        filtered_params.append(param)
+                
+                if filtered_values:
+                    min_stat = min(filtered_values)
+                    min_index = filtered_values.index(min_stat)
+                    min_param = filtered_params[min_index]
+                    st.metric("Axe d'Amélioration", f"{min_param.replace('\\n', ' ')}", f"{min_stat}%")
+                else:
+                    st.metric("Axe d'Amélioration", "Excellent partout", "✨")
             
         except Exception as e:
             st.error(f"Erreur lors de la création du radar individuel : {str(e)}")

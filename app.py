@@ -1,10 +1,10 @@
 """
-Dashboard Football Professionnel - Version avec Recherche de Similitude
-=======================================================================
+Dashboard Football Professionnel - Version Restructurée
+=======================================================
 
 Application Streamlit pour l'analyse avancée des performances footballistiques.
 Auteur: Dashboard Pro
-Version: 2.1.0
+Version: 2.0.0
 """
 
 import streamlit as st
@@ -22,8 +22,6 @@ from PIL import Image
 import base64
 import io
 from typing import Dict, List, Optional, Tuple, Union
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics.pairwise import cosine_similarity
 
 # ================================================================================================
 # CONFIGURATION ET CONSTANTES
@@ -84,29 +82,6 @@ class Config:
         'Ligue 1': 'Ligue1_Logos',
         'Premier League': 'Premier_League_Logos',
         'Serie A': 'Serie_A_Logos'
-    }
-    
-    # Métriques pour la recherche de similitude
-    SIMILARITY_METRICS = {
-        'offensive': [
-            'Buts par 90 minutes', 'Passes décisives par 90 minutes', 
-            'Buts attendus par 90 minutes', 'Passes décisives attendues par 90 minutes',
-            'Tirs par 90 minutes', 'Passes clés', 'Dribbles réussis'
-        ],
-        'defensive': [
-            'Tacles gagnants', 'Interceptions', 'Ballons récupérés',
-            'Duels défensifs gagnés', 'Dégagements', 'Tirs bloqués'
-        ],
-        'technical': [
-            'Passes tentées', 'Passes progressives', 'Dribbles tentés',
-            'Pourcentage de passes réussies', 'Pourcentage de dribbles réussis',
-            'Touches de balle'
-        ],
-        'global': [
-            'Buts par 90 minutes', 'Passes décisives par 90 minutes', 
-            'Tacles gagnants', 'Interceptions', 'Passes tentées',
-            'Dribbles réussis', 'Pourcentage de passes réussies'
-        ]
     }
 
 # ================================================================================================
@@ -340,34 +315,6 @@ class StyleManager:
             line-height: 1.3;
         }
         
-        /* Cartes de joueurs similaires */
-        .similar-player-card {
-            background: var(--background-surface);
-            padding: var(--spacing-md);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-light);
-            transition: all 0.3s ease;
-            height: 100%;
-            text-align: center;
-        }
-        
-        .similar-player-card:hover {
-            border-color: var(--accent-color);
-            box-shadow: 0 8px 25px rgba(255, 127, 14, 0.3);
-            transform: translateY(-3px);
-        }
-        
-        .similarity-score {
-            background: linear-gradient(45deg, var(--accent-color), var(--warning));
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: var(--spacing-sm);
-        }
-        
         /* Titres de sections */
         .section-title-enhanced {
             color: var(--text-primary);
@@ -457,6 +404,43 @@ class StyleManager:
             width: 12px;
             height: 12px;
             border-radius: 50%;
+        }
+        
+        /* Navigation rapide */
+        .quick-nav {
+            position: fixed;
+            right: var(--spacing-lg);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: var(--background-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+        
+        .quick-nav:hover {
+            opacity: 1;
+        }
+        
+        .quick-nav-item {
+            display: block;
+            padding: var(--spacing-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .quick-nav-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateX(-2px);
         }
         
         /* Breadcrumbs */
@@ -625,126 +609,6 @@ class ImageManager:
         return None
 
 # ================================================================================================
-# CALCULATEUR DE SIMILITUDE
-# ================================================================================================
-
-class SimilarityCalculator:
-    """Calculateur pour trouver des joueurs similaires"""
-    
-    @staticmethod
-    def find_similar_players(target_player: str, df: pd.DataFrame, 
-                           num_similar: int = 5, similarity_type: str = 'global') -> List[Dict]:
-        """
-        Trouve les joueurs les plus similaires au joueur cible
-        
-        Args:
-            target_player: Nom du joueur de référence
-            df: DataFrame contenant tous les joueurs
-            num_similar: Nombre de joueurs similaires à retourner
-            similarity_type: Type de similitude ('offensive', 'defensive', 'technical', 'global')
-        
-        Returns:
-            Liste des joueurs similaires avec leurs scores de similitude
-        """
-        try:
-            # Obtenir les métriques pour le type de similitude choisi
-            metrics = Config.SIMILARITY_METRICS.get(similarity_type, Config.SIMILARITY_METRICS['global'])
-            
-            # Filtrer les colonnes existantes
-            available_metrics = [col for col in metrics if col in df.columns]
-            
-            if not available_metrics:
-                st.warning(f"Aucune métrique disponible pour le type '{similarity_type}'")
-                return []
-            
-            # Créer le dataframe avec les métriques disponibles
-            df_metrics = df[['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge', 'Minutes jouées'] + available_metrics].copy()
-            
-            # Normaliser les métriques par 90 minutes si nécessaire
-            df_normalized = SimilarityCalculator._normalize_metrics(df_metrics, available_metrics)
-            
-            # Supprimer les lignes avec des valeurs manquantes
-            df_clean = df_normalized.dropna(subset=available_metrics)
-            
-            if df_clean.empty:
-                st.warning("Aucune donnée disponible après nettoyage")
-                return []
-            
-            # Vérifier que le joueur cible existe
-            if target_player not in df_clean['Joueur'].values:
-                st.warning(f"Joueur '{target_player}' non trouvé dans les données")
-                return []
-            
-            # Préparer les données pour le calcul de similitude
-            features_matrix = df_clean[available_metrics].values
-            
-            # Standardiser les features
-            scaler = StandardScaler()
-            features_scaled = scaler.fit_transform(features_matrix)
-            
-            # Trouver l'index du joueur cible
-            target_idx = df_clean[df_clean['Joueur'] == target_player].index[0]
-            target_features = features_scaled[df_clean.index.get_loc(target_idx)].reshape(1, -1)
-            
-            # Calculer la similitude cosinus
-            similarities = cosine_similarity(target_features, features_scaled)[0]
-            
-            # Créer un dataframe avec les scores de similitude
-            similarity_df = df_clean.copy()
-            similarity_df['similarity_score'] = similarities
-            
-            # Exclure le joueur cible et trier par similitude décroissante
-            similar_players = similarity_df[similarity_df['Joueur'] != target_player].nlargest(num_similar, 'similarity_score')
-            
-            # Convertir en liste de dictionnaires
-            result = []
-            for _, player in similar_players.iterrows():
-                player_info = {
-                    'name': player['Joueur'],
-                    'team': player['Équipe'],
-                    'competition': player['Compétition'],
-                    'position': player['Position'],
-                    'age': player['Âge'],
-                    'minutes': player['Minutes jouées'],
-                    'similarity_score': player['similarity_score'],
-                    'metrics': {metric: player[metric] for metric in available_metrics if pd.notna(player[metric])}
-                }
-                result.append(player_info)
-            
-            return result
-            
-        except Exception as e:
-            st.error(f"Erreur lors du calcul de similitude : {str(e)}")
-            return []
-    
-    @staticmethod
-    def _normalize_metrics(df: pd.DataFrame, metrics: List[str]) -> pd.DataFrame:
-        """Normalise les métriques par 90 minutes si nécessaire"""
-        df_normalized = df.copy()
-        
-        for metric in metrics:
-            if metric in df_normalized.columns:
-                # Si la métrique n'est pas déjà normalisée par 90 minutes
-                if 'par 90 minutes' not in metric and 'Pourcentage' not in metric:
-                    # Normaliser par les minutes jouées
-                    minutes_90 = df_normalized['Minutes jouées'] / 90
-                    minutes_90 = minutes_90.replace(0, 1)  # Éviter la division par zéro
-                    df_normalized[metric] = df_normalized[metric] / minutes_90
-        
-        return df_normalized
-    
-    @staticmethod
-    def get_similarity_explanation(similarity_type: str) -> str:
-        """Retourne une explication du type de similitude"""
-        explanations = {
-            'global': "Similitude basée sur un ensemble équilibré de métriques offensives, défensives et techniques",
-            'offensive': "Similitude basée sur les métriques offensives (buts, passes décisives, tirs, dribbles)",
-            'defensive': "Similitude basée sur les métriques défensives (tacles, interceptions, duels)",
-            'technical': "Similitude basée sur les métriques techniques (passes, précision, touches de balle)"
-        }
-        return explanations.get(similarity_type, "Type de similitude non défini")
-
-# ================================================================================================
 # CALCULATEUR DE MÉTRIQUES
 # ================================================================================================
 
@@ -826,7 +690,7 @@ class MetricsCalculator:
             'Passes tentées/90': player_data.get('Passes tentées', 0) / minutes_90,
             'Passes prog./90': player_data.get('Passes progressives', 0) / minutes_90,
             'Dribbles/90': player_data.get('Dribbles tentés', 0) / minutes_90,
-            'Passes clés/90': player_data.get('Passes clés', 0) / minutes_90,
+            'Passes clés/90': player_data.get('Passes clés', 0) / minutes_90,  # Modifié ici
             '% Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
             '% Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0)
         }
@@ -1357,85 +1221,6 @@ class UIComponents:
                 UIComponents._render_club_logo(player_data['Équipe'], competition)
     
     @staticmethod
-    def render_similar_players(similar_players: List[Dict], target_player: str, similarity_type: str):
-        """Affiche les joueurs similaires"""
-        if not similar_players:
-            st.warning("Aucun joueur similaire trouvé")
-            return
-        
-        st.markdown(f"""
-        <h3 class='subsection-title-enhanced'>
-            🔍 Joueurs similaires à {target_player}
-        </h3>
-        <p style='color: var(--text-secondary); margin-bottom: var(--spacing-lg); font-style: italic;'>
-            {SimilarityCalculator.get_similarity_explanation(similarity_type)}
-        </p>
-        """, unsafe_allow_html=True)
-        
-        # Affichage en grille
-        cols = st.columns(min(len(similar_players), 3))
-        
-        for i, player in enumerate(similar_players):
-            with cols[i % 3]:
-                UIComponents._render_similar_player_card(player, i + 1)
-    
-    @staticmethod
-    def _render_similar_player_card(player: Dict, rank: int):
-        """Affiche une carte de joueur similaire"""
-        similarity_percentage = player['similarity_score'] * 100
-        
-        # Couleur de la carte selon le score de similitude
-        if similarity_percentage >= 90:
-            border_color = "var(--success)"
-        elif similarity_percentage >= 80:
-            border_color = "var(--warning)"
-        else:
-            border_color = "var(--accent-color)"
-        
-        # Métriques principales à afficher
-        key_metrics = list(player['metrics'].items())[:3]
-        
-        st.markdown(f"""
-        <div class='similar-player-card' style='border-color: {border_color};'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-sm);'>
-                <span style='color: var(--text-muted); font-size: 0.8rem; font-weight: 600;'>#{rank}</span>
-                <div class='similarity-score'>{similarity_percentage:.1f}%</div>
-            </div>
-            
-            <h4 style='color: var(--text-primary); margin: 0 0 var(--spacing-xs) 0; font-size: 1.1rem; font-weight: 700;'>
-                {player['name']}
-            </h4>
-            
-            <div style='color: var(--text-secondary); font-size: 0.85rem; margin-bottom: var(--spacing-md);'>
-                <div>🏆 {player['competition']}</div>
-                <div>⚽ {player['team']}</div>
-                <div>📍 {player['position']} • {player['age']} ans</div>
-                <div>⏱️ {int(player['minutes'])} min</div>
-            </div>
-            
-            <div style='border-top: 1px solid var(--border-light); padding-top: var(--spacing-sm);'>
-                <div style='color: var(--text-muted); font-size: 0.75rem; margin-bottom: var(--spacing-xs);'>
-                    MÉTRIQUES CLÉS
-                </div>
-        """, unsafe_allow_html=True)
-        
-        # Affichage des métriques clés
-        for metric_name, metric_value in key_metrics:
-            if isinstance(metric_value, (int, float)):
-                formatted_value = f"{metric_value:.1f}"
-            else:
-                formatted_value = str(metric_value)
-            
-            st.markdown(f"""
-            <div style='display: flex; justify-content: space-between; margin-bottom: 2px;'>
-                <span style='color: var(--text-secondary); font-size: 0.7rem;'>{metric_name[:15]}...</span>
-                <span style='color: var(--primary-color); font-size: 0.7rem; font-weight: 600;'>{formatted_value}</span>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("</div></div>", unsafe_allow_html=True)
-    
-    @staticmethod
     def _render_player_photo(player_name: str):
         """Affiche la photo du joueur"""
         photo_path = ImageManager.get_player_photo(player_name)
@@ -1668,7 +1453,7 @@ class TabManager:
     """Gestionnaire pour les différents onglets"""
     
     @staticmethod
-    def render_offensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str, df_full: pd.DataFrame):
+    def render_offensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str):
         """Rendu de l'onglet performance offensive"""
         st.markdown("<h2 class='section-title-enhanced'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
         
@@ -1766,6 +1551,226 @@ class TabManager:
         st.markdown("---")
         st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
         
+        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
+        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
+        
+        fig_comp = ChartManager.create_comparison_chart(
+            comparison_metrics,
+            avg_comparison,
+            selected_player,
+            "Performance par 90min vs Moyenne des Autres Ligues"
+        )
+        st.plotly_chart(fig_comp, use_container_width=True)
+    
+    @staticmethod
+    def render_defensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str):
+        """Rendu de l'onglet performance défensive"""
+        st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
+        
+        analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison)
+        
+        col1, col2 = st.columns([1, 1], gap="large")
+        
+        with col1:
+            # Actions défensives
+            basic_actions = {
+                'Tacles': player_data.get('Tacles gagnants', 0),
+                'Interceptions': player_data.get('Interceptions', 0),
+                'Ballons récupérés': player_data.get('Ballons récupérés', 0),
+                'Duels aériens': player_data.get('Duels aériens gagnés', 0)
+            }
+            
+            fig_bar = ChartManager.create_bar_chart(
+                basic_actions,
+                "Actions Défensives Totales",
+                Config.COLORS['gradient']
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+            
+            # Métriques défensives
+            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Défensives</h3>", unsafe_allow_html=True)
+            
+            metric_col1, metric_col2 = st.columns(2)
+            with metric_col1:
+                st.metric(
+                    label="Tacles par 90min",
+                    value=f"{analysis['metrics']['Tacles/90']:.2f}",
+                    delta=f"{analysis['metrics']['Tacles/90'] - analysis['avg_metrics']['Tacles/90']:.2f}",
+                    help="Nombre de tacles gagnants par 90 minutes de jeu"
+                )
+                st.metric(
+                    label="Interceptions par 90min",
+                    value=f"{analysis['metrics']['Interceptions/90']:.2f}",
+                    delta=f"{analysis['metrics']['Interceptions/90'] - analysis['avg_metrics']['Interceptions/90']:.2f}",
+                    help="Nombre d'interceptions par 90 minutes de jeu"
+                )
+            
+            with metric_col2:
+                st.metric(
+                    label="% Duels gagnés",
+                    value=f"{analysis['metrics']['% Duels gagnés']:.1f}%",
+                    delta=f"{analysis['metrics']['% Duels gagnés'] - analysis['avg_metrics']['% Duels gagnés']:.1f}%",
+                    help="Pourcentage de duels défensifs remportés"
+                )
+                st.metric(
+                    label="% Duels aériens",
+                    value=f"{analysis['metrics']['% Duels aériens']:.1f}%",
+                    delta=f"{analysis['metrics']['% Duels aériens'] - analysis['avg_metrics']['% Duels aériens']:.1f}%",
+                    help="Pourcentage de duels aériens remportés"
+                )
+        
+        with col2:
+            # Pourcentages de réussite
+            success_data = {
+                'Duels défensifs': player_data.get('Pourcentage de duels gagnés', 0),
+                'Duels aériens': player_data.get('Pourcentage de duels aériens gagnés', 0),
+                'Passes': player_data.get('Pourcentage de passes réussies', 0)
+            }
+            
+            fig_gauge = ChartManager.create_gauge_chart(success_data, "Pourcentages de Réussite (%)")
+            st.plotly_chart(fig_gauge, use_container_width=True)
+            
+            # Radar défensif
+            st.markdown("<h3 class='subsection-title-enhanced'>🛡️ Analyse Radar</h3>", unsafe_allow_html=True)
+            
+            # Légende explicite
+            st.markdown(f"""
+            <div class='chart-legend'>
+                <div class='legend-item'>
+                    <div class='legend-color' style='background: var(--accent-color);'></div>
+                    <span>{selected_player}</span>
+                </div>
+                <div class='legend-item'>
+                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
+                    <span>Moyenne autres ligues</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            fig_radar = ChartManager.create_radar_chart(
+                analysis['metrics'],
+                analysis['percentiles'],
+                analysis['avg_percentiles'],
+                selected_player,
+                "autres ligues",
+                Config.COLORS['accent']
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
+        
+        # Comparaison détaillée
+        st.markdown("---")
+        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
+        
+        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
+        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
+        
+        fig_comp = ChartManager.create_comparison_chart(
+            comparison_metrics,
+            avg_comparison,
+            selected_player,
+            "Performance par 90min vs Moyenne des Autres Ligues"
+        )
+        st.plotly_chart(fig_comp, use_container_width=True)
+    
+    @staticmethod
+    def render_technical_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str):
+        """Rendu de l'onglet performance technique"""
+        st.markdown("<h2 class='section-title-enhanced'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
+        
+        analysis = PerformanceAnalyzer.analyze_technical_performance(player_data, df_comparison)
+        
+        col1, col2 = st.columns([1, 1], gap="large")
+        
+        with col1:
+            # Actions techniques
+            basic_actions = {
+                'Passes tentées': player_data.get('Passes tentées', 0),
+                'Dribbles tentés': player_data.get('Dribbles tentés', 0),
+                'Passes clés': player_data.get('Passes clés', 0),  # Modifié ici
+                'Passes progressives': player_data.get('Passes progressives', 0)  # Modifié ici
+            }
+            
+            fig_bar = ChartManager.create_bar_chart(
+                basic_actions,
+                "Actions Techniques Totales",
+                Config.COLORS['gradient']
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+            
+            # Métriques techniques
+            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Techniques</h3>", unsafe_allow_html=True)
+            
+            metric_col1, metric_col2 = st.columns(2)
+            with metric_col1:
+                st.metric(
+                    label="Passes par 90min",
+                    value=f"{analysis['metrics']['Passes tentées/90']:.1f}",
+                    delta=f"{analysis['metrics']['Passes tentées/90'] - analysis['avg_metrics']['Passes tentées/90']:.1f}",
+                    help="Nombre de passes tentées par 90 minutes de jeu"
+                )
+                st.metric(
+                    label="Passes clés par 90min",  # Modifié ici
+                    value=f"{analysis['metrics']['Passes clés/90']:.1f}",
+                    delta=f"{analysis['metrics']['Passes clés/90'] - analysis['avg_metrics']['Passes clés/90']:.1f}",
+                    help="Nombre de passes clés par 90 minutes de jeu"
+                )
+            
+            with metric_col2:
+                st.metric(
+                    label="% Passes réussies",
+                    value=f"{analysis['metrics']['% Passes réussies']:.1f}%",
+                    delta=f"{analysis['metrics']['% Passes réussies'] - analysis['avg_metrics']['% Passes réussies']:.1f}%",
+                    help="Pourcentage de passes réussies"
+                )
+                st.metric(
+                    label="% Dribbles réussis",
+                    value=f"{analysis['metrics']['% Dribbles réussis']:.1f}%",
+                    delta=f"{analysis['metrics']['% Dribbles réussis'] - analysis['avg_metrics']['% Dribbles réussis']:.1f}%",
+                    help="Pourcentage de dribbles réussis"
+                )
+        
+        with col2:
+            # Pourcentages techniques
+            technical_success = {
+                'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
+                'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
+                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0)
+            }
+            
+            fig_gauge = ChartManager.create_gauge_chart(technical_success, "Précision Technique (%)")
+            st.plotly_chart(fig_gauge, use_container_width=True)
+            
+            # Radar technique
+            st.markdown("<h3 class='subsection-title-enhanced'>🎨 Analyse Radar</h3>", unsafe_allow_html=True)
+            
+            # Légende explicite
+            st.markdown(f"""
+            <div class='chart-legend'>
+                <div class='legend-item'>
+                    <div class='legend-color' style='background: var(--secondary-color);'></div>
+                    <span>{selected_player}</span>
+                </div>
+                <div class='legend-item'>
+                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
+                    <span>Moyenne autres ligues</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            fig_radar = ChartManager.create_radar_chart(
+                analysis['metrics'],
+                analysis['percentiles'],
+                analysis['avg_percentiles'],
+                selected_player,
+                "autres ligues",
+                Config.COLORS['secondary']
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
+        
+        # Comparaison détaillée - Modifié ici pour inclure 'Passes clés/90'
+        st.markdown("---")
+        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
+        
         # Sélectionner les 4 premières métriques en incluant 'Passes clés/90'
         selected_metrics = ['Passes tentées/90', 'Passes prog./90', 'Dribbles/90', 'Passes clés/90']
         comparison_metrics = {k: analysis['metrics'][k] for k in selected_metrics if k in analysis['metrics']}
@@ -1778,43 +1783,6 @@ class TabManager:
             "Performance par 90min vs Moyenne des Autres Ligues"
         )
         st.plotly_chart(fig_comp, use_container_width=True)
-        
-        # Section des joueurs similaires
-        st.markdown("---")
-        TabManager._render_similarity_section(selected_player, df_full, 'technical')
-    
-    @staticmethod
-    def _render_similarity_section(selected_player: str, df_full: pd.DataFrame, similarity_type: str):
-        """Rendu de la section des joueurs similaires"""
-        st.markdown("<h3 class='subsection-title-enhanced'>🔍 Profils Similaires</h3>", unsafe_allow_html=True)
-        
-        # Configuration des joueurs similaires
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            num_similar = st.selectbox(
-                "Nombre de joueurs similaires :",
-                options=[3, 5, 8, 10],
-                index=1,
-                help="Choisissez le nombre de joueurs similaires à afficher"
-            )
-        
-        with col2:
-            st.info(f"🎯 Similitude basée sur les métriques {similarity_type}s")
-        
-        # Calcul et affichage des joueurs similaires
-        with st.spinner("Recherche de joueurs similaires..."):
-            similar_players = SimilarityCalculator.find_similar_players(
-                target_player=selected_player,
-                df=df_full,
-                num_similar=num_similar,
-                similarity_type=similarity_type
-            )
-        
-        if similar_players:
-            UIComponents.render_similar_players(similar_players, selected_player, similarity_type)
-        else:
-            st.warning("Aucun joueur similaire trouvé avec les critères actuels")
     
     @staticmethod
     def render_comparison_tab(df: pd.DataFrame, selected_player: str):
@@ -1824,7 +1792,7 @@ class TabManager:
         # Mode de visualisation
         mode = st.radio(
             "Mode de visualisation",
-            ["Radar individuel", "Radar comparatif", "Analyse de similitude"],
+            ["Radar individuel", "Radar comparatif"],
             horizontal=True,
             help="Choisissez le type d'analyse radar à afficher"
         )
@@ -1833,138 +1801,8 @@ class TabManager:
         
         if mode == "Radar individuel":
             TabManager._render_individual_radar(df, selected_player, competitions)
-        elif mode == "Radar comparatif":
+        else:
             TabManager._render_comparative_radar(df, competitions)
-        else:
-            TabManager._render_similarity_analysis(df, selected_player)
-    
-    @staticmethod
-    def _render_similarity_analysis(df: pd.DataFrame, selected_player: str):
-        """Rendu de l'analyse de similitude avancée"""
-        st.markdown(f"<h3 class='subsection-title-enhanced'>🔍 Analyse de Similitude Avancée : {selected_player}</h3>", unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns([1, 1, 1])
-        
-        with col1:
-            similarity_type = st.selectbox(
-                "Type de similitude :",
-                options=['global', 'offensive', 'defensive', 'technical'],
-                format_func=lambda x: {
-                    'global': '🌐 Global',
-                    'offensive': '🎯 Offensive',
-                    'defensive': '🛡️ Défensive',
-                    'technical': '🎨 Technique'
-                }[x],
-                help="Choisissez le type de métriques pour la similitude"
-            )
-        
-        with col2:
-            num_similar = st.selectbox(
-                "Nombre de joueurs :",
-                options=[5, 10, 15, 20],
-                index=1,
-                help="Nombre de joueurs similaires à analyser"
-            )
-        
-        with col3:
-            min_minutes = st.number_input(
-                "Minutes minimum :",
-                min_value=0,
-                max_value=3000,
-                value=500,
-                step=100,
-                help="Filtrer par minutes jouées minimum"
-            )
-        
-        # Explication du type de similitude
-        st.info(SimilarityCalculator.get_similarity_explanation(similarity_type))
-        
-        # Filtrage des données
-        df_filtered = df[df['Minutes jouées'] >= min_minutes]
-        
-        # Calcul des joueurs similaires
-        with st.spinner("Analyse en cours..."):
-            similar_players = SimilarityCalculator.find_similar_players(
-                target_player=selected_player,
-                df=df_filtered,
-                num_similar=num_similar,
-                similarity_type=similarity_type
-            )
-        
-        if similar_players:
-            # Affichage des résultats
-            st.markdown("---")
-            
-            # Statistiques générales
-            avg_similarity = np.mean([p['similarity_score'] for p in similar_players])
-            max_similarity = max([p['similarity_score'] for p in similar_players])
-            
-            stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
-            
-            with stat_col1:
-                st.metric("Similitude moyenne", f"{avg_similarity*100:.1f}%")
-            
-            with stat_col2:
-                st.metric("Similitude maximale", f"{max_similarity*100:.1f}%")
-            
-            with stat_col3:
-                competitions_found = len(set([p['competition'] for p in similar_players]))
-                st.metric("Compétitions", competitions_found)
-            
-            with stat_col4:
-                positions_found = len(set([p['position'] for p in similar_players]))
-                st.metric("Positions", positions_found)
-            
-            # Graphique de distribution des scores de similitude
-            st.markdown("<h4 class='subsection-title-enhanced'>📊 Distribution des Scores de Similitude</h4>", unsafe_allow_html=True)
-            
-            scores = [p['similarity_score'] * 100 for p in similar_players]
-            names = [p['name'] for p in similar_players]
-            
-            fig_similarity = go.Figure(data=[go.Bar(
-                x=names,
-                y=scores,
-                marker=dict(
-                    color=scores,
-                    colorscale='Viridis',
-                    colorbar=dict(title="Score de Similitude (%)"),
-                    line=dict(color='rgba(255,255,255,0.2)', width=1)
-                ),
-                text=[f"{s:.1f}%" for s in scores],
-                textposition='outside',
-                textfont=dict(color='white', size=11, family='Inter')
-            )])
-            
-            fig_similarity.update_layout(
-                title=dict(
-                    text=f"Scores de Similitude avec {selected_player}",
-                    font=dict(size=16, color='white', family='Inter', weight=600),
-                    x=0.5
-                ),
-                xaxis=dict(
-                    tickfont=dict(color='white', size=10, family='Inter'),
-                    tickangle=45
-                ),
-                yaxis=dict(
-                    title="Score de Similitude (%)",
-                    tickfont=dict(color='white', size=11, family='Inter'),
-                    gridcolor='rgba(255,255,255,0.15)'
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white', family='Inter'),
-                height=400,
-                margin=dict(t=60, b=100, l=60, r=60)
-            )
-            
-            st.plotly_chart(fig_similarity, use_container_width=True)
-            
-            # Affichage des cartes de joueurs similaires
-            st.markdown("<h4 class='subsection-title-enhanced'>👥 Profils des Joueurs Similaires</h4>", unsafe_allow_html=True)
-            UIComponents.render_similar_players(similar_players, selected_player, similarity_type)
-            
-        else:
-            st.warning("Aucun joueur similaire trouvé avec les critères actuels")
     
     @staticmethod
     def _render_individual_radar(df: pd.DataFrame, selected_player: str, competitions: List[str]):
@@ -2349,13 +2187,13 @@ class FootballDashboard:
         ])
         
         with tab1:
-            TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition, df_full)
+            TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
         
         with tab2:
-            TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition, df_full)
+            TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
         
         with tab3:
-            TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition, df_full)
+            TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
         
         with tab4:
             TabManager.render_comparison_tab(df_full, selected_player)
@@ -2466,232 +2304,4 @@ def main():
 # ================================================================================================
 
 if __name__ == "__main__":
-    main())
-        
-        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
-        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
-        
-        fig_comp = ChartManager.create_comparison_chart(
-            comparison_metrics,
-            avg_comparison,
-            selected_player,
-            "Performance par 90min vs Moyenne des Autres Ligues"
-        )
-        st.plotly_chart(fig_comp, use_container_width=True)
-        
-        # Section des joueurs similaires
-        st.markdown("---")
-        TabManager._render_similarity_section(selected_player, df_full, 'offensive')
-    
-    @staticmethod
-    def render_defensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str, df_full: pd.DataFrame):
-        """Rendu de l'onglet performance défensive"""
-        st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
-        
-        analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison)
-        
-        col1, col2 = st.columns([1, 1], gap="large")
-        
-        with col1:
-            # Actions défensives
-            basic_actions = {
-                'Tacles': player_data.get('Tacles gagnants', 0),
-                'Interceptions': player_data.get('Interceptions', 0),
-                'Ballons récupérés': player_data.get('Ballons récupérés', 0),
-                'Duels aériens': player_data.get('Duels aériens gagnés', 0)
-            }
-            
-            fig_bar = ChartManager.create_bar_chart(
-                basic_actions,
-                "Actions Défensives Totales",
-                Config.COLORS['gradient']
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-            # Métriques défensives
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Défensives</h3>", unsafe_allow_html=True)
-            
-            metric_col1, metric_col2 = st.columns(2)
-            with metric_col1:
-                st.metric(
-                    label="Tacles par 90min",
-                    value=f"{analysis['metrics']['Tacles/90']:.2f}",
-                    delta=f"{analysis['metrics']['Tacles/90'] - analysis['avg_metrics']['Tacles/90']:.2f}",
-                    help="Nombre de tacles gagnants par 90 minutes de jeu"
-                )
-                st.metric(
-                    label="Interceptions par 90min",
-                    value=f"{analysis['metrics']['Interceptions/90']:.2f}",
-                    delta=f"{analysis['metrics']['Interceptions/90'] - analysis['avg_metrics']['Interceptions/90']:.2f}",
-                    help="Nombre d'interceptions par 90 minutes de jeu"
-                )
-            
-            with metric_col2:
-                st.metric(
-                    label="% Duels gagnés",
-                    value=f"{analysis['metrics']['% Duels gagnés']:.1f}%",
-                    delta=f"{analysis['metrics']['% Duels gagnés'] - analysis['avg_metrics']['% Duels gagnés']:.1f}%",
-                    help="Pourcentage de duels défensifs remportés"
-                )
-                st.metric(
-                    label="% Duels aériens",
-                    value=f"{analysis['metrics']['% Duels aériens']:.1f}%",
-                    delta=f"{analysis['metrics']['% Duels aériens'] - analysis['avg_metrics']['% Duels aériens']:.1f}%",
-                    help="Pourcentage de duels aériens remportés"
-                )
-        
-        with col2:
-            # Pourcentages de réussite
-            success_data = {
-                'Duels défensifs': player_data.get('Pourcentage de duels gagnés', 0),
-                'Duels aériens': player_data.get('Pourcentage de duels aériens gagnés', 0),
-                'Passes': player_data.get('Pourcentage de passes réussies', 0)
-            }
-            
-            fig_gauge = ChartManager.create_gauge_chart(success_data, "Pourcentages de Réussite (%)")
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Radar défensif
-            st.markdown("<h3 class='subsection-title-enhanced'>🛡️ Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--accent-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            fig_radar = ChartManager.create_radar_chart(
-                analysis['metrics'],
-                analysis['percentiles'],
-                analysis['avg_percentiles'],
-                selected_player,
-                "autres ligues",
-                Config.COLORS['accent']
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-        
-        # Comparaison détaillée
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
-        
-        comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
-        avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
-        
-        fig_comp = ChartManager.create_comparison_chart(
-            comparison_metrics,
-            avg_comparison,
-            selected_player,
-            "Performance par 90min vs Moyenne des Autres Ligues"
-        )
-        st.plotly_chart(fig_comp, use_container_width=True)
-        
-        # Section des joueurs similaires
-        st.markdown("---")
-        TabManager._render_similarity_section(selected_player, df_full, 'defensive')
-    
-    @staticmethod
-    def render_technical_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str, df_full: pd.DataFrame):
-        """Rendu de l'onglet performance technique"""
-        st.markdown("<h2 class='section-title-enhanced'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
-        
-        analysis = PerformanceAnalyzer.analyze_technical_performance(player_data, df_comparison)
-        
-        col1, col2 = st.columns([1, 1], gap="large")
-        
-        with col1:
-            # Actions techniques
-            basic_actions = {
-                'Passes tentées': player_data.get('Passes tentées', 0),
-                'Dribbles tentés': player_data.get('Dribbles tentés', 0),
-                'Passes clés': player_data.get('Passes clés', 0),
-                'Passes progressives': player_data.get('Passes progressives', 0)
-            }
-            
-            fig_bar = ChartManager.create_bar_chart(
-                basic_actions,
-                "Actions Techniques Totales",
-                Config.COLORS['gradient']
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-            # Métriques techniques
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Techniques</h3>", unsafe_allow_html=True)
-            
-            metric_col1, metric_col2 = st.columns(2)
-            with metric_col1:
-                st.metric(
-                    label="Passes par 90min",
-                    value=f"{analysis['metrics']['Passes tentées/90']:.1f}",
-                    delta=f"{analysis['metrics']['Passes tentées/90'] - analysis['avg_metrics']['Passes tentées/90']:.1f}",
-                    help="Nombre de passes tentées par 90 minutes de jeu"
-                )
-                st.metric(
-                    label="Passes clés par 90min",
-                    value=f"{analysis['metrics']['Passes clés/90']:.1f}",
-                    delta=f"{analysis['metrics']['Passes clés/90'] - analysis['avg_metrics']['Passes clés/90']:.1f}",
-                    help="Nombre de passes clés par 90 minutes de jeu"
-                )
-            
-            with metric_col2:
-                st.metric(
-                    label="% Passes réussies",
-                    value=f"{analysis['metrics']['% Passes réussies']:.1f}%",
-                    delta=f"{analysis['metrics']['% Passes réussies'] - analysis['avg_metrics']['% Passes réussies']:.1f}%",
-                    help="Pourcentage de passes réussies"
-                )
-                st.metric(
-                    label="% Dribbles réussis",
-                    value=f"{analysis['metrics']['% Dribbles réussis']:.1f}%",
-                    delta=f"{analysis['metrics']['% Dribbles réussis'] - analysis['avg_metrics']['% Dribbles réussis']:.1f}%",
-                    help="Pourcentage de dribbles réussis"
-                )
-        
-        with col2:
-            # Pourcentages techniques
-            technical_success = {
-                'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
-                'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
-                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0)
-            }
-            
-            fig_gauge = ChartManager.create_gauge_chart(technical_success, "Précision Technique (%)")
-            st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Radar technique
-            st.markdown("<h3 class='subsection-title-enhanced'>🎨 Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--secondary-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            fig_radar = ChartManager.create_radar_chart(
-                analysis['metrics'],
-                analysis['percentiles'],
-                analysis['avg_percentiles'],
-                selected_player,
-                "autres ligues",
-                Config.COLORS['secondary']
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-        
-        # Comparaison détaillée
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True
+    main()

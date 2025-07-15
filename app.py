@@ -112,24 +112,17 @@ class Config:
         'offensive': [
             'Buts', 'Passes décisives', 'Tirs', 'Tirs cadrés', 'Passes clés',
             'Actions menant à un tir', 'Actions menant à un but', 'Dribbles réussis',
-            'Buts attendus', 'Passes décisives attendues', 'Centres réussis', 'Buts de la tête'
+            'Buts attendus', 'Passes décisives attendues'
         ],
         'defensive': [
             'Tacles gagnants', 'Interceptions', 'Ballons récupérés', 'Dégagements',
             'Duels défensifs gagnés', 'Duels aériens gagnés', 'Tirs bloqués',
-            'Fautes commises', 'Cartons jaunes', 'Cartons rouges', 'Duels gagnés', 'Erreurs menant à un tir'
+            'Fautes commises', 'Cartons jaunes', 'Cartons rouges'
         ],
         'technical': [
             'Passes tentées', 'Passes progressives', 'Passes dans le dernier tiers',
             'Passes dans la surface', 'Centres tentés', 'Centres réussis',
-            'Dribbles tentés', 'Touches de balle', 'Ballons perdus', 'Passes longues tentées',
-            'Passes longues réussies', 'Passes courtes tentées'
-        ],
-        'passing': [
-            'Passes tentées', 'Passes réussies', 'Passes progressives', 'Passes clés',
-            'Passes dans le dernier tiers', 'Passes dans la surface', 'Passes longues tentées',
-            'Passes longues réussies', 'Passes courtes tentées', 'Passes courtes réussies',
-            'Centres tentés', 'Centres réussis'
+            'Dribbles tentés', 'Touches de balle', 'Ballons perdus'
         ]
     }
 
@@ -149,20 +142,13 @@ class Utils:
         # Conversion en nombre si c'est une chaîne
         if isinstance(value, str):
             try:
-                # Nettoyer la chaîne: garder seulement les chiffres et le point décimal
-                clean_value = ''.join(c for c in str(value) if c.isdigit() or c == '.')
-                if clean_value and clean_value != '.':
-                    value = float(clean_value)
-                else:
-                    return "N/A"
+                clean_value = ''.join(c for c in value if c.isdigit() or c == '.')
+                value = float(clean_value) if clean_value else 0
             except (ValueError, TypeError):
-                return "N/A"
+                return str(value)
         
         try:
             value = float(value)
-            # Vérifier que la valeur est positive et raisonnable
-            if value <= 0 or value > 1_000_000_000_000:  # Plus de 1000 milliards semble irréaliste
-                return "N/A"
         except (ValueError, TypeError):
             return "N/A"
         
@@ -178,22 +164,28 @@ class Utils:
     
     @staticmethod
     def get_market_value_safe(player_data: pd.Series) -> str:
-        """Récupère la valeur marchande exacte depuis les données du joueur"""
+        """Récupère la valeur marchande de manière sécurisée en testant différentes colonnes"""
         possible_columns = [
             'Valeur marchande', 'Market Value', 'valeur_marchande', 
-            'Valeur', 'Value', 'market_value', 'Valeur en €', 'Valeur (€)',
-            'Market_Value', 'Valeur_marchande', 'VALEUR_MARCHANDE'
+            'Valeur', 'Value', 'market_value'
         ]
         
-        # Essayer de récupérer la vraie valeur marchande depuis les données exactes du joueur
         for col in possible_columns:
             if col in player_data.index and pd.notna(player_data.get(col)):
-                value = player_data[col]
-                # Vérifier que ce n'est pas une valeur vide ou zéro
-                if value != 0 and str(value).lower() not in ['nan', 'null', '', '0', 'none']:
-                    return Utils.format_market_value(value)
+                return Utils.format_market_value(player_data[col])
         
-        # Si vraiment aucune valeur marchande trouvée dans les données, retourner N/A
+        # Si aucune colonne trouvée, essayer de calculer une estimation basée sur les performances
+        age = player_data.get('Âge', 25)
+        buts = player_data.get('Buts', 0)
+        passes_d = player_data.get('Passes décisives', 0)
+        minutes = player_data.get('Minutes jouées', 0)
+        
+        if minutes > 0:
+            performance_score = (buts * 2 + passes_d) * (90 / (minutes / 10))
+            age_factor = max(0.5, (35 - age) / 10)
+            estimated_value = performance_score * age_factor * 1000000
+            return Utils.format_market_value(estimated_value)
+        
         return "N/A"
     
     @staticmethod
@@ -1276,139 +1268,121 @@ class ChartManager:
         # Obtenir les données du joueur cible
         target_data = df[df['Joueur'] == target_player].iloc[0]
         
-        # Combiner toutes les métriques importantes
+        # Sélectionner les métriques les plus pertinentes de toutes les catégories
         all_metrics = []
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['offensive'])
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['defensive'])
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['technical'])
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['passing'])
+        all_metrics.extend(Config.COMPREHENSIVE_METRICS['offensive'][:4])
+        all_metrics.extend(Config.COMPREHENSIVE_METRICS['defensive'][:4])
+        all_metrics.extend(Config.COMPREHENSIVE_METRICS['technical'][:4])
         
-        # Filtrer les métriques disponibles dans les données et éviter les doublons
-        available_metrics = []
-        seen_metrics = set()
-        for metric in all_metrics:
-            if metric in df.columns and metric not in seen_metrics:
-                available_metrics.append(metric)
-                seen_metrics.add(metric)
+        # Filtrer les métriques disponibles dans les données
+        available_metrics = [metric for metric in all_metrics if metric in df.columns]
         
         if not available_metrics:
             # Fallback vers les métriques de base si les autres ne sont pas disponibles
-            fallback_metrics = [
+            available_metrics = [
                 'Buts', 'Passes décisives', 'Tirs', 'Passes clés',
                 'Tacles gagnants', 'Interceptions', 'Dégagements', 'Duels aériens gagnés',
                 'Passes tentées', 'Dribbles tentés', 'Touches de balle', 'Passes progressives'
             ]
-            available_metrics = [metric for metric in fallback_metrics if metric in df.columns]
+            available_metrics = [metric for metric in available_metrics if metric in df.columns]
         
-        # Utiliser toutes les métriques disponibles (ou limiter si trop nombreuses)
-        if len(available_metrics) > 16:
-            # Prendre les 16 plus importantes si trop nombreuses
-            priority_metrics = [
-                'Buts', 'Passes décisives', 'Tirs', 'Passes clés', 'Dribbles réussis',
-                'Tacles gagnants', 'Interceptions', 'Ballons récupérés', 'Duels aériens gagnés',
-                'Passes tentées', 'Passes progressives', 'Dribbles tentés', 'Touches de balle',
-                'Centres tentés', 'Passes dans le dernier tiers', 'Actions menant à un tir'
-            ]
-            display_metrics = [m for m in priority_metrics if m in available_metrics][:16]
-        else:
-            display_metrics = available_metrics
+        # Limiter à 8 métriques pour la lisibilité
+        display_metrics = available_metrics[:8]
         
-        # Calculer le nombre de lignes et colonnes pour les subplots
-        n_metrics = len(display_metrics)
-        n_cols = 4
-        n_rows = (n_metrics + n_cols - 1) // n_cols  # Arrondir vers le haut
-        
-        # Créer la figure avec subplots dynamiques
+        # Créer la figure avec subplots
         fig = make_subplots(
-            rows=n_rows, cols=n_cols,
+            rows=2, cols=4,
             subplot_titles=display_metrics,
-            specs=[[{"type": "bar"}] * n_cols for _ in range(n_rows)],
-            vertical_spacing=0.12 / n_rows if n_rows > 1 else 0.15,
+            specs=[[{"type": "bar"}] * 4, [{"type": "bar"}] * 4],
+            vertical_spacing=0.15,
             horizontal_spacing=0.08
         )
         
-        # Couleurs pour chaque joueur (palette étendue)
-        base_colors = [Config.COLORS['primary'], Config.COLORS['secondary'], 
-                      Config.COLORS['accent'], Config.COLORS['warning'], 
-                      Config.COLORS['success'], Config.COLORS['danger']]
-        
-        # Étendre la palette de couleurs si nécessaire
-        extended_colors = base_colors * ((len(similar_players) + 1) // len(base_colors) + 1)
+        # Couleurs pour chaque joueur
+        colors = [Config.COLORS['primary'], Config.COLORS['secondary'], 
+                 Config.COLORS['accent'], Config.COLORS['warning']]
         
         # Préparer les données pour chaque métrique
         for i, metric in enumerate(display_metrics):
-            row = (i // n_cols) + 1
-            col = (i % n_cols) + 1
+            row = (i // 4) + 1
+            col = (i % 4) + 1
             
             # Valeurs pour tous les joueurs
             player_values = []
             player_names = []
-            player_colors = []
             
             # Joueur cible
             target_value = target_data.get(metric, 0)
             if pd.isna(target_value):
                 target_value = 0
             player_values.append(float(target_value))
-            player_names.append(target_player[:15] + "..." if len(target_player) > 15 else target_player)
-            player_colors.append(extended_colors[0])
+            player_names.append(target_player)
             
-            # Tous les joueurs similaires (selon le choix de l'utilisateur)
-            for j, player_info in enumerate(similar_players):
+            # Joueurs similaires (max 3)
+            for j, player_info in enumerate(similar_players[:3]):
                 player_data = player_info['data']
                 value = player_data.get(metric, 0)
                 if pd.isna(value):
                     value = 0
                 player_values.append(float(value))
-                # Tronquer le nom pour l'affichage
-                short_name = player_info['joueur'][:12] + "..." if len(player_info['joueur']) > 12 else player_info['joueur']
-                player_names.append(short_name)
-                player_colors.append(extended_colors[(j + 1) % len(extended_colors)])
+                player_names.append(f"{player_info['joueur'][:12]}...")  # Tronquer pour l'affichage
             
             # Ajouter les barres pour cette métrique
-            fig.add_trace(
-                go.Bar(
-                    x=player_names,
-                    y=player_values,
-                    name=f"Métrique: {metric}" if i == 0 else "",
-                    marker_color=player_colors,
-                    showlegend=False,  # Pas de légende car trop de joueurs
-                    text=[f"{v:.1f}" for v in player_values],
-                    textposition='outside',
-                    textfont=dict(size=8, color='white'),
-                    hovertemplate="<b>%{x}</b><br>" + f"{metric}: %{{y:.2f}}<extra></extra>"
-                ),
-                row=row, col=col
-            )
+            for k, (name, value) in enumerate(zip(player_names, player_values)):
+                fig.add_trace(
+                    go.Bar(
+                        x=[name],
+                        y=[value],
+                        name=name if i == 0 else "",  # Légende seulement pour le premier graphique
+                        marker_color=colors[k % len(colors)],
+                        showlegend=i == 0,  # Légende seulement pour le premier graphique
+                        text=[f"{value:.1f}"],
+                        textposition='outside',
+                        textfont=dict(size=10, color='white'),
+                        hovertemplate=f"<b>{name}</b><br>{metric}: %{{y:.2f}}<extra></extra>"
+                    ),
+                    row=row, col=col
+                )
         
         # Mise à jour de la mise en page
         fig.update_layout(
             title=dict(
-                text=f"Analyse Comparative Complète - {target_player} vs {len(similar_players)} Joueurs Similaires",
-                font=dict(color='white', size=18, family='Inter', weight=700),
+                text="Analyse Comparative Complète - Toutes Métriques Clés",
+                font=dict(color='white', size=20, family='Inter', weight=700),
                 x=0.5,
                 y=0.98
             ),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             font=dict(color='white', family='Inter'),
-            height=max(600, n_rows * 200),  # Hauteur dynamique
-            margin=dict(t=80, b=60, l=60, r=60)
+            height=700,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.1,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=12, family='Inter'),
+                bgcolor='rgba(26, 29, 35, 0.8)',
+                bordercolor='rgba(255,255,255,0.2)',
+                borderwidth=1
+            ),
+            margin=dict(t=80, b=100, l=60, r=60)
         )
         
         # Mise à jour des axes pour tous les subplots
-        for i in range(1, n_metrics + 1):
-            row = ((i-1) // n_cols) + 1
-            col = ((i-1) % n_cols) + 1
+        for i in range(1, 9):
+            row = ((i-1) // 4) + 1
+            col = ((i-1) % 4) + 1
             
             fig.update_xaxes(
-                tickfont=dict(color='white', size=8),
+                tickfont=dict(color='white', size=9),
                 tickangle=45,
                 showgrid=False,
                 row=row, col=col
             )
             fig.update_yaxes(
-                tickfont=dict(color='white', size=8),
+                tickfont=dict(color='white', size=9),
                 gridcolor='rgba(255,255,255,0.15)',
                 showgrid=True,
                 row=row, col=col
@@ -1697,7 +1671,6 @@ class UIComponents:
         else:
             score_color = "#1f77b4"  # Bleu
         
-        # Utiliser la vraie valeur marchande du joueur depuis ses données
         valeur_marchande = Utils.get_market_value_safe(player_data)
         
         # Obtenir le logo du club
@@ -2351,7 +2324,7 @@ class TabManager:
         st.markdown(f"<h3 class='subsection-title-enhanced'>🎯 Top {len(similar_players)} joueurs les plus similaires à {selected_player}</h3>", unsafe_allow_html=True)
         
         # Métriques de résumé
-        metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
+        metrics_col1, metrics_col2, metrics_col3 = st.columns(3)
         
         with metrics_col1:
             avg_similarity = np.mean([p['similarity_score'] for p in similar_players])
@@ -2369,12 +2342,6 @@ class TabManager:
             st.metric("Compétitions Représentées", f"{unique_competitions}", 
                      help="Nombre de compétitions différentes")
         
-        with metrics_col4:
-            # Compter les métriques disponibles pour l'analyse
-            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
-            st.metric("Métriques Analysées", f"{len(available_metrics)}", 
-                     help="Nombre de métriques utilisées pour calculer la similarité")
-        
         # Cartes des joueurs similaires
         st.markdown("---")
         
@@ -2390,9 +2357,6 @@ class TabManager:
         # Analyse comparative complète
         st.markdown("---")
         st.markdown("<h3 class='subsection-title-enhanced'>📊 Analyse Comparative Complète</h3>", unsafe_allow_html=True)
-        
-        # Note explicative
-        st.info(f"📈 Comparaison de {selected_player} avec les {len(similar_players)} joueurs similaires sélectionnés sur {len([m for m in Config.COMPREHENSIVE_METRICS['offensive'] + Config.COMPREHENSIVE_METRICS['defensive'] + Config.COMPREHENSIVE_METRICS['technical'] + Config.COMPREHENSIVE_METRICS['passing'] if m in df.columns])} métriques disponibles.")
         
         # Graphique de comparaison complet avec toutes les métriques importantes
         fig_comprehensive = ChartManager.create_comprehensive_comparison_chart(

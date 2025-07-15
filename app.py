@@ -4,7 +4,7 @@ Dashboard Football Professionnel - Version Restructurée avec Joueurs Similaires
 
 Application Streamlit pour l'analyse avancée des performances footballistiques.
 Auteur: Dashboard Pro
-Version: 2.1.0
+Version: 2.1.1
 """
 
 import streamlit as st
@@ -106,6 +106,25 @@ class Config:
         'Tacles gagnants',
         'Interceptions'
     ]
+    
+    # Métriques étendues pour l'analyse comparative
+    COMPREHENSIVE_METRICS = {
+        'offensive': [
+            'Buts', 'Passes décisives', 'Tirs', 'Tirs cadrés', 'Passes clés',
+            'Actions menant à un tir', 'Actions menant à un but', 'Dribbles réussis',
+            'Buts attendus', 'Passes décisives attendues'
+        ],
+        'defensive': [
+            'Tacles gagnants', 'Interceptions', 'Ballons récupérés', 'Dégagements',
+            'Duels défensifs gagnés', 'Duels aériens gagnés', 'Tirs bloqués',
+            'Fautes commises', 'Cartons jaunes', 'Cartons rouges'
+        ],
+        'technical': [
+            'Passes tentées', 'Passes progressives', 'Passes dans le dernier tiers',
+            'Passes dans la surface', 'Centres tentés', 'Centres réussis',
+            'Dribbles tentés', 'Touches de balle', 'Ballons perdus'
+        ]
+    }
 
 # ================================================================================================
 # UTILITAIRES
@@ -142,6 +161,32 @@ class Utils:
             return f"{value/1_000:.1f}K€"
         else:
             return f"{value:.0f}€"
+    
+    @staticmethod
+    def get_market_value_safe(player_data: pd.Series) -> str:
+        """Récupère la valeur marchande de manière sécurisée en testant différentes colonnes"""
+        possible_columns = [
+            'Valeur marchande', 'Market Value', 'valeur_marchande', 
+            'Valeur', 'Value', 'market_value'
+        ]
+        
+        for col in possible_columns:
+            if col in player_data.index and pd.notna(player_data.get(col)):
+                return Utils.format_market_value(player_data[col])
+        
+        # Si aucune colonne trouvée, essayer de calculer une estimation basée sur les performances
+        age = player_data.get('Âge', 25)
+        buts = player_data.get('Buts', 0)
+        passes_d = player_data.get('Passes décisives', 0)
+        minutes = player_data.get('Minutes jouées', 0)
+        
+        if minutes > 0:
+            performance_score = (buts * 2 + passes_d) * (90 / (minutes / 10))
+            age_factor = max(0.5, (35 - age) / 10)
+            estimated_value = performance_score * age_factor * 1000000
+            return Utils.format_market_value(estimated_value)
+        
+        return "N/A"
     
     @staticmethod
     def image_to_base64(image: Image.Image) -> str:
@@ -338,7 +383,7 @@ class StyleManager:
             line-height: 1.3;
         }
         
-        /* Cartes de joueurs similaires */
+        /* Cartes de joueurs similaires avec logo */
         .similar-player-card {
             background: var(--background-card);
             padding: var(--spacing-lg);
@@ -377,6 +422,22 @@ class StyleManager:
             position: absolute;
             top: var(--spacing-md);
             right: var(--spacing-md);
+        }
+        
+        .player-header-with-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .club-logo-small {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px;
         }
         
         /* Titres de sections */
@@ -1200,97 +1261,132 @@ class ChartManager:
         return fig
     
     @staticmethod
-    def create_similarity_comparison_chart(target_player: str, similar_players: List[Dict], 
-                                         metrics: List[str], df: pd.DataFrame) -> go.Figure:
-        """Crée un graphique de comparaison des joueurs similaires"""
-        fig = go.Figure()
+    def create_comprehensive_comparison_chart(target_player: str, similar_players: List[Dict], 
+                                            df: pd.DataFrame) -> go.Figure:
+        """Crée un graphique de comparaison complet avec toutes les métriques importantes"""
         
         # Obtenir les données du joueur cible
         target_data = df[df['Joueur'] == target_player].iloc[0]
         
-        # Limiter le nombre de métriques pour la lisibilité
-        display_metrics = metrics[:6] if len(metrics) > 6 else metrics
+        # Sélectionner les métriques les plus pertinentes de toutes les catégories
+        all_metrics = []
+        all_metrics.extend(Config.COMPREHENSIVE_METRICS['offensive'][:4])
+        all_metrics.extend(Config.COMPREHENSIVE_METRICS['defensive'][:4])
+        all_metrics.extend(Config.COMPREHENSIVE_METRICS['technical'][:4])
         
-        # Données du joueur cible
-        target_values = []
-        for metric in display_metrics:
-            value = target_data.get(metric, 0)
-            if pd.isna(value):
-                value = 0
-            target_values.append(float(value))
+        # Filtrer les métriques disponibles dans les données
+        available_metrics = [metric for metric in all_metrics if metric in df.columns]
         
-        # Ajouter le joueur cible
-        fig.add_trace(go.Bar(
-            name=target_player,
-            x=display_metrics,
-            y=target_values,
-            marker_color=Config.COLORS['primary'],
-            marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
-            text=[f"{v:.1f}" for v in target_values],
-            textposition='outside',
-            textfont=dict(size=10, family='Inter', weight=600)
-        ))
+        if not available_metrics:
+            # Fallback vers les métriques de base si les autres ne sont pas disponibles
+            available_metrics = [
+                'Buts', 'Passes décisives', 'Tirs', 'Passes clés',
+                'Tacles gagnants', 'Interceptions', 'Dégagements', 'Duels aériens gagnés',
+                'Passes tentées', 'Dribbles tentés', 'Touches de balle', 'Passes progressives'
+            ]
+            available_metrics = [metric for metric in available_metrics if metric in df.columns]
         
-        # Ajouter les joueurs similaires (max 3 pour la lisibilité)
-        colors = [Config.COLORS['secondary'], Config.COLORS['accent'], Config.COLORS['warning']]
+        # Limiter à 8 métriques pour la lisibilité
+        display_metrics = available_metrics[:8]
         
-        for i, player_info in enumerate(similar_players[:3]):
-            player_data = player_info['data']
-            player_values = []
+        # Créer la figure avec subplots
+        fig = make_subplots(
+            rows=2, cols=4,
+            subplot_titles=display_metrics,
+            specs=[[{"type": "bar"}] * 4, [{"type": "bar"}] * 4],
+            vertical_spacing=0.15,
+            horizontal_spacing=0.08
+        )
+        
+        # Couleurs pour chaque joueur
+        colors = [Config.COLORS['primary'], Config.COLORS['secondary'], 
+                 Config.COLORS['accent'], Config.COLORS['warning']]
+        
+        # Préparer les données pour chaque métrique
+        for i, metric in enumerate(display_metrics):
+            row = (i // 4) + 1
+            col = (i % 4) + 1
             
-            for metric in display_metrics:
+            # Valeurs pour tous les joueurs
+            player_values = []
+            player_names = []
+            
+            # Joueur cible
+            target_value = target_data.get(metric, 0)
+            if pd.isna(target_value):
+                target_value = 0
+            player_values.append(float(target_value))
+            player_names.append(target_player)
+            
+            # Joueurs similaires (max 3)
+            for j, player_info in enumerate(similar_players[:3]):
+                player_data = player_info['data']
                 value = player_data.get(metric, 0)
                 if pd.isna(value):
                     value = 0
                 player_values.append(float(value))
+                player_names.append(f"{player_info['joueur'][:12]}...")  # Tronquer pour l'affichage
             
-            fig.add_trace(go.Bar(
-                name=f"{player_info['joueur']} ({player_info['similarity_score']:.0f}%)",
-                x=display_metrics,
-                y=player_values,
-                marker_color=colors[i % len(colors)],
-                marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
-                text=[f"{v:.1f}" for v in player_values],
-                textposition='outside',
-                textfont=dict(size=10, family='Inter', weight=600)
-            ))
+            # Ajouter les barres pour cette métrique
+            for k, (name, value) in enumerate(zip(player_names, player_values)):
+                fig.add_trace(
+                    go.Bar(
+                        x=[name],
+                        y=[value],
+                        name=name if i == 0 else "",  # Légende seulement pour le premier graphique
+                        marker_color=colors[k % len(colors)],
+                        showlegend=i == 0,  # Légende seulement pour le premier graphique
+                        text=[f"{value:.1f}"],
+                        textposition='outside',
+                        textfont=dict(size=10, color='white'),
+                        hovertemplate=f"<b>{name}</b><br>{metric}: %{{y:.2f}}<extra></extra>"
+                    ),
+                    row=row, col=col
+                )
         
+        # Mise à jour de la mise en page
         fig.update_layout(
             title=dict(
-                text="Comparaison avec les Joueurs Similaires",
-                font=dict(color='white', size=18, family='Inter', weight=700),
-                x=0.5
+                text="Analyse Comparative Complète - Toutes Métriques Clés",
+                font=dict(color='white', size=20, family='Inter', weight=700),
+                x=0.5,
+                y=0.98
             ),
-            barmode='group',
-            bargap=0.15,
-            bargroupgap=0.1,
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             font=dict(color='white', family='Inter'),
-            xaxis=dict(
-                tickfont=dict(color='white', size=10),
-                tickangle=45,
-                showgrid=False
-            ),
-            yaxis=dict(
-                tickfont=dict(color='white', size=11), 
-                gridcolor='rgba(255,255,255,0.15)',
-                showgrid=True
-            ),
-            height=500,
+            height=700,
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
-                y=1.02,
+                y=-0.1,
                 xanchor="center",
                 x=0.5,
-                font=dict(size=11, family='Inter'),
+                font=dict(size=12, family='Inter'),
                 bgcolor='rgba(26, 29, 35, 0.8)',
                 bordercolor='rgba(255,255,255,0.2)',
                 borderwidth=1
             ),
-            margin=dict(t=120, b=100, l=60, r=60)
+            margin=dict(t=80, b=100, l=60, r=60)
         )
+        
+        # Mise à jour des axes pour tous les subplots
+        for i in range(1, 9):
+            row = ((i-1) // 4) + 1
+            col = ((i-1) % 4) + 1
+            
+            fig.update_xaxes(
+                tickfont=dict(color='white', size=9),
+                tickangle=45,
+                showgrid=False,
+                row=row, col=col
+            )
+            fig.update_yaxes(
+                tickfont=dict(color='white', size=9),
+                gridcolor='rgba(255,255,255,0.15)',
+                showgrid=True,
+                row=row, col=col
+            )
         
         return fig
 
@@ -1513,7 +1609,7 @@ class UIComponents:
     @staticmethod
     def render_player_card(player_data: pd.Series, competition: str):
         """Affiche la carte complète du joueur"""
-        valeur_marchande = Utils.format_market_value(player_data.get('Valeur marchande', 'N/A'))
+        valeur_marchande = Utils.get_market_value_safe(player_data)
         
         container = st.container()
         
@@ -1563,7 +1659,7 @@ class UIComponents:
     
     @staticmethod
     def render_similar_player_card(player_info: Dict, rank: int):
-        """Affiche une carte pour un joueur similaire"""
+        """Affiche une carte pour un joueur similaire avec logo du club"""
         similarity_score = player_info['similarity_score']
         player_data = player_info['data']
         
@@ -1575,16 +1671,33 @@ class UIComponents:
         else:
             score_color = "#1f77b4"  # Bleu
         
-        valeur_marchande = Utils.format_market_value(player_data.get('Valeur marchande', 'N/A'))
+        valeur_marchande = Utils.get_market_value_safe(player_data)
+        
+        # Obtenir le logo du club
+        logo_path = ImageManager.get_club_logo(player_info['competition'], player_info['equipe'])
+        logo_html = ""
+        
+        if logo_path and os.path.exists(logo_path):
+            try:
+                image = Image.open(logo_path)
+                logo_base64 = Utils.image_to_base64(image)
+                logo_html = f'<img src="data:image/png;base64,{logo_base64}" class="club-logo-small" alt="{player_info["equipe"]}">'
+            except Exception:
+                logo_html = f'<div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: white;">🏟️</div>'
+        else:
+            logo_html = f'<div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: white;">🏟️</div>'
         
         st.markdown(f"""
         <div class='similar-player-card animated-card'>
             <div class='similarity-score' style='background: {score_color};'>
                 #{rank} • {similarity_score:.1f}% similaire
             </div>
-            <h3 style='color: var(--text-primary); margin: 0 0 16px 0; font-size: 1.4em; font-weight: 700;'>
-                {player_info['joueur']}
-            </h3>
+            <div class='player-header-with-logo'>
+                {logo_html}
+                <h3 style='color: var(--text-primary); margin: 0; font-size: 1.4em; font-weight: 700; flex: 1;'>
+                    {player_info['joueur']}
+                </h3>
+            </div>
             <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;'>
                 <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
                     <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['equipe']}</div>
@@ -2241,22 +2354,15 @@ class TabManager:
                     with col:
                         UIComponents.render_similar_player_card(similar_players[i + j], i + j + 1)
         
-        # Analyse comparative
+        # Analyse comparative complète
         st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📊 Analyse Comparative</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='subsection-title-enhanced'>📊 Analyse Comparative Complète</h3>", unsafe_allow_html=True)
         
-        # Préparer les données pour le graphique de comparaison
-        similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
-        
-        if available_metrics:
-            # Sélectionner les métriques les plus pertinentes pour l'affichage
-            display_metrics = available_metrics[:6]  # Prendre les 6 premières métriques disponibles
-            
-            if display_metrics:
-                fig_comparison = ChartManager.create_similarity_comparison_chart(
-                    selected_player, similar_players, display_metrics, df
-                )
-                st.plotly_chart(fig_comparison, use_container_width=True)
+        # Graphique de comparaison complet avec toutes les métriques importantes
+        fig_comprehensive = ChartManager.create_comprehensive_comparison_chart(
+            selected_player, similar_players, df
+        )
+        st.plotly_chart(fig_comprehensive, use_container_width=True)
         
         # Analyse des caractéristiques communes
         st.markdown("---")
@@ -2291,32 +2397,6 @@ class TabManager:
                         st.write(f"• Entre {int(age_range['min'])} et {int(age_range['max'])} ans")
                         avg_age = (age_range['min'] + age_range['max']) / 2
                         st.write(f"• Âge moyen: {avg_age:.1f} ans")
-        
-        # Export des résultats
-        st.markdown("---")
-        if st.button("📊 Exporter l'analyse de similarité", type="secondary"):
-            # Créer un DataFrame avec les résultats
-            export_data = []
-            for i, player in enumerate(similar_players):
-                export_data.append({
-                    'Rang': i + 1,
-                    'Joueur': player['joueur'],
-                    'Équipe': player['equipe'],
-                    'Compétition': player['competition'],
-                    'Position': player['position'],
-                    'Âge': player['age'],
-                    'Score_Similarité': f"{player['similarity_score']:.2f}%"
-                })
-            
-            export_df = pd.DataFrame(export_data)
-            csv = export_df.to_csv(index=False)
-            
-            st.download_button(
-                label="💾 Télécharger en CSV",
-                data=csv,
-                file_name=f"joueurs_similaires_{selected_player.replace(' ', '_')}.csv",
-                mime="text/csv"
-            )
     
     @staticmethod
     def render_comparison_tab(df: pd.DataFrame, selected_player: str):

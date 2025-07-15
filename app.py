@@ -22,8 +22,15 @@ from PIL import Image
 import base64
 import io
 from typing import Dict, List, Optional, Tuple, Union
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics.pairwise import euclidean_distances
+
+# Imports pour l'analyse de similarité
+try:
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.metrics.pairwise import euclidean_distances
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    st.warning("⚠️ scikit-learn n'est pas installé. La fonctionnalité de joueurs similaires sera limitée.")
 
 # ================================================================================================
 # CONFIGURATION ET CONSTANTES
@@ -86,25 +93,18 @@ class Config:
         'Serie A': 'Serie_A_Logos'
     }
     
-    # Métriques pour l'analyse de similarité
+    # Métriques pour l'analyse de similarité (versions simplifiées)
     SIMILARITY_METRICS = [
-        'Buts par 90 minutes',
-        'Passes décisives par 90 minutes',
-        'Buts attendus par 90 minutes',
-        'Passes décisives attendues par 90 minutes',
-        'Tirs par 90 minutes',
+        'Minutes jouées',
+        'Buts',
+        'Passes décisives',
+        'Tirs',
         'Passes clés',
         'Passes tentées',
-        'Passes progressives',
         'Dribbles tentés',
         'Dribbles réussis',
         'Tacles gagnants',
-        'Interceptions',
-        'Ballons récupérés',
-        'Duels défensifs gagnés',
-        'Pourcentage de passes réussies',
-        'Pourcentage de dribbles réussis',
-        'Minutes jouées'
+        'Interceptions'
     ]
 
 # ================================================================================================
@@ -470,43 +470,6 @@ class StyleManager:
             border-radius: 50%;
         }
         
-        /* Navigation rapide */
-        .quick-nav {
-            position: fixed;
-            right: var(--spacing-lg);
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 1000;
-            background: var(--background-card);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-sm);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-lg);
-            opacity: 0.9;
-            transition: opacity 0.3s ease;
-        }
-        
-        .quick-nav:hover {
-            opacity: 1;
-        }
-        
-        .quick-nav-item {
-            display: block;
-            padding: var(--spacing-sm);
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-radius: var(--radius-sm);
-            transition: all 0.2s ease;
-            font-size: 0.8rem;
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .quick-nav-item:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: translateX(-2px);
-        }
-        
         /* Breadcrumbs */
         .breadcrumbs {
             background: var(--background-surface);
@@ -767,7 +730,7 @@ class SimilarPlayerAnalyzer:
     """Analyseur pour trouver des joueurs similaires"""
     
     @staticmethod
-    def prepare_similarity_data(df: pd.DataFrame) -> pd.DataFrame:
+    def prepare_similarity_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
         """Prépare les données pour l'analyse de similarité"""
         # Sélectionner les colonnes disponibles pour l'analyse
         available_metrics = []
@@ -775,23 +738,101 @@ class SimilarPlayerAnalyzer:
             if metric in df.columns:
                 available_metrics.append(metric)
         
+        if not available_metrics:
+            st.warning("⚠️ Aucune métrique disponible pour l'analyse de similarité")
+            return pd.DataFrame(), []
+        
         # Créer le DataFrame avec les métriques disponibles
-        similarity_df = df[['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge'] + available_metrics].copy()
+        required_cols = ['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge']
+        similarity_df = df[required_cols + available_metrics].copy()
         
         # Remplacer les valeurs manquantes par 0
         for col in available_metrics:
             similarity_df[col] = pd.to_numeric(similarity_df[col], errors='coerce').fillna(0)
         
+        # Filtrer les lignes avec des données valides
+        similarity_df = similarity_df.dropna(subset=['Joueur'])
+        
         return similarity_df, available_metrics
     
     @staticmethod
-    def calculate_similarity(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Calcule la similarité entre joueurs"""
+    def calculate_similarity_simple(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
+        """Calcule la similarité sans sklearn (version simplifiée)"""
         try:
             # Préparer les données
             similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
             
-            if not available_metrics:
+            if similarity_df.empty or not available_metrics:
+                return []
+            
+            # Obtenir les données du joueur cible
+            target_data = similarity_df[similarity_df['Joueur'] == target_player]
+            if target_data.empty:
+                return []
+            
+            target_values = target_data[available_metrics].iloc[0]
+            target_info = target_data.iloc[0]
+            
+            # Filtrer les autres joueurs (exclure le joueur cible)
+            other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
+            
+            if other_players.empty:
+                return []
+            
+            # Calculer la similarité de manière simple (somme des différences absolues normalisées)
+            similarities = []
+            
+            for idx, player_row in other_players.iterrows():
+                player_values = player_row[available_metrics]
+                
+                # Calculer la différence relative pour chaque métrique
+                total_diff = 0
+                valid_metrics = 0
+                
+                for metric in available_metrics:
+                    target_val = float(target_values[metric])
+                    player_val = float(player_values[metric])
+                    
+                    # Éviter la division par zéro
+                    max_val = max(abs(target_val), abs(player_val), 1)
+                    diff = abs(target_val - player_val) / max_val
+                    total_diff += diff
+                    valid_metrics += 1
+                
+                # Score de similarité (0-100)
+                if valid_metrics > 0:
+                    avg_diff = total_diff / valid_metrics
+                    similarity_score = max(0, 100 * (1 - avg_diff))
+                else:
+                    similarity_score = 0
+                
+                similarities.append({
+                    'joueur': player_row['Joueur'],
+                    'equipe': player_row['Équipe'],
+                    'competition': player_row['Compétition'],
+                    'position': player_row['Position'],
+                    'age': player_row['Âge'],
+                    'similarity_score': similarity_score,
+                    'data': player_row
+                })
+            
+            # Trier par score de similarité décroissant
+            similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
+            
+            return similarities[:num_similar]
+            
+        except Exception as e:
+            st.error(f"Erreur lors du calcul de similarité : {str(e)}")
+            return []
+    
+    @staticmethod
+    def calculate_similarity_advanced(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
+        """Calcule la similarité avec sklearn (version avancée)"""
+        try:
+            # Préparer les données
+            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
+            
+            if similarity_df.empty or not available_metrics:
                 return []
             
             # Obtenir les données du joueur cible
@@ -846,8 +887,16 @@ class SimilarPlayerAnalyzer:
             return similar_players[:num_similar]
             
         except Exception as e:
-            st.error(f"Erreur lors du calcul de similarité : {str(e)}")
+            st.error(f"Erreur lors du calcul de similarité avancé : {str(e)}")
             return []
+    
+    @staticmethod
+    def calculate_similarity(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
+        """Point d'entrée principal pour le calcul de similarité"""
+        if SKLEARN_AVAILABLE:
+            return SimilarPlayerAnalyzer.calculate_similarity_advanced(target_player, df, num_similar)
+        else:
+            return SimilarPlayerAnalyzer.calculate_similarity_simple(target_player, df, num_similar)
     
     @staticmethod
     def analyze_common_characteristics(target_player: str, similar_players: List[Dict], df: pd.DataFrame) -> Dict:
@@ -864,7 +913,6 @@ class SimilarPlayerAnalyzer:
                 'positions': {},
                 'competitions': {},
                 'age_range': {'min': float('inf'), 'max': float('-inf')},
-                'avg_metrics': {},
                 'common_traits': []
             }
             
@@ -887,28 +935,10 @@ class SimilarPlayerAnalyzer:
                     analysis['age_range']['min'] = min(analysis['age_range']['min'], age)
                     analysis['age_range']['max'] = max(analysis['age_range']['max'], age)
             
-            # Calcul des métriques moyennes
-            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
-            
-            for metric in available_metrics:
-                values = []
-                for player_data in all_players_data:
-                    val = player_data.get(metric, 0)
-                    if pd.notna(val):
-                        values.append(val)
-                
-                if values:
-                    analysis['avg_metrics'][metric] = {
-                        'mean': np.mean(values),
-                        'std': np.std(values),
-                        'min': np.min(values),
-                        'max': np.max(values)
-                    }
-            
             return analysis
             
         except Exception as e:
-            st.error(f"Erreur lors de l'analyse des caractéristiques : {str(e)}")
+            st.warning(f"Erreur lors de l'analyse des caractéristiques : {str(e)}")
             return {}
 
 # ================================================================================================
@@ -2165,6 +2195,10 @@ class TabManager:
                 help="Choisissez combien de joueurs similaires vous voulez voir"
             )
         
+        # Message d'information sur sklearn
+        if not SKLEARN_AVAILABLE:
+            st.info("ℹ️ Analyse de similarité en mode simplifié (scikit-learn non disponible)")
+        
         # Calcul des joueurs similaires
         with st.spinner("🔍 Recherche de joueurs similaires..."):
             similar_players = SimilarPlayerAnalyzer.calculate_similarity(selected_player, df, num_similar)
@@ -2216,11 +2250,7 @@ class TabManager:
         
         if available_metrics:
             # Sélectionner les métriques les plus pertinentes pour l'affichage
-            key_metrics = [
-                'Buts par 90 minutes', 'Passes décisives par 90 minutes', 
-                'Tirs par 90 minutes', 'Passes clés', 'Dribbles réussis', 'Tacles gagnants'
-            ]
-            display_metrics = [m for m in key_metrics if m in available_metrics][:6]
+            display_metrics = available_metrics[:6]  # Prendre les 6 premières métriques disponibles
             
             if display_metrics:
                 fig_comparison = ChartManager.create_similarity_comparison_chart(

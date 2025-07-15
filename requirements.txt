@@ -1,4 +1,5 @@
 streamlit
+scikit-learn
 mplsoccer
 matplotlib
 pandas

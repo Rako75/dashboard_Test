@@ -377,6 +377,77 @@ class StyleManager:
             position: absolute;
             top: var(--spacing-md);
             right: var(--spacing-md);
+            z-index: 10;
+        }
+        
+        /* Comparaisons de joueurs */
+        .player-comparison-container {
+            background: var(--background-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+        
+        .vs-divider {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: var(--spacing-md) 0;
+            position: relative;
+        }
+        
+        .vs-divider::before,
+        .vs-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        }
+        
+        .vs-divider::before {
+            left: 0;
+        }
+        
+        .vs-divider::after {
+            right: 0;
+        }
+        
+        .comparison-metric-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .comparison-metric-row:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-name {
+            flex: 1;
+            text-align: center;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .metric-value-left {
+            flex: 0 0 80px;
+            text-align: right;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .metric-value-right {
+            flex: 0 0 80px;
+            text-align: left;
+            color: var(--secondary-color);
+            font-weight: 600;
         }
         
         /* Titres de sections */
@@ -1575,15 +1646,37 @@ class UIComponents:
         else:
             score_color = "#1f77b4"  # Bleu
         
-        valeur_marchande = Utils.format_market_value(player_data.get('Valeur marchande', 'N/A'))
+        # Correction pour récupérer la valeur marchande
+        market_value_fields = ['Valeur marchande', 'Market Value', 'Valeur', 'Value']
+        valeur_marchande = 'N/A'
+        for field in market_value_fields:
+            if field in player_data and pd.notna(player_data[field]):
+                valeur_marchande = Utils.format_market_value(player_data[field])
+                break
+        
+        # Récupérer le logo du club
+        logo_path = ImageManager.get_club_logo(player_info['competition'], player_info['equipe'])
+        logo_html = ""
+        if logo_path and os.path.exists(logo_path):
+            try:
+                logo_image = Image.open(logo_path)
+                logo_base64 = Utils.image_to_base64(logo_image)
+                logo_html = f"""
+                <img src="data:image/png;base64,{logo_base64}" 
+                     style="width: 24px; height: 24px; object-fit: contain; margin-right: 8px; vertical-align: middle;">
+                """
+            except:
+                logo_html = "🏟️ "
+        else:
+            logo_html = "🏟️ "
         
         st.markdown(f"""
         <div class='similar-player-card animated-card'>
             <div class='similarity-score' style='background: {score_color};'>
                 #{rank} • {similarity_score:.1f}% similaire
             </div>
-            <h3 style='color: var(--text-primary); margin: 0 0 16px 0; font-size: 1.4em; font-weight: 700;'>
-                {player_info['joueur']}
+            <h3 style='color: var(--text-primary); margin: 0 0 16px 0; font-size: 1.4em; font-weight: 700; display: flex; align-items: center;'>
+                {logo_html}{player_info['joueur']}
             </h3>
             <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;'>
                 <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
@@ -1611,6 +1704,126 @@ class UIComponents:
             </div>
         </div>
         """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_player_comparison_chart(target_player: str, target_data: pd.Series, 
+                                     similar_player: Dict, comparison_metrics: List[str]) -> go.Figure:
+        """Crée un diagramme de comparaison horizontal entre deux joueurs"""
+        similar_data = similar_player['data']
+        
+        # Obtenir les logos
+        target_competition = target_data.get('Compétition', '')
+        target_team = target_data.get('Équipe', '')
+        target_logo_path = ImageManager.get_club_logo(target_competition, target_team)
+        
+        similar_logo_path = ImageManager.get_club_logo(
+            similar_player['competition'], 
+            similar_player['equipe']
+        )
+        
+        # Préparer les données pour le graphique
+        target_values = []
+        similar_values = []
+        
+        for metric in comparison_metrics:
+            # Valeur du joueur cible
+            target_val = target_data.get(metric, 0)
+            if pd.isna(target_val):
+                target_val = 0
+            target_values.append(float(target_val))
+            
+            # Valeur du joueur similaire
+            similar_val = similar_data.get(metric, 0)
+            if pd.isna(similar_val):
+                similar_val = 0
+            similar_values.append(float(similar_val))
+        
+        # Créer le graphique en barres horizontales
+        fig = go.Figure()
+        
+        # Barres du joueur cible (à gauche)
+        fig.add_trace(go.Bar(
+            y=comparison_metrics,
+            x=[-val for val in target_values],  # Valeurs négatives pour aller à gauche
+            orientation='h',
+            name=target_player,
+            marker_color=Config.COLORS['primary'],
+            text=[f"{val:.1f}" for val in target_values],
+            textposition='auto',
+            textfont=dict(color='white', size=11, weight=600),
+            hovertemplate='<b>%{customdata}</b><br>%{y}: %{text}<extra></extra>',
+            customdata=[target_player] * len(comparison_metrics)
+        ))
+        
+        # Barres du joueur similaire (à droite)
+        fig.add_trace(go.Bar(
+            y=comparison_metrics,
+            x=similar_values,
+            orientation='h',
+            name=similar_player['joueur'],
+            marker_color=Config.COLORS['secondary'],
+            text=[f"{val:.1f}" for val in similar_values],
+            textposition='auto',
+            textfont=dict(color='white', size=11, weight=600),
+            hovertemplate='<b>%{customdata}</b><br>%{y}: %{text}<extra></extra>',
+            customdata=[similar_player['joueur']] * len(comparison_metrics)
+        ))
+        
+        # Configuration du layout
+        max_val = max(max(target_values), max(similar_values))
+        
+        fig.update_layout(
+            title=dict(
+                text=f"Comparaison Directe",
+                font=dict(size=16, color='white', family='Inter', weight=700),
+                x=0.5
+            ),
+            xaxis=dict(
+                range=[-max_val * 1.2, max_val * 1.2],
+                showgrid=True,
+                gridcolor='rgba(255,255,255,0.1)',
+                zeroline=True,
+                zerolinecolor='rgba(255,255,255,0.3)',
+                zerolinewidth=2,
+                tickfont=dict(color='white', size=10),
+                title=dict(
+                    text=f"← {target_player}     |     {similar_player['joueur']} →",
+                    font=dict(color='white', size=12, weight=600)
+                )
+            ),
+            yaxis=dict(
+                tickfont=dict(color='white', size=11),
+                showgrid=False
+            ),
+            barmode='overlay',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            height=300,
+            showlegend=False,
+            margin=dict(t=60, b=60, l=150, r=150)
+        )
+        
+        # Ajouter des annotations pour les noms avec logos
+        fig.add_annotation(
+            x=-max_val * 0.6,
+            y=len(comparison_metrics),
+            text=f"🏟️ {target_player}",
+            showarrow=False,
+            font=dict(size=14, color=Config.COLORS['primary'], weight=700),
+            xanchor='center'
+        )
+        
+        fig.add_annotation(
+            x=max_val * 0.6,
+            y=len(comparison_metrics),
+            text=f"🏟️ {similar_player['joueur']}",
+            showarrow=False,
+            font=dict(size=14, color=Config.COLORS['secondary'], weight=700),
+            xanchor='center'
+        )
+        
+        return fig
     
     @staticmethod
     def _render_player_photo(player_name: str):
@@ -2199,6 +2412,14 @@ class TabManager:
         if not SKLEARN_AVAILABLE:
             st.info("ℹ️ Analyse de similarité en mode simplifié (scikit-learn non disponible)")
         
+        # Récupérer les données du joueur cible
+        target_player_data = df[df['Joueur'] == selected_player]
+        if target_player_data.empty:
+            st.error(f"❌ Impossible de trouver les données pour {selected_player}")
+            return
+        
+        target_data = target_player_data.iloc[0]
+        
         # Calcul des joueurs similaires
         with st.spinner("🔍 Recherche de joueurs similaires..."):
             similar_players = SimilarPlayerAnalyzer.calculate_similarity(selected_player, df, num_similar)
@@ -2229,34 +2450,62 @@ class TabManager:
             st.metric("Compétitions Représentées", f"{unique_competitions}", 
                      help="Nombre de compétitions différentes")
         
-        # Cartes des joueurs similaires
-        st.markdown("---")
-        
-        # Affichage en colonnes
-        cols_per_row = 2
-        for i in range(0, len(similar_players), cols_per_row):
-            cols = st.columns(cols_per_row)
-            for j, col in enumerate(cols):
-                if i + j < len(similar_players):
-                    with col:
-                        UIComponents.render_similar_player_card(similar_players[i + j], i + j + 1)
-        
-        # Analyse comparative
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📊 Analyse Comparative</h3>", unsafe_allow_html=True)
-        
-        # Préparer les données pour le graphique de comparaison
+        # Préparer les métriques de comparaison
         similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
+        comparison_metrics = available_metrics[:6] if len(available_metrics) > 6 else available_metrics
         
-        if available_metrics:
-            # Sélectionner les métriques les plus pertinentes pour l'affichage
-            display_metrics = available_metrics[:6]  # Prendre les 6 premières métriques disponibles
-            
-            if display_metrics:
-                fig_comparison = ChartManager.create_similarity_comparison_chart(
-                    selected_player, similar_players, display_metrics, df
-                )
-                st.plotly_chart(fig_comparison, use_container_width=True)
+        # Cartes des joueurs similaires avec diagrammes de comparaison
+        st.markdown("---")
+        st.markdown("<h3 class='subsection-title-enhanced'>🔍 Analyse Détaillée des Joueurs Similaires</h3>", unsafe_allow_html=True)
+        
+        for i, player_info in enumerate(similar_players):
+            # Conteneur pour chaque joueur
+            with st.container():
+                # Afficher la carte du joueur
+                col1, col2 = st.columns([1, 1.5], gap="large")
+                
+                with col1:
+                    UIComponents.render_similar_player_card(player_info, i + 1)
+                
+                with col2:
+                    # Diagramme de comparaison directe
+                    if comparison_metrics:
+                        st.markdown(f"<h4 class='subsection-title-enhanced' style='font-size: 1.1em; margin: 0 0 16px 0;'>📊 Comparaison avec {selected_player}</h4>", unsafe_allow_html=True)
+                        
+                        try:
+                            fig_comparison = UIComponents.render_player_comparison_chart(
+                                selected_player, target_data, player_info, comparison_metrics
+                            )
+                            st.plotly_chart(fig_comparison, use_container_width=True)
+                        except Exception as e:
+                            st.warning(f"⚠️ Impossible de créer le diagramme de comparaison : {str(e)}")
+                    
+                    # Métriques de différence
+                    st.markdown("**🔢 Principales Différences :**")
+                    differences = []
+                    for metric in comparison_metrics[:3]:  # Top 3 métriques
+                        target_val = target_data.get(metric, 0)
+                        similar_val = player_info['data'].get(metric, 0)
+                        if pd.notna(target_val) and pd.notna(similar_val):
+                            diff = abs(float(target_val) - float(similar_val))
+                            differences.append((metric, diff, target_val, similar_val))
+                    
+                    # Afficher les 3 plus grandes différences
+                    differences.sort(key=lambda x: x[1], reverse=True)
+                    for metric, diff, target_val, similar_val in differences[:3]:
+                        if diff > 0:
+                            st.write(f"• **{metric}**: {target_val:.1f} vs {similar_val:.1f} (Δ {diff:.1f})")
+                
+                st.markdown("---")
+        
+        # Analyse comparative globale
+        st.markdown("<h3 class='subsection-title-enhanced'>📊 Analyse Comparative Globale</h3>", unsafe_allow_html=True)
+        
+        if comparison_metrics:
+            fig_global_comparison = ChartManager.create_similarity_comparison_chart(
+                selected_player, similar_players, comparison_metrics, df
+            )
+            st.plotly_chart(fig_global_comparison, use_container_width=True)
         
         # Analyse des caractéristiques communes
         st.markdown("---")

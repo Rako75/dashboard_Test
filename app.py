@@ -1,10 +1,10 @@
 """
-Dashboard Football Professionnel - Version Restructurée
-=======================================================
+Dashboard Football Professionnel - Version Restructurée avec Joueurs Similaires
+===============================================================================
 
 Application Streamlit pour l'analyse avancée des performances footballistiques.
 Auteur: Dashboard Pro
-Version: 2.0.0
+Version: 2.1.0
 """
 
 import streamlit as st
@@ -22,6 +22,8 @@ from PIL import Image
 import base64
 import io
 from typing import Dict, List, Optional, Tuple, Union
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics.pairwise import euclidean_distances
 
 # ================================================================================================
 # CONFIGURATION ET CONSTANTES
@@ -83,6 +85,27 @@ class Config:
         'Premier League': 'Premier_League_Logos',
         'Serie A': 'Serie_A_Logos'
     }
+    
+    # Métriques pour l'analyse de similarité
+    SIMILARITY_METRICS = [
+        'Buts par 90 minutes',
+        'Passes décisives par 90 minutes',
+        'Buts attendus par 90 minutes',
+        'Passes décisives attendues par 90 minutes',
+        'Tirs par 90 minutes',
+        'Passes clés',
+        'Passes tentées',
+        'Passes progressives',
+        'Dribbles tentés',
+        'Dribbles réussis',
+        'Tacles gagnants',
+        'Interceptions',
+        'Ballons récupérés',
+        'Duels défensifs gagnés',
+        'Pourcentage de passes réussies',
+        'Pourcentage de dribbles réussis',
+        'Minutes jouées'
+    ]
 
 # ================================================================================================
 # UTILITAIRES
@@ -313,6 +336,47 @@ class StyleManager:
             text-transform: uppercase;
             letter-spacing: 0.5px;
             line-height: 1.3;
+        }
+        
+        /* Cartes de joueurs similaires */
+        .similar-player-card {
+            background: var(--background-card);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow);
+            margin: var(--spacing-md) 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .similar-player-card:hover {
+            border-color: var(--secondary-color);
+            box-shadow: 0 12px 30px rgba(44, 160, 44, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .similar-player-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+        }
+        
+        .similarity-score {
+            background: var(--secondary-color);
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.9em;
+            position: absolute;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
         }
         
         /* Titres de sections */
@@ -690,10 +754,162 @@ class MetricsCalculator:
             'Passes tentées/90': player_data.get('Passes tentées', 0) / minutes_90,
             'Passes prog./90': player_data.get('Passes progressives', 0) / minutes_90,
             'Dribbles/90': player_data.get('Dribbles tentés', 0) / minutes_90,
-            'Passes clés/90': player_data.get('Passes clés', 0) / minutes_90,  # Modifié ici
+            'Passes clés/90': player_data.get('Passes clés', 0) / minutes_90,
             '% Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
             '% Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0)
         }
+
+# ================================================================================================
+# ANALYSEUR DE JOUEURS SIMILAIRES
+# ================================================================================================
+
+class SimilarPlayerAnalyzer:
+    """Analyseur pour trouver des joueurs similaires"""
+    
+    @staticmethod
+    def prepare_similarity_data(df: pd.DataFrame) -> pd.DataFrame:
+        """Prépare les données pour l'analyse de similarité"""
+        # Sélectionner les colonnes disponibles pour l'analyse
+        available_metrics = []
+        for metric in Config.SIMILARITY_METRICS:
+            if metric in df.columns:
+                available_metrics.append(metric)
+        
+        # Créer le DataFrame avec les métriques disponibles
+        similarity_df = df[['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge'] + available_metrics].copy()
+        
+        # Remplacer les valeurs manquantes par 0
+        for col in available_metrics:
+            similarity_df[col] = pd.to_numeric(similarity_df[col], errors='coerce').fillna(0)
+        
+        return similarity_df, available_metrics
+    
+    @staticmethod
+    def calculate_similarity(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
+        """Calcule la similarité entre joueurs"""
+        try:
+            # Préparer les données
+            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
+            
+            if not available_metrics:
+                return []
+            
+            # Obtenir les données du joueur cible
+            target_data = similarity_df[similarity_df['Joueur'] == target_player]
+            if target_data.empty:
+                return []
+            
+            target_values = target_data[available_metrics].values[0]
+            target_info = target_data.iloc[0]
+            
+            # Filtrer les autres joueurs (exclure le joueur cible)
+            other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
+            
+            if other_players.empty:
+                return []
+            
+            # Normaliser les données
+            scaler = StandardScaler()
+            
+            # Données pour normalisation (inclut le joueur cible)
+            all_data = similarity_df[available_metrics].values
+            scaler.fit(all_data)
+            
+            # Normaliser les données du joueur cible et des autres
+            target_normalized = scaler.transform([target_values])[0]
+            others_normalized = scaler.transform(other_players[available_metrics].values)
+            
+            # Calculer les distances euclidiennes
+            distances = euclidean_distances([target_normalized], others_normalized)[0]
+            
+            # Convertir en scores de similarité (0-100)
+            max_distance = np.max(distances) if len(distances) > 0 else 1
+            similarity_scores = 100 * (1 - distances / max_distance) if max_distance > 0 else [100] * len(distances)
+            
+            # Créer la liste des joueurs similaires
+            similar_players = []
+            for i, (idx, row) in enumerate(other_players.iterrows()):
+                similar_players.append({
+                    'joueur': row['Joueur'],
+                    'equipe': row['Équipe'],
+                    'competition': row['Compétition'],
+                    'position': row['Position'],
+                    'age': row['Âge'],
+                    'similarity_score': similarity_scores[i],
+                    'distance': distances[i],
+                    'data': row
+                })
+            
+            # Trier par score de similarité décroissant
+            similar_players.sort(key=lambda x: x['similarity_score'], reverse=True)
+            
+            return similar_players[:num_similar]
+            
+        except Exception as e:
+            st.error(f"Erreur lors du calcul de similarité : {str(e)}")
+            return []
+    
+    @staticmethod
+    def analyze_common_characteristics(target_player: str, similar_players: List[Dict], df: pd.DataFrame) -> Dict:
+        """Analyse les caractéristiques communes entre joueurs similaires"""
+        if not similar_players:
+            return {}
+        
+        try:
+            # Obtenir les données du joueur cible
+            target_data = df[df['Joueur'] == target_player].iloc[0]
+            
+            # Analyser les caractéristiques
+            analysis = {
+                'positions': {},
+                'competitions': {},
+                'age_range': {'min': float('inf'), 'max': float('-inf')},
+                'avg_metrics': {},
+                'common_traits': []
+            }
+            
+            all_players_data = [target_data] + [p['data'] for p in similar_players]
+            
+            # Analyse des positions
+            for player_data in all_players_data:
+                pos = player_data.get('Position', 'N/A')
+                analysis['positions'][pos] = analysis['positions'].get(pos, 0) + 1
+            
+            # Analyse des compétitions
+            for player_data in all_players_data:
+                comp = player_data.get('Compétition', 'N/A')
+                analysis['competitions'][comp] = analysis['competitions'].get(comp, 0) + 1
+            
+            # Analyse des âges
+            for player_data in all_players_data:
+                age = player_data.get('Âge', 0)
+                if pd.notna(age) and age > 0:
+                    analysis['age_range']['min'] = min(analysis['age_range']['min'], age)
+                    analysis['age_range']['max'] = max(analysis['age_range']['max'], age)
+            
+            # Calcul des métriques moyennes
+            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
+            
+            for metric in available_metrics:
+                values = []
+                for player_data in all_players_data:
+                    val = player_data.get(metric, 0)
+                    if pd.notna(val):
+                        values.append(val)
+                
+                if values:
+                    analysis['avg_metrics'][metric] = {
+                        'mean': np.mean(values),
+                        'std': np.std(values),
+                        'min': np.min(values),
+                        'max': np.max(values)
+                    }
+            
+            return analysis
+            
+        except Exception as e:
+            st.error(f"Erreur lors de l'analyse des caractéristiques : {str(e)}")
+            return {}
 
 # ================================================================================================
 # GESTIONNAIRE DE GRAPHIQUES
@@ -949,6 +1165,101 @@ class ChartManager:
             ),
             height=500,
             margin=dict(t=80, b=100, l=80, r=80)
+        )
+        
+        return fig
+    
+    @staticmethod
+    def create_similarity_comparison_chart(target_player: str, similar_players: List[Dict], 
+                                         metrics: List[str], df: pd.DataFrame) -> go.Figure:
+        """Crée un graphique de comparaison des joueurs similaires"""
+        fig = go.Figure()
+        
+        # Obtenir les données du joueur cible
+        target_data = df[df['Joueur'] == target_player].iloc[0]
+        
+        # Limiter le nombre de métriques pour la lisibilité
+        display_metrics = metrics[:6] if len(metrics) > 6 else metrics
+        
+        # Données du joueur cible
+        target_values = []
+        for metric in display_metrics:
+            value = target_data.get(metric, 0)
+            if pd.isna(value):
+                value = 0
+            target_values.append(float(value))
+        
+        # Ajouter le joueur cible
+        fig.add_trace(go.Bar(
+            name=target_player,
+            x=display_metrics,
+            y=target_values,
+            marker_color=Config.COLORS['primary'],
+            marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
+            text=[f"{v:.1f}" for v in target_values],
+            textposition='outside',
+            textfont=dict(size=10, family='Inter', weight=600)
+        ))
+        
+        # Ajouter les joueurs similaires (max 3 pour la lisibilité)
+        colors = [Config.COLORS['secondary'], Config.COLORS['accent'], Config.COLORS['warning']]
+        
+        for i, player_info in enumerate(similar_players[:3]):
+            player_data = player_info['data']
+            player_values = []
+            
+            for metric in display_metrics:
+                value = player_data.get(metric, 0)
+                if pd.isna(value):
+                    value = 0
+                player_values.append(float(value))
+            
+            fig.add_trace(go.Bar(
+                name=f"{player_info['joueur']} ({player_info['similarity_score']:.0f}%)",
+                x=display_metrics,
+                y=player_values,
+                marker_color=colors[i % len(colors)],
+                marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
+                text=[f"{v:.1f}" for v in player_values],
+                textposition='outside',
+                textfont=dict(size=10, family='Inter', weight=600)
+            ))
+        
+        fig.update_layout(
+            title=dict(
+                text="Comparaison avec les Joueurs Similaires",
+                font=dict(color='white', size=18, family='Inter', weight=700),
+                x=0.5
+            ),
+            barmode='group',
+            bargap=0.15,
+            bargroupgap=0.1,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            xaxis=dict(
+                tickfont=dict(color='white', size=10),
+                tickangle=45,
+                showgrid=False
+            ),
+            yaxis=dict(
+                tickfont=dict(color='white', size=11), 
+                gridcolor='rgba(255,255,255,0.15)',
+                showgrid=True
+            ),
+            height=500,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=11, family='Inter'),
+                bgcolor='rgba(26, 29, 35, 0.8)',
+                bordercolor='rgba(255,255,255,0.2)',
+                borderwidth=1
+            ),
+            margin=dict(t=120, b=100, l=60, r=60)
         )
         
         return fig
@@ -1219,6 +1530,57 @@ class UIComponents:
             
             with col3:
                 UIComponents._render_club_logo(player_data['Équipe'], competition)
+    
+    @staticmethod
+    def render_similar_player_card(player_info: Dict, rank: int):
+        """Affiche une carte pour un joueur similaire"""
+        similarity_score = player_info['similarity_score']
+        player_data = player_info['data']
+        
+        # Couleur basée sur le score de similarité
+        if similarity_score >= 85:
+            score_color = "#2ca02c"  # Vert
+        elif similarity_score >= 70:
+            score_color = "#ff7f0e"  # Orange
+        else:
+            score_color = "#1f77b4"  # Bleu
+        
+        valeur_marchande = Utils.format_market_value(player_data.get('Valeur marchande', 'N/A'))
+        
+        st.markdown(f"""
+        <div class='similar-player-card animated-card'>
+            <div class='similarity-score' style='background: {score_color};'>
+                #{rank} • {similarity_score:.1f}% similaire
+            </div>
+            <h3 style='color: var(--text-primary); margin: 0 0 16px 0; font-size: 1.4em; font-weight: 700;'>
+                {player_info['joueur']}
+            </h3>
+            <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;'>
+                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['equipe']}</div>
+                    <div class='metric-label-enhanced'>Équipe</div>
+                </div>
+                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['position']}</div>
+                    <div class='metric-label-enhanced'>Position</div>
+                </div>
+                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['age']}</div>
+                    <div class='metric-label-enhanced'>Âge</div>
+                </div>
+            </div>
+            <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;'>
+                <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1em; color: var(--accent-color);'>{valeur_marchande}</div>
+                    <div class='metric-label-enhanced'>Valeur Marchande</div>
+                </div>
+                <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1em;'>{player_info['competition']}</div>
+                    <div class='metric-label-enhanced'>Compétition</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     @staticmethod
     def _render_player_photo(player_name: str):
@@ -1686,8 +2048,8 @@ class TabManager:
             basic_actions = {
                 'Passes tentées': player_data.get('Passes tentées', 0),
                 'Dribbles tentés': player_data.get('Dribbles tentés', 0),
-                'Passes clés': player_data.get('Passes clés', 0),  # Modifié ici
-                'Passes progressives': player_data.get('Passes progressives', 0)  # Modifié ici
+                'Passes clés': player_data.get('Passes clés', 0),
+                'Passes progressives': player_data.get('Passes progressives', 0)
             }
             
             fig_bar = ChartManager.create_bar_chart(
@@ -1709,7 +2071,7 @@ class TabManager:
                     help="Nombre de passes tentées par 90 minutes de jeu"
                 )
                 st.metric(
-                    label="Passes clés par 90min",  # Modifié ici
+                    label="Passes clés par 90min",
                     value=f"{analysis['metrics']['Passes clés/90']:.1f}",
                     delta=f"{analysis['metrics']['Passes clés/90'] - analysis['avg_metrics']['Passes clés/90']:.1f}",
                     help="Nombre de passes clés par 90 minutes de jeu"
@@ -1767,11 +2129,10 @@ class TabManager:
             )
             st.plotly_chart(fig_radar, use_container_width=True)
         
-        # Comparaison détaillée - Modifié ici pour inclure 'Passes clés/90'
+        # Comparaison détaillée
         st.markdown("---")
         st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
         
-        # Sélectionner les 4 premières métriques en incluant 'Passes clés/90'
         selected_metrics = ['Passes tentées/90', 'Passes prog./90', 'Dribbles/90', 'Passes clés/90']
         comparison_metrics = {k: analysis['metrics'][k] for k in selected_metrics if k in analysis['metrics']}
         avg_comparison = {k: analysis['avg_metrics'][k] for k in selected_metrics if k in analysis['avg_metrics']}
@@ -1783,6 +2144,149 @@ class TabManager:
             "Performance par 90min vs Moyenne des Autres Ligues"
         )
         st.plotly_chart(fig_comp, use_container_width=True)
+    
+    @staticmethod
+    def render_similar_players_tab(selected_player: str, df: pd.DataFrame):
+        """Rendu de l'onglet joueurs similaires"""
+        st.markdown("<h2 class='section-title-enhanced'>👥 Profils Similaires</h2>", unsafe_allow_html=True)
+        
+        # Configuration
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.markdown("<h3 class='subsection-title-enhanced'>⚙️ Configuration de l'Analyse</h3>", unsafe_allow_html=True)
+        
+        with col2:
+            num_similar = st.slider(
+                "Nombre de joueurs similaires à afficher :",
+                min_value=1,
+                max_value=10,
+                value=5,
+                help="Choisissez combien de joueurs similaires vous voulez voir"
+            )
+        
+        # Calcul des joueurs similaires
+        with st.spinner("🔍 Recherche de joueurs similaires..."):
+            similar_players = SimilarPlayerAnalyzer.calculate_similarity(selected_player, df, num_similar)
+        
+        if not similar_players:
+            st.warning("⚠️ Aucun joueur similaire trouvé. Vérifiez que le joueur sélectionné existe dans les données.")
+            return
+        
+        # Affichage des résultats
+        st.markdown(f"<h3 class='subsection-title-enhanced'>🎯 Top {len(similar_players)} joueurs les plus similaires à {selected_player}</h3>", unsafe_allow_html=True)
+        
+        # Métriques de résumé
+        metrics_col1, metrics_col2, metrics_col3 = st.columns(3)
+        
+        with metrics_col1:
+            avg_similarity = np.mean([p['similarity_score'] for p in similar_players])
+            st.metric("Score de Similarité Moyen", f"{avg_similarity:.1f}%", 
+                     help="Score moyen de similarité des joueurs trouvés")
+        
+        with metrics_col2:
+            best_match = similar_players[0] if similar_players else None
+            if best_match:
+                st.metric("Meilleure Correspondance", best_match['joueur'], 
+                         f"{best_match['similarity_score']:.1f}%")
+        
+        with metrics_col3:
+            unique_competitions = len(set(p['competition'] for p in similar_players))
+            st.metric("Compétitions Représentées", f"{unique_competitions}", 
+                     help="Nombre de compétitions différentes")
+        
+        # Cartes des joueurs similaires
+        st.markdown("---")
+        
+        # Affichage en colonnes
+        cols_per_row = 2
+        for i in range(0, len(similar_players), cols_per_row):
+            cols = st.columns(cols_per_row)
+            for j, col in enumerate(cols):
+                if i + j < len(similar_players):
+                    with col:
+                        UIComponents.render_similar_player_card(similar_players[i + j], i + j + 1)
+        
+        # Analyse comparative
+        st.markdown("---")
+        st.markdown("<h3 class='subsection-title-enhanced'>📊 Analyse Comparative</h3>", unsafe_allow_html=True)
+        
+        # Préparer les données pour le graphique de comparaison
+        similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
+        
+        if available_metrics:
+            # Sélectionner les métriques les plus pertinentes pour l'affichage
+            key_metrics = [
+                'Buts par 90 minutes', 'Passes décisives par 90 minutes', 
+                'Tirs par 90 minutes', 'Passes clés', 'Dribbles réussis', 'Tacles gagnants'
+            ]
+            display_metrics = [m for m in key_metrics if m in available_metrics][:6]
+            
+            if display_metrics:
+                fig_comparison = ChartManager.create_similarity_comparison_chart(
+                    selected_player, similar_players, display_metrics, df
+                )
+                st.plotly_chart(fig_comparison, use_container_width=True)
+        
+        # Analyse des caractéristiques communes
+        st.markdown("---")
+        st.markdown("<h3 class='subsection-title-enhanced'>🔍 Caractéristiques Communes</h3>", unsafe_allow_html=True)
+        
+        analysis = SimilarPlayerAnalyzer.analyze_common_characteristics(
+            selected_player, similar_players, df
+        )
+        
+        if analysis:
+            char_col1, char_col2, char_col3 = st.columns(3)
+            
+            with char_col1:
+                st.markdown("**📍 Positions les plus fréquentes :**")
+                if analysis.get('positions'):
+                    for pos, count in sorted(analysis['positions'].items(), 
+                                           key=lambda x: x[1], reverse=True)[:3]:
+                        st.write(f"• {pos}: {count} joueur(s)")
+            
+            with char_col2:
+                st.markdown("**🏆 Compétitions représentées :**")
+                if analysis.get('competitions'):
+                    for comp, count in sorted(analysis['competitions'].items(), 
+                                            key=lambda x: x[1], reverse=True)[:3]:
+                        st.write(f"• {comp}: {count} joueur(s)")
+            
+            with char_col3:
+                st.markdown("**📅 Tranche d'âge :**")
+                age_range = analysis.get('age_range', {})
+                if age_range.get('min') and age_range.get('max'):
+                    if age_range['min'] != float('inf') and age_range['max'] != float('-inf'):
+                        st.write(f"• Entre {int(age_range['min'])} et {int(age_range['max'])} ans")
+                        avg_age = (age_range['min'] + age_range['max']) / 2
+                        st.write(f"• Âge moyen: {avg_age:.1f} ans")
+        
+        # Export des résultats
+        st.markdown("---")
+        if st.button("📊 Exporter l'analyse de similarité", type="secondary"):
+            # Créer un DataFrame avec les résultats
+            export_data = []
+            for i, player in enumerate(similar_players):
+                export_data.append({
+                    'Rang': i + 1,
+                    'Joueur': player['joueur'],
+                    'Équipe': player['equipe'],
+                    'Compétition': player['competition'],
+                    'Position': player['position'],
+                    'Âge': player['age'],
+                    'Score_Similarité': f"{player['similarity_score']:.2f}%"
+                })
+            
+            export_df = pd.DataFrame(export_data)
+            csv = export_df.to_csv(index=False)
+            
+            st.download_button(
+                label="💾 Télécharger en CSV",
+                data=csv,
+                file_name=f"joueurs_similaires_{selected_player.replace(' ', '_')}.csv",
+                mime="text/csv"
+            )
     
     @staticmethod
     def render_comparison_tab(df: pd.DataFrame, selected_player: str):
@@ -2123,7 +2627,7 @@ class FootballDashboard:
             
             st.markdown("---")
             
-            # Onglets principaux avec données des autres ligues
+            # Onglets principaux avec données des autres ligues et nouveau tab Profils Similaires
             self._render_main_tabs(player_data, selected_competition, selected_player, df)
         
         else:
@@ -2179,10 +2683,11 @@ class FootballDashboard:
         # Obtenir les données des autres ligues pour comparaison
         df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
         
-        tab1, tab2, tab3, tab4 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
             "🎯 Performance Offensive", 
             "🛡️ Performance Défensive", 
-            "🎨 Performance Technique", 
+            "🎨 Performance Technique",
+            "👥 Profils Similaires", 
             "🔄 Comparaison"
         ])
         
@@ -2196,6 +2701,9 @@ class FootballDashboard:
             TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
         
         with tab4:
+            TabManager.render_similar_players_tab(selected_player, df_full)
+        
+        with tab5:
             TabManager.render_comparison_tab(df_full, selected_player)
     
     def _render_no_player_message(self):
@@ -2222,6 +2730,11 @@ class FootballDashboard:
                     <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>🎨</div>
                     <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Technique</h4>
                     <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Passes, dribbles, touches</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>👥</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Profils Similaires</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Joueurs au style proche</p>
                 </div>
                 <div class='metric-card-enhanced' style='padding: 24px;'>
                     <div style='font-size: 3em; margin-bottom: 12px; color: var(--warning);'>🔄</div>

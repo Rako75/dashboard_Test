@@ -2052,11 +2052,11 @@ class TabManager:
                 )
         
         with col2:
-            # Jauges avec % explicites
+            # Métriques offensives simples et claires
             efficiency_data = {
-                'Conversion': (player_data.get('Buts', 0) / player_data.get('Tirs', 1) * 100) if player_data.get('Tirs', 0) > 0 else 0,
-                'Précision tirs': player_data.get('Pourcentage de tirs cadrés', 0),
-                'Efficacité passes': (player_data.get('Passes décisives', 0) / player_data.get('Passes clés', 1) * 100) if player_data.get('Passes clés', 0) > 0 else 0
+                'Tirs cadrés': player_data.get('Pourcentage de tirs cadrés', 0),
+                'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
+                'Centres réussis': player_data.get('Pourcentage de centres réussis', 0)
             }
             
             fig_gauge = ChartManager.create_gauge_chart(efficiency_data, "Efficacité Offensive (%)")

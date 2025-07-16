@@ -1607,7 +1607,7 @@ class UIComponents:
         """, unsafe_allow_html=True)
 
     @staticmethod
-def render_breadcrumbs(competition, team, player):
+    def render_breadcrumbs(competition, team, player):
     """Affiche le fil d’Ariane (breadcrumbs)"""
     st.markdown(
         f"""

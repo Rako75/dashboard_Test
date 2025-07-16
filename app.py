@@ -1599,17 +1599,17 @@ class UIComponents:
 
     @staticmethod
     def render_breadcrumbs(competition, team, player):
-    """Affiche le fil d'Ariane (breadcrumbs)"""
-    st.markdown(
-        f"""
-        <div class='breadcrumbs'>
-            <span style='color:var(--primary-color); font-weight:600;'>{competition}</span> &nbsp;›&nbsp;
-            <span style='color:var(--accent-color); font-weight:600;'>{team}</span> &nbsp;›&nbsp;
-            <span style='color:var(--text-primary); font-weight:600;'>{player}</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        """Affiche le fil d'Ariane (breadcrumbs)"""
+        st.markdown(
+            f"""
+            <div class='breadcrumbs'>
+                <span style='color:var(--primary-color); font-weight:600;'>{competition}</span> &nbsp;›&nbsp;
+                <span style='color:var(--accent-color); font-weight:600;'>{team}</span> &nbsp;›&nbsp;
+                <span style='color:var(--text-primary); font-weight:600;'>{player}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     
     @staticmethod
     def render_player_card(player_data: pd.Series, competition: str):
@@ -1662,81 +1662,81 @@ class UIComponents:
             with col3:
                 UIComponents._render_club_logo(player_data['Équipe'], competition)
     
-@staticmethod
-def render_similar_player_card(player_info: Dict, rank: int):
-    similarity_score = player_info['similarity_score']
-    player_data = player_info['data']
+    @staticmethod
+    def render_similar_player_card(player_info: Dict, rank: int):
+        similarity_score = player_info['similarity_score']
+        player_data = player_info['data']
 
-    # Couleur basée sur le score de similarité
-    if similarity_score >= 85:
-        score_color = "#2ca02c"  # Vert
-    elif similarity_score >= 70:
-        score_color = "#ff7f0e"  # Orange
-    else:
-        score_color = "#1f77b4"  # Bleu
+        # Couleur basée sur le score de similarité
+        if similarity_score >= 85:
+            score_color = "#2ca02c"  # Vert
+        elif similarity_score >= 70:
+            score_color = "#ff7f0e"  # Orange
+        else:
+            score_color = "#1f77b4"  # Bleu
 
-    valeur_marchande = Utils.get_market_value_safe(player_data)
+        valeur_marchande = Utils.get_market_value_safe(player_data)
 
-    # Logo du club (déjà existant)
-    logo_path = ImageManager.get_club_logo(player_info['competition'], player_info['equipe'])
-    logo_html = ""
-    if logo_path and os.path.exists(logo_path):
-        try:
-            image = Image.open(logo_path)
-            logo_base64 = Utils.image_to_base64(image)
-            logo_html = f'<img src="data:image/png;base64,{logo_base64}" class="club-logo-small" alt="{player_info["equipe"]}">'
-        except Exception:
+        # Logo du club (déjà existant)
+        logo_path = ImageManager.get_club_logo(player_info['competition'], player_info['equipe'])
+        logo_html = ""
+        if logo_path and os.path.exists(logo_path):
+            try:
+                image = Image.open(logo_path)
+                logo_base64 = Utils.image_to_base64(image)
+                logo_html = f'<img src="data:image/png;base64,{logo_base64}" class="club-logo-small" alt="{player_info["equipe"]}">'
+            except Exception:
+                logo_html = f'<div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: white;">🏟️</div>'
+        else:
             logo_html = f'<div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: white;">🏟️</div>'
-    else:
-        logo_html = f'<div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: white;">🏟️</div>'
 
-    # --- AJOUT : Photo du joueur ---
-    photo_path = ImageManager.get_player_photo(player_info['joueur'])
-    if photo_path and os.path.exists(photo_path):
-        image = Image.open(photo_path)
-        photo_html = f'<img src="data:image/jpeg;base64,{Utils.image_to_base64(image)}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; margin-right:8px;">'
-    else:
-        photo_html = '<div style="width:48px; height:48px; border-radius:50%; background:#eee; color:#bbb; display:inline-flex; align-items:center; justify-content:center; font-size:2em; margin-right:8px;">👤</div>'
-    # --- FIN AJOUT ---
+        # --- AJOUT : Photo du joueur ---
+        photo_path = ImageManager.get_player_photo(player_info['joueur'])
+        if photo_path and os.path.exists(photo_path):
+            image = Image.open(photo_path)
+            photo_html = f'<img src="data:image/jpeg;base64,{Utils.image_to_base64(image)}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; margin-right:8px;">'
+        else:
+            photo_html = '<div style="width:48px; height:48px; border-radius:50%; background:#eee; color:#bbb; display:inline-flex; align-items:center; justify-content:center; font-size:2em; margin-right:8px;">👤</div>'
+        # --- FIN AJOUT ---
 
-    st.markdown(f"""
-    <div class='similar-player-card animated-card'>
-        <div class='similarity-score' style='background: {score_color};'>
-            #{rank} • {similarity_score:.1f}% similaire
+        st.markdown(f"""
+        <div class='similar-player-card animated-card'>
+            <div class='similarity-score' style='background: {score_color};'>
+                #{rank} • {similarity_score:.1f}% similaire
+            </div>
+            <div class='player-header-with-logo' style="display:flex; align-items:center; gap:10px;">
+                {photo_html}
+                {logo_html}
+                <h3 style='color: var(--text-primary); margin: 0; font-size: 1.4em; font-weight: 700; flex: 1;'>
+                    {player_info['joueur']}
+                </h3>
+            </div>
+            <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;'>
+                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['equipe']}</div>
+                    <div class='metric-label-enhanced'>Équipe</div>
+                </div>
+                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['position']}</div>
+                    <div class='metric-label-enhanced'>Position</div>
+                </div>
+                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['age']}</div>
+                    <div class='metric-label-enhanced'>Âge</div>
+                </div>
+            </div>
+            <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;'>
+                <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1em; color: var(--accent-color);'>{valeur_marchande}</div>
+                    <div class='metric-label-enhanced'>Valeur Marchande</div>
+                </div>
+                <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
+                    <div class='metric-value-enhanced' style='font-size: 1em;'>{player_info['competition']}</div>
+                    <div class='metric-label-enhanced'>Compétition</div>
+                </div>
+            </div>
         </div>
-        <div class='player-header-with-logo' style="display:flex; align-items:center; gap:10px;">
-            {photo_html}
-            {logo_html}
-            <h3 style='color: var(--text-primary); margin: 0; font-size: 1.4em; font-weight: 700; flex: 1;'>
-                {player_info['joueur']}
-            </h3>
-        </div>
-        <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;'>
-            <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
-                <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['equipe']}</div>
-                <div class='metric-label-enhanced'>Équipe</div>
-            </div>
-            <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
-                <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['position']}</div>
-                <div class='metric-label-enhanced'>Position</div>
-            </div>
-            <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
-                <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['age']}</div>
-                <div class='metric-label-enhanced'>Âge</div>
-            </div>
-        </div>
-        <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;'>
-            <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
-                <div class='metric-value-enhanced' style='font-size: 1em; color: var(--accent-color);'>{valeur_marchande}</div>
-                <div class='metric-label-enhanced'>Valeur Marchande</div>
-            </div>
-            <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
-                <div class='metric-value-enhanced' style='font-size: 1em;'>{player_info['competition']}</div>
-                <div class='metric-label-enhanced'>Compétition</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
     
     @staticmethod
     def _render_player_photo(player_name: str):

@@ -2020,7 +2020,7 @@ class TabManager:
             st.plotly_chart(fig_bar, use_container_width=True)
             
             # Métriques avec st.metric
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Clés</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Offensives</h3>", unsafe_allow_html=True)
             
             metric_col1, metric_col2 = st.columns(2)
             with metric_col1:

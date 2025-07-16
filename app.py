@@ -1,12 +1,3 @@
-"""
-Dashboard Football Professionnel - Version Restructurée avec Joueurs Similaires
-===============================================================================
-
-Application Streamlit pour l'analyse avancée des performances footballistiques.
-Auteur: Dashboard Pro
-Version: 2.1.2 - Corrections Profils Similaires
-"""
-
 import streamlit as st
 import pandas as pd
 import numpy as np

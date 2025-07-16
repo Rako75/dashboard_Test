@@ -1599,7 +1599,7 @@ class UIComponents:
 
     @staticmethod
     def render_breadcrumbs(competition, team, player):
-    """Affiche le fil d’Ariane (breadcrumbs)"""
+    """Affiche le fil d'Ariane (breadcrumbs)"""
     st.markdown(
         f"""
         <div class='breadcrumbs'>

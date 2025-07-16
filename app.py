@@ -4,7 +4,7 @@ Dashboard Football Professionnel - Version Restructurée avec Joueurs Similaires
 
 Application Streamlit pour l'analyse avancée des performances footballistiques.
 Auteur: Dashboard Pro
-Version: 2.1.1
+Version: 2.1.2 - Corrections Profils Similaires
 """
 
 import streamlit as st
@@ -107,6 +107,30 @@ class Config:
         'Interceptions'
     ]
     
+    # Métriques pour les histogrammes de comparaison
+    HISTOGRAM_METRICS = [
+        'Buts',
+        'Passes décisives',
+        'Tirs',
+        'Passes clés',
+        'Dribbles réussis',
+        'Tacles gagnants',
+        'Interceptions',
+        'Passes tentées',
+        'Passes progressives',
+        'Ballons récupérés',
+        'Duels aériens gagnés',
+        'Centres réussis',
+        'Actions menant à un tir',
+        'Passes dans le dernier tiers',
+        'Passes dans la surface',
+        'Dribbles tentés',
+        'Touches de balle',
+        'Dégagements',
+        'Fautes commises',
+        'Cartons jaunes'
+    ]
+    
     # Métriques étendues pour l'analyse comparative
     COMPREHENSIVE_METRICS = {
         'offensive': [
@@ -149,8 +173,16 @@ class Utils:
         # Conversion en nombre si c'est une chaîne
         if isinstance(value, str):
             try:
-                # Nettoyer la chaîne: garder seulement les chiffres et le point décimal
-                clean_value = ''.join(c for c in str(value) if c.isdigit() or c == '.')
+                # Nettoyer la chaîne: enlever €, M, K, etc. et garder seulement les chiffres et le point décimal
+                clean_value = value.replace('€', '').replace('M', '').replace('K', '').replace('B', '').replace(',', '').replace(' ', '')
+                # Gérer les cas comme "50.5M" ou "2.3K"
+                if 'M' in value.upper():
+                    clean_value = str(float(clean_value) * 1_000_000)
+                elif 'K' in value.upper():
+                    clean_value = str(float(clean_value) * 1_000)
+                elif 'B' in value.upper():
+                    clean_value = str(float(clean_value) * 1_000_000_000)
+                
                 if clean_value and clean_value != '.':
                     value = float(clean_value)
                 else:
@@ -179,10 +211,14 @@ class Utils:
     @staticmethod
     def get_market_value_safe(player_data: pd.Series) -> str:
         """Récupère la valeur marchande exacte depuis les données du joueur"""
+        # Liste étendue des colonnes possibles pour la valeur marchande
         possible_columns = [
             'Valeur marchande', 'Market Value', 'valeur_marchande', 
             'Valeur', 'Value', 'market_value', 'Valeur en €', 'Valeur (€)',
-            'Market_Value', 'Valeur_marchande', 'VALEUR_MARCHANDE'
+            'Market_Value', 'Valeur_marchande', 'VALEUR_MARCHANDE',
+            'Valeur_Marchande', 'MARKET_VALUE', 'MarketValue', 'market_val',
+            'val_marchande', 'VM', 'vm', 'valeur_m', 'valeur_marche',
+            'Transfer Value', 'transfer_value', 'Prix', 'price', 'Price'
         ]
         
         # Essayer de récupérer la vraie valeur marchande depuis les données exactes du joueur
@@ -190,10 +226,35 @@ class Utils:
             if col in player_data.index and pd.notna(player_data.get(col)):
                 value = player_data[col]
                 # Vérifier que ce n'est pas une valeur vide ou zéro
-                if value != 0 and str(value).lower() not in ['nan', 'null', '', '0', 'none']:
-                    return Utils.format_market_value(value)
+                if value != 0 and str(value).lower() not in ['nan', 'null', '', '0', 'none', 'n/a', 'na']:
+                    formatted_value = Utils.format_market_value(value)
+                    if formatted_value != "N/A":
+                        return formatted_value
         
-        # Si vraiment aucune valeur marchande trouvée dans les données, retourner N/A
+        # Si aucune valeur trouvée, essayer les colonnes numériques qui pourraient être des valeurs marchandes
+        for col in player_data.index:
+            if any(keyword in col.lower() for keyword in ['val', 'market', 'price', 'prix', 'cost', 'worth']):
+                if pd.notna(player_data.get(col)):
+                    value = player_data[col]
+                    if value != 0 and str(value).lower() not in ['nan', 'null', '', '0', 'none', 'n/a', 'na']:
+                        formatted_value = Utils.format_market_value(value)
+                        if formatted_value != "N/A":
+                            return formatted_value
+        
+        # Dernière tentative : chercher des colonnes numériques avec des valeurs dans la fourchette des valeurs marchandes
+        for col in player_data.index:
+            if pd.notna(player_data.get(col)):
+                try:
+                    value = float(player_data[col])
+                    # Valeurs typiques de valeurs marchandes (entre 50K et 200M)
+                    if 50_000 <= value <= 200_000_000:
+                        formatted_value = Utils.format_market_value(value)
+                        if formatted_value != "N/A":
+                            return formatted_value
+                except (ValueError, TypeError):
+                    continue
+        
+        # Si vraiment aucune valeur marchande trouvée, retourner N/A
         return "N/A"
     
     @staticmethod
@@ -966,49 +1027,6 @@ class SimilarPlayerAnalyzer:
             return SimilarPlayerAnalyzer.calculate_similarity_advanced(target_player, df, num_similar)
         else:
             return SimilarPlayerAnalyzer.calculate_similarity_simple(target_player, df, num_similar)
-    
-    @staticmethod
-    def analyze_common_characteristics(target_player: str, similar_players: List[Dict], df: pd.DataFrame) -> Dict:
-        """Analyse les caractéristiques communes entre joueurs similaires"""
-        if not similar_players:
-            return {}
-        
-        try:
-            # Obtenir les données du joueur cible
-            target_data = df[df['Joueur'] == target_player].iloc[0]
-            
-            # Analyser les caractéristiques
-            analysis = {
-                'positions': {},
-                'competitions': {},
-                'age_range': {'min': float('inf'), 'max': float('-inf')},
-                'common_traits': []
-            }
-            
-            all_players_data = [target_data] + [p['data'] for p in similar_players]
-            
-            # Analyse des positions
-            for player_data in all_players_data:
-                pos = player_data.get('Position', 'N/A')
-                analysis['positions'][pos] = analysis['positions'].get(pos, 0) + 1
-            
-            # Analyse des compétitions
-            for player_data in all_players_data:
-                comp = player_data.get('Compétition', 'N/A')
-                analysis['competitions'][comp] = analysis['competitions'].get(comp, 0) + 1
-            
-            # Analyse des âges
-            for player_data in all_players_data:
-                age = player_data.get('Âge', 0)
-                if pd.notna(age) and age > 0:
-                    analysis['age_range']['min'] = min(analysis['age_range']['min'], age)
-                    analysis['age_range']['max'] = max(analysis['age_range']['max'], age)
-            
-            return analysis
-            
-        except Exception as e:
-            st.warning(f"Erreur lors de l'analyse des caractéristiques : {str(e)}")
-            return {}
 
 # ================================================================================================
 # GESTIONNAIRE DE GRAPHIQUES
@@ -1269,150 +1287,106 @@ class ChartManager:
         return fig
     
     @staticmethod
-    def create_comprehensive_comparison_chart(target_player: str, similar_players: List[Dict], 
-                                            df: pd.DataFrame) -> go.Figure:
-        """Crée un graphique de comparaison complet avec toutes les métriques importantes"""
+    def create_histogram_comparison(target_player: str, similar_players: List[Dict], 
+                                  df: pd.DataFrame, metric: str) -> go.Figure:
+        """Crée un histogramme de comparaison haute qualité pour une métrique spécifique"""
+        
+        # Vérifier que la métrique existe
+        if metric not in df.columns:
+            st.error(f"La métrique '{metric}' n'existe pas dans les données")
+            return go.Figure()
         
         # Obtenir les données du joueur cible
-        target_data = df[df['Joueur'] == target_player].iloc[0]
+        target_data = df[df['Joueur'] == target_player]
+        if target_data.empty:
+            st.error(f"Joueur '{target_player}' non trouvé")
+            return go.Figure()
         
-        # Combiner toutes les métriques importantes
-        all_metrics = []
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['offensive'])
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['defensive'])
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['technical'])
-        all_metrics.extend(Config.COMPREHENSIVE_METRICS['passing'])
+        target_value = target_data[metric].iloc[0]
+        if pd.isna(target_value):
+            target_value = 0
         
-        # Filtrer les métriques disponibles dans les données et éviter les doublons
-        available_metrics = []
-        seen_metrics = set()
-        for metric in all_metrics:
-            if metric in df.columns and metric not in seen_metrics:
-                available_metrics.append(metric)
-                seen_metrics.add(metric)
+        # Préparer les données pour l'histogramme
+        player_names = [target_player]
+        player_values = [float(target_value)]
+        player_colors = [Config.COLORS['primary']]
         
-        if not available_metrics:
-            # Fallback vers les métriques de base si les autres ne sont pas disponibles
-            fallback_metrics = [
-                'Buts', 'Passes décisives', 'Tirs', 'Passes clés',
-                'Tacles gagnants', 'Interceptions', 'Dégagements', 'Duels aériens gagnés',
-                'Passes tentées', 'Dribbles tentés', 'Touches de balle', 'Passes progressives'
-            ]
-            available_metrics = [metric for metric in fallback_metrics if metric in df.columns]
+        # Ajouter les joueurs similaires
+        for i, player_info in enumerate(similar_players):
+            player_data = player_info['data']
+            value = player_data.get(metric, 0)
+            if pd.isna(value):
+                value = 0
+            
+            player_names.append(player_info['joueur'])
+            player_values.append(float(value))
+            
+            # Couleur dégradée selon la similarité
+            similarity_score = player_info['similarity_score']
+            if similarity_score >= 85:
+                color = Config.COLORS['secondary']
+            elif similarity_score >= 70:
+                color = Config.COLORS['warning']
+            else:
+                color = Config.COLORS['accent']
+            
+            player_colors.append(color)
         
-        # Utiliser toutes les métriques disponibles (ou limiter si trop nombreuses)
-        if len(available_metrics) > 16:
-            # Prendre les 16 plus importantes si trop nombreuses
-            priority_metrics = [
-                'Buts', 'Passes décisives', 'Tirs', 'Passes clés', 'Dribbles réussis',
-                'Tacles gagnants', 'Interceptions', 'Ballons récupérés', 'Duels aériens gagnés',
-                'Passes tentées', 'Passes progressives', 'Dribbles tentés', 'Touches de balle',
-                'Centres tentés', 'Passes dans le dernier tiers', 'Actions menant à un tir'
-            ]
-            display_metrics = [m for m in priority_metrics if m in available_metrics][:16]
-        else:
-            display_metrics = available_metrics
+        # Créer l'histogramme
+        fig = go.Figure(data=[go.Bar(
+            x=player_names,
+            y=player_values,
+            marker=dict(
+                color=player_colors,
+                line=dict(color='rgba(255,255,255,0.3)', width=2),
+                opacity=0.8
+            ),
+            text=[f"{v:.1f}" for v in player_values],
+            textposition='outside',
+            textfont=dict(color='white', size=14, family='Inter', weight=600),
+            hovertemplate='<b>%{x}</b><br>' + f'{metric}: %{{y:.2f}}<extra></extra>'
+        )])
         
-        # Calculer le nombre de lignes et colonnes pour les subplots
-        n_metrics = len(display_metrics)
-        n_cols = 4
-        n_rows = (n_metrics + n_cols - 1) // n_cols  # Arrondir vers le haut
-        
-        # Créer la figure avec subplots dynamiques
-        fig = make_subplots(
-            rows=n_rows, cols=n_cols,
-            subplot_titles=display_metrics,
-            specs=[[{"type": "bar"}] * n_cols for _ in range(n_rows)],
-            vertical_spacing=0.12 / n_rows if n_rows > 1 else 0.15,
-            horizontal_spacing=0.08
+        # Ajouter une ligne horizontale pour la moyenne
+        avg_value = np.mean(player_values)
+        fig.add_hline(
+            y=avg_value,
+            line_dash="dash",
+            line_color="rgba(255,255,255,0.6)",
+            line_width=2,
+            annotation_text=f"Moyenne: {avg_value:.1f}",
+            annotation_position="top right",
+            annotation_font_color="white",
+            annotation_font_size=12
         )
         
-        # Couleurs pour chaque joueur (palette étendue)
-        base_colors = [Config.COLORS['primary'], Config.COLORS['secondary'], 
-                      Config.COLORS['accent'], Config.COLORS['warning'], 
-                      Config.COLORS['success'], Config.COLORS['danger']]
-        
-        # Étendre la palette de couleurs si nécessaire
-        extended_colors = base_colors * ((len(similar_players) + 1) // len(base_colors) + 1)
-        
-        # Préparer les données pour chaque métrique
-        for i, metric in enumerate(display_metrics):
-            row = (i // n_cols) + 1
-            col = (i % n_cols) + 1
-            
-            # Valeurs pour tous les joueurs
-            player_values = []
-            player_names = []
-            player_colors = []
-            
-            # Joueur cible
-            target_value = target_data.get(metric, 0)
-            if pd.isna(target_value):
-                target_value = 0
-            player_values.append(float(target_value))
-            player_names.append(target_player[:15] + "..." if len(target_player) > 15 else target_player)
-            player_colors.append(extended_colors[0])
-            
-            # Tous les joueurs similaires (selon le choix de l'utilisateur)
-            for j, player_info in enumerate(similar_players):
-                player_data = player_info['data']
-                value = player_data.get(metric, 0)
-                if pd.isna(value):
-                    value = 0
-                player_values.append(float(value))
-                # Tronquer le nom pour l'affichage
-                short_name = player_info['joueur'][:12] + "..." if len(player_info['joueur']) > 12 else player_info['joueur']
-                player_names.append(short_name)
-                player_colors.append(extended_colors[(j + 1) % len(extended_colors)])
-            
-            # Ajouter les barres pour cette métrique
-            fig.add_trace(
-                go.Bar(
-                    x=player_names,
-                    y=player_values,
-                    name=f"Métrique: {metric}" if i == 0 else "",
-                    marker_color=player_colors,
-                    showlegend=False,  # Pas de légende car trop de joueurs
-                    text=[f"{v:.1f}" for v in player_values],
-                    textposition='outside',
-                    textfont=dict(size=8, color='white'),
-                    hovertemplate="<b>%{x}</b><br>" + f"{metric}: %{{y:.2f}}<extra></extra>"
-                ),
-                row=row, col=col
-            )
-        
-        # Mise à jour de la mise en page
+        # Mise en page haute qualité
         fig.update_layout(
             title=dict(
-                text=f"Analyse Comparative Complète - {target_player} vs {len(similar_players)} Joueurs Similaires",
-                font=dict(color='white', size=18, family='Inter', weight=700),
+                text=f"Comparaison: {metric}",
+                font=dict(size=24, color='white', family='Inter', weight=700),
                 x=0.5,
-                y=0.98
+                y=0.95
+            ),
+            xaxis=dict(
+                tickfont=dict(color='white', size=14, family='Inter'),
+                tickangle=45,
+                showgrid=False,
+                title=dict(text="Joueurs", font=dict(color='white', size=16, family='Inter'))
+            ),
+            yaxis=dict(
+                tickfont=dict(color='white', size=14, family='Inter'),
+                gridcolor='rgba(255,255,255,0.15)',
+                showgrid=True,
+                title=dict(text=metric, font=dict(color='white', size=16, family='Inter'))
             ),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             font=dict(color='white', family='Inter'),
-            height=max(600, n_rows * 200),  # Hauteur dynamique
-            margin=dict(t=80, b=60, l=60, r=60)
+            height=600,
+            margin=dict(t=100, b=150, l=80, r=80),
+            showlegend=False
         )
-        
-        # Mise à jour des axes pour tous les subplots
-        for i in range(1, n_metrics + 1):
-            row = ((i-1) // n_cols) + 1
-            col = ((i-1) % n_cols) + 1
-            
-            fig.update_xaxes(
-                tickfont=dict(color='white', size=8),
-                tickangle=45,
-                showgrid=False,
-                row=row, col=col
-            )
-            fig.update_yaxes(
-                tickfont=dict(color='white', size=8),
-                gridcolor='rgba(255,255,255,0.15)',
-                showgrid=True,
-                row=row, col=col
-            )
         
         return fig
 
@@ -2317,7 +2291,7 @@ class TabManager:
     
     @staticmethod
     def render_similar_players_tab(selected_player: str, df: pd.DataFrame):
-        """Rendu de l'onglet joueurs similaires"""
+        """Rendu de l'onglet joueurs similaires avec histogrammes de comparaison"""
         st.markdown("<h2 class='section-title-enhanced'>👥 Profils Similaires</h2>", unsafe_allow_html=True)
         
         # Configuration
@@ -2387,52 +2361,72 @@ class TabManager:
                     with col:
                         UIComponents.render_similar_player_card(similar_players[i + j], i + j + 1)
         
-        # Analyse comparative complète
+        # Section pour les histogrammes de comparaison
         st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📊 Analyse Comparative Complète</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='subsection-title-enhanced'>📊 Histogrammes de Comparaison</h3>", unsafe_allow_html=True)
         
-        # Note explicative
-        st.info(f"📈 Comparaison de {selected_player} avec les {len(similar_players)} joueurs similaires sélectionnés sur {len([m for m in Config.COMPREHENSIVE_METRICS['offensive'] + Config.COMPREHENSIVE_METRICS['defensive'] + Config.COMPREHENSIVE_METRICS['technical'] + Config.COMPREHENSIVE_METRICS['passing'] if m in df.columns])} métriques disponibles.")
+        # Sélection de la métrique pour l'histogramme
+        available_histogram_metrics = [metric for metric in Config.HISTOGRAM_METRICS if metric in df.columns]
         
-        # Graphique de comparaison complet avec toutes les métriques importantes
-        fig_comprehensive = ChartManager.create_comprehensive_comparison_chart(
-            selected_player, similar_players, df
-        )
-        st.plotly_chart(fig_comprehensive, use_container_width=True)
-        
-        # Analyse des caractéristiques communes
-        st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>🔍 Caractéristiques Communes</h3>", unsafe_allow_html=True)
-        
-        analysis = SimilarPlayerAnalyzer.analyze_common_characteristics(
-            selected_player, similar_players, df
-        )
-        
-        if analysis:
-            char_col1, char_col2, char_col3 = st.columns(3)
+        if available_histogram_metrics:
+            # Interface pour choisir la métrique
+            metric_col1, metric_col2 = st.columns([2, 1])
             
-            with char_col1:
-                st.markdown("**📍 Positions les plus fréquentes :**")
-                if analysis.get('positions'):
-                    for pos, count in sorted(analysis['positions'].items(), 
-                                           key=lambda x: x[1], reverse=True)[:3]:
-                        st.write(f"• {pos}: {count} joueur(s)")
+            with metric_col1:
+                selected_metric = st.selectbox(
+                    "📈 Choisissez une métrique pour l'histogramme de comparaison :",
+                    available_histogram_metrics,
+                    index=0,
+                    help="Sélectionnez la métrique à comparer entre le joueur sélectionné et les joueurs similaires"
+                )
             
-            with char_col2:
-                st.markdown("**🏆 Compétitions représentées :**")
-                if analysis.get('competitions'):
-                    for comp, count in sorted(analysis['competitions'].items(), 
-                                            key=lambda x: x[1], reverse=True)[:3]:
-                        st.write(f"• {comp}: {count} joueur(s)")
+            with metric_col2:
+                st.info(f"🎯 Comparaison sur : **{selected_metric}**")
             
-            with char_col3:
-                st.markdown("**📅 Tranche d'âge :**")
-                age_range = analysis.get('age_range', {})
-                if age_range.get('min') and age_range.get('max'):
-                    if age_range['min'] != float('inf') and age_range['max'] != float('-inf'):
-                        st.write(f"• Entre {int(age_range['min'])} et {int(age_range['max'])} ans")
-                        avg_age = (age_range['min'] + age_range['max']) / 2
-                        st.write(f"• Âge moyen: {avg_age:.1f} ans")
+            # Créer et afficher l'histogramme haute qualité
+            if selected_metric:
+                fig_histogram = ChartManager.create_histogram_comparison(
+                    selected_player, similar_players, df, selected_metric
+                )
+                st.plotly_chart(fig_histogram, use_container_width=True)
+                
+                # Informations supplémentaires sur l'histogramme
+                target_data = df[df['Joueur'] == selected_player]
+                if not target_data.empty:
+                    target_value = target_data[selected_metric].iloc[0]
+                    if not pd.isna(target_value):
+                        similar_values = []
+                        for player_info in similar_players:
+                            player_data = player_info['data']
+                            value = player_data.get(selected_metric, 0)
+                            if not pd.isna(value):
+                                similar_values.append(value)
+                        
+                        if similar_values:
+                            avg_similar = np.mean(similar_values)
+                            max_similar = np.max(similar_values)
+                            min_similar = np.min(similar_values)
+                            
+                            stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)
+                            
+                            with stats_col1:
+                                st.metric(f"{selected_player}", f"{target_value:.1f}", 
+                                         help=f"Valeur du joueur sélectionné pour {selected_metric}")
+                            
+                            with stats_col2:
+                                st.metric("Moyenne Similaires", f"{avg_similar:.1f}",
+                                         delta=f"{target_value - avg_similar:.1f}",
+                                         help="Moyenne des joueurs similaires")
+                            
+                            with stats_col3:
+                                st.metric("Maximum", f"{max_similar:.1f}",
+                                         help="Valeur maximale parmi les joueurs similaires")
+                            
+                            with stats_col4:
+                                st.metric("Minimum", f"{min_similar:.1f}",
+                                         help="Valeur minimale parmi les joueurs similaires")
+        else:
+            st.warning("⚠️ Aucune métrique disponible pour les histogrammes de comparaison")
     
     @staticmethod
     def render_comparison_tab(df: pd.DataFrame, selected_player: str):

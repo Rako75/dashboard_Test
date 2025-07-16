@@ -1605,6 +1605,20 @@ class UIComponents:
             </p>
         </div>
         """, unsafe_allow_html=True)
+
+    @staticmethod
+def render_breadcrumbs(competition, team, player):
+    """Affiche le fil d’Ariane (breadcrumbs)"""
+    st.markdown(
+        f"""
+        <div class='breadcrumbs'>
+            <span style='color:var(--primary-color); font-weight:600;'>{competition}</span> &nbsp;›&nbsp;
+            <span style='color:var(--accent-color); font-weight:600;'>{team}</span> &nbsp;›&nbsp;
+            <span style='color:var(--text-primary); font-weight:600;'>{player}</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     
     @staticmethod
     def render_player_card(player_data: pd.Series, competition: str):

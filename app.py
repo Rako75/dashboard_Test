@@ -96,7 +96,9 @@ class Config:
     # Colonnes à exclure pour l'analyse de similarité (non numériques ou non pertinentes)
     EXCLUDED_SIMILARITY_COLUMNS = {
         'Joueur', 'Équipe', 'Compétition', 'Position', 'Nationalité', 'Né',
-        'Matchs', 'Titulaire', 'Remplaçant', 'Équipe non renseignée'
+        'Matchs', 'Titulaire', 'Remplaçant', 'Équipe non renseignée', 'Saison',
+        'Unnamed: 0', 'index', 'level_0', 'level_1', 'ID', 'id', 'player_id',
+        'team_id', 'competition_id', 'url', 'photo', 'link', 'href'
     }
     
     # Métriques pour les histogrammes de comparaison
@@ -257,6 +259,18 @@ class Utils:
             if len(vec1) == 0 or len(vec2) == 0:
                 return 0.0
             
+            # Vérifier que les vecteurs ont la même longueur
+            if len(vec1) != len(vec2):
+                return 0.0
+            
+            # Convertir en numpy arrays si nécessaire
+            vec1 = np.array(vec1, dtype=float)
+            vec2 = np.array(vec2, dtype=float)
+            
+            # Vérifier qu'il n'y a pas de NaN ou d'infinis
+            if np.any(np.isnan(vec1)) or np.any(np.isnan(vec2)) or np.any(np.isinf(vec1)) or np.any(np.isinf(vec2)):
+                return 0.0
+            
             # Calculer le produit scalaire
             dot_product = np.dot(vec1, vec2)
             
@@ -276,7 +290,8 @@ class Utils:
             
             return float(similarity)
         
-        except Exception:
+        except Exception as e:
+            # En cas d'erreur, retourner 0
             return 0.0
     
     @staticmethod
@@ -728,6 +743,11 @@ class DataManager:
         # Exclure les colonnes non pertinentes
         relevant_columns = [col for col in numeric_columns if col not in Config.EXCLUDED_SIMILARITY_COLUMNS]
         
+        # Vérifier qu'il y a bien des colonnes numériques
+        if not relevant_columns:
+            st.warning("⚠️ Aucune colonne numérique trouvée pour l'analyse de similarité")
+            return []
+        
         return relevant_columns
 
 # ================================================================================================
@@ -906,19 +926,40 @@ class SimilarPlayerAnalyzer:
         required_cols = ['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge']
         available_required = [col for col in required_cols if col in df.columns]
         
-        similarity_df = df[available_required + numeric_columns].copy()
+        if not available_required:
+            st.error("❌ Colonnes essentielles manquantes pour l'analyse")
+            return pd.DataFrame(), []
         
-        # Remplacer les valeurs manquantes par 0 pour toutes les colonnes numériques
-        for col in numeric_columns:
-            similarity_df[col] = pd.to_numeric(similarity_df[col], errors='coerce').fillna(0)
+        # Vérifier que les colonnes numériques existent vraiment dans le DataFrame
+        existing_numeric_cols = [col for col in numeric_columns if col in df.columns]
         
-        # Filtrer les lignes avec des données valides
-        similarity_df = similarity_df.dropna(subset=['Joueur'])
+        if not existing_numeric_cols:
+            st.error("❌ Aucune colonne numérique valide trouvée")
+            return pd.DataFrame(), []
         
-        # Afficher les métriques utilisées
-        st.info(f"📊 Analyse de similarité basée sur **{len(numeric_columns)}** métriques : {', '.join(numeric_columns[:10])}{'...' if len(numeric_columns) > 10 else ''}")
-        
-        return similarity_df, numeric_columns
+        try:
+            similarity_df = df[available_required + existing_numeric_cols].copy()
+            
+            # Remplacer les valeurs manquantes par 0 pour toutes les colonnes numériques
+            for col in existing_numeric_cols:
+                similarity_df[col] = pd.to_numeric(similarity_df[col], errors='coerce').fillna(0)
+            
+            # Filtrer les lignes avec des données valides
+            similarity_df = similarity_df.dropna(subset=['Joueur'])
+            
+            # Vérifier qu'il reste des données
+            if similarity_df.empty:
+                st.error("❌ Aucune donnée valide après nettoyage")
+                return pd.DataFrame(), []
+            
+            # Afficher les métriques utilisées
+            st.info(f"📊 Analyse de similarité basée sur **{len(existing_numeric_cols)}** métriques : {', '.join(existing_numeric_cols[:10])}{'...' if len(existing_numeric_cols) > 10 else ''}")
+            
+            return similarity_df, existing_numeric_cols
+            
+        except Exception as e:
+            st.error(f"❌ Erreur lors de la préparation des données : {str(e)}")
+            return pd.DataFrame(), []
     
     @staticmethod
     def calculate_similarity_with_cosine(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
@@ -933,33 +974,55 @@ class SimilarPlayerAnalyzer:
             # Obtenir les données du joueur cible
             target_data = similarity_df[similarity_df['Joueur'] == target_player]
             if target_data.empty:
+                st.error(f"❌ Joueur '{target_player}' non trouvé dans les données")
                 return []
             
-            target_values = target_data[available_metrics].values[0]
-            target_info = target_data.iloc[0]
+            # Extraire les valeurs numériques du joueur cible
+            target_values = target_data[available_metrics].iloc[0].values
+            
+            # Vérifier que les valeurs sont bien numériques
+            if not all(isinstance(val, (int, float, np.number)) for val in target_values):
+                st.error("❌ Données non numériques détectées pour le joueur cible")
+                return []
             
             # Filtrer les autres joueurs (exclure le joueur cible)
             other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
             
             if other_players.empty:
+                st.warning("⚠️ Aucun autre joueur trouvé pour la comparaison")
+                return []
+            
+            # Extraire les valeurs numériques des autres joueurs
+            others_values = other_players[available_metrics].values
+            
+            # Vérifier la forme des données
+            if others_values.shape[0] == 0 or others_values.shape[1] == 0:
+                st.error("❌ Données vides pour les autres joueurs")
                 return []
             
             # Normaliser les données
             scaler = StandardScaler()
             
-            # Données pour normalisation (inclut le joueur cible)
+            # Préparer toutes les données pour la normalisation
             all_data = similarity_df[available_metrics].values
+            
+            # Vérifier que les données sont valides
+            if all_data.shape[0] == 0 or all_data.shape[1] == 0:
+                st.error("❌ Données insuffisantes pour l'analyse")
+                return []
+            
+            # Ajuster le scaler sur toutes les données
             scaler.fit(all_data)
             
-            # Normaliser les données du joueur cible et des autres
-            target_normalized = scaler.transform([target_values])
-            others_normalized = scaler.transform(other_players[available_metrics].values)
+            # Normaliser les données
+            target_normalized = scaler.transform(target_values.reshape(1, -1))
+            others_normalized = scaler.transform(others_values)
             
             # Calculer la similarité cosinus
             similarities = cosine_similarity(target_normalized, others_normalized)[0]
             
             # Convertir en scores de similarité (0-100)
-            similarity_scores = (similarities * 100).tolist()
+            similarity_scores = np.clip(similarities * 100, 0, 100).tolist()
             
             # Créer la liste des joueurs similaires
             similar_players = []
@@ -980,7 +1043,10 @@ class SimilarPlayerAnalyzer:
             return similar_players[:num_similar]
             
         except Exception as e:
-            st.error(f"Erreur lors du calcul de similarité avec sklearn : {str(e)}")
+            st.error(f"❌ Erreur lors du calcul de similarité avec sklearn : {str(e)}")
+            import traceback
+            with st.expander("🔍 Détails de l'erreur", expanded=False):
+                st.code(traceback.format_exc())
             return []
     
     @staticmethod
@@ -996,15 +1062,22 @@ class SimilarPlayerAnalyzer:
             # Obtenir les données du joueur cible
             target_data = similarity_df[similarity_df['Joueur'] == target_player]
             if target_data.empty:
+                st.error(f"❌ Joueur '{target_player}' non trouvé dans les données")
                 return []
             
-            target_values = target_data[available_metrics].values[0]
-            target_info = target_data.iloc[0]
+            # Extraire les valeurs numériques du joueur cible
+            target_values = target_data[available_metrics].iloc[0].values
+            
+            # Vérifier que les valeurs sont bien numériques
+            if not all(isinstance(val, (int, float, np.number)) for val in target_values):
+                st.error("❌ Données non numériques détectées pour le joueur cible")
+                return []
             
             # Filtrer les autres joueurs (exclure le joueur cible)
             other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
             
             if other_players.empty:
+                st.warning("⚠️ Aucun autre joueur trouvé pour la comparaison")
                 return []
             
             # Normaliser les données manuellement
@@ -1022,24 +1095,34 @@ class SimilarPlayerAnalyzer:
             similarities = []
             
             for idx, player_row in other_players.iterrows():
-                player_values = player_row[available_metrics].values
-                player_normalized = (player_values - mean_vals) / std_vals
-                
-                # Calculer la similarité cosinus
-                cosine_sim = Utils.cosine_similarity_manual(target_normalized, player_normalized)
-                
-                # Convertir en score de similarité (0-100)
-                similarity_score = cosine_sim * 100
-                
-                similarities.append({
-                    'joueur': player_row['Joueur'],
-                    'equipe': player_row['Équipe'],
-                    'competition': player_row['Compétition'],
-                    'position': player_row['Position'],
-                    'age': player_row['Âge'],
-                    'similarity_score': similarity_score,
-                    'data': player_row
-                })
+                try:
+                    player_values = player_row[available_metrics].values
+                    
+                    # Vérifier que les valeurs sont numériques
+                    if not all(isinstance(val, (int, float, np.number)) for val in player_values):
+                        continue
+                    
+                    player_normalized = (player_values - mean_vals) / std_vals
+                    
+                    # Calculer la similarité cosinus
+                    cosine_sim = Utils.cosine_similarity_manual(target_normalized, player_normalized)
+                    
+                    # Convertir en score de similarité (0-100)
+                    similarity_score = np.clip(cosine_sim * 100, 0, 100)
+                    
+                    similarities.append({
+                        'joueur': player_row['Joueur'],
+                        'equipe': player_row['Équipe'],
+                        'competition': player_row['Compétition'],
+                        'position': player_row['Position'],
+                        'age': player_row['Âge'],
+                        'similarity_score': similarity_score,
+                        'data': player_row
+                    })
+                    
+                except Exception as e:
+                    # Ignorer les joueurs avec des données problématiques
+                    continue
             
             # Trier par score de similarité décroissant
             similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
@@ -1047,7 +1130,10 @@ class SimilarPlayerAnalyzer:
             return similarities[:num_similar]
             
         except Exception as e:
-            st.error(f"Erreur lors du calcul de similarité manuelle : {str(e)}")
+            st.error(f"❌ Erreur lors du calcul de similarité manuelle : {str(e)}")
+            import traceback
+            with st.expander("🔍 Détails de l'erreur", expanded=False):
+                st.code(traceback.format_exc())
             return []
     
     @staticmethod
@@ -2327,6 +2413,38 @@ class TabManager:
         # Message d'information sur l'algorithme utilisé
         algorithm_info = "Cosine Similarity avec sklearn" if SKLEARN_AVAILABLE else "Cosine Similarity (implémentation manuelle)"
         st.info(f"🔬 **Algorithme utilisé**: {algorithm_info} - Analyse basée sur toutes les métriques numériques disponibles")
+        
+        # Diagnostic des données (optionnel)
+        with st.expander("🔍 Diagnostic des données", expanded=False):
+            st.write("**Informations sur les données:**")
+            st.write(f"- Nombre total de joueurs: {len(df)}")
+            st.write(f"- Nombre de colonnes: {len(df.columns)}")
+            
+            # Vérifier les colonnes numériques
+            numeric_cols = DataManager.get_numeric_columns(df)
+            st.write(f"- Colonnes numériques détectées: {len(numeric_cols)}")
+            
+            if numeric_cols:
+                st.write("- Exemples de colonnes numériques:")
+                for col in numeric_cols[:10]:  # Montrer les 10 premières
+                    st.write(f"  • {col}")
+                if len(numeric_cols) > 10:
+                    st.write(f"  ... et {len(numeric_cols) - 10} autres")
+            
+            # Vérifier les données du joueur sélectionné
+            player_data = df[df['Joueur'] == selected_player]
+            if not player_data.empty:
+                st.write(f"- Joueur '{selected_player}' trouvé ✅")
+                # Compter combien de métriques numériques ont des valeurs non-nulles
+                non_null_metrics = 0
+                for col in numeric_cols:
+                    if col in player_data.columns:
+                        val = player_data[col].iloc[0]
+                        if pd.notna(val) and val != 0:
+                            non_null_metrics += 1
+                st.write(f"- Métriques non-nulles pour ce joueur: {non_null_metrics}/{len(numeric_cols)}")
+            else:
+                st.write(f"- Joueur '{selected_player}' NON trouvé ❌")
         
         # Configuration
         col1, col2 = st.columns([2, 1])

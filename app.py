@@ -2274,9 +2274,9 @@ class TabManager:
         with col2:
             # Pourcentages techniques spécialisés
             technical_success = {
-                'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
                 'Passes progressives': player_data.get('Pourcentage de passes progressives réussies', player_data.get('Pourcentage de passes réussies', 0)),
-                'Première touche': min(100, max(0, 95 - (player_data.get('Ballons perdus', 0) / max(player_data.get('Touches de balle', 1), 1) * 100))) if player_data.get('Touches de balle', 0) > 0 else 0
+                'Conservation': max(0, 100 - (player_data.get('Ballons perdus', 0) / max(player_data.get('Touches de balle', 1), 1) * 100)) if player_data.get('Touches de balle', 0) > 0 else 0,
+                'Activité': min(100, (player_data.get('Touches de balle', 0) / max(player_data.get('Minutes jouées', 90), 1) * 90 / 100 * 100)) if player_data.get('Touches de balle', 0) > 0 else 0
             }
             
             fig_gauge = ChartManager.create_gauge_chart(technical_success, "Maîtrise Technique (%)")

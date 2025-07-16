@@ -2056,7 +2056,7 @@ class TabManager:
             efficiency_data = {
                 'Tirs cadrés': player_data.get('Pourcentage de tirs cadrés', 0),
                 'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
-                'Centres réussis': player_data.get('Pourcentage de centres réussis', 0)
+                'Conversion buts': (player_data.get('Buts', 0) / player_data.get('Tirs', 1) * 100) if player_data.get('Tirs', 0) > 0 else 0
             }
             
             fig_gauge = ChartManager.create_gauge_chart(efficiency_data, "Efficacité Offensive (%)")

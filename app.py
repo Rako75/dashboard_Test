@@ -2272,14 +2272,14 @@ class TabManager:
                 )
         
         with col2:
-            # Pourcentages techniques
+            # Pourcentages techniques spécialisés
             technical_success = {
                 'Passes réussies': player_data.get('Pourcentage de passes réussies', 0),
-                'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
-                'Passes longues': player_data.get('Pourcentage de passes longues réussies', 0)
+                'Passes progressives': player_data.get('Pourcentage de passes progressives réussies', player_data.get('Pourcentage de passes réussies', 0)),
+                'Première touche': min(100, max(0, 95 - (player_data.get('Ballons perdus', 0) / max(player_data.get('Touches de balle', 1), 1) * 100))) if player_data.get('Touches de balle', 0) > 0 else 0
             }
             
-            fig_gauge = ChartManager.create_gauge_chart(technical_success, "Précision Technique (%)")
+            fig_gauge = ChartManager.create_gauge_chart(technical_success, "Maîtrise Technique (%)")
             st.plotly_chart(fig_gauge, use_container_width=True)
             
             # Radar technique

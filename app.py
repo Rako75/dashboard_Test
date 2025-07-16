@@ -2343,11 +2343,6 @@ class TabManager:
             st.metric("Compétitions Représentées", f"{unique_competitions}", 
                      help="Nombre de compétitions différentes")
         
-        with metrics_col4:
-            # Compter les métriques disponibles pour l'analyse
-            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
-            st.metric("Métriques Analysées", f"{len(available_metrics)}", 
-                     help="Nombre de métriques utilisées pour calculer la similarité")
         
         # Cartes des joueurs similaires
         st.markdown("---")

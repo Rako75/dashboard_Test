@@ -1,10 +1,10 @@
 """
-Dashboard Football Professionnel - Version Restructurée avec Joueurs Similaires
+Dashboard Football Professionnel - Version Restructurée avec Cosine Similarity
 ===============================================================================
 
 Application Streamlit pour l'analyse avancée des performances footballistiques.
 Auteur: Dashboard Pro
-Version: 2.1.2 - Corrections Profils Similaires
+Version: 2.2.0 - Cosine Similarity avec toutes les métriques
 """
 
 import streamlit as st
@@ -26,7 +26,7 @@ from typing import Dict, List, Optional, Tuple, Union
 # Imports pour l'analyse de similarité
 try:
     from sklearn.preprocessing import StandardScaler
-    from sklearn.metrics.pairwise import euclidean_distances
+    from sklearn.metrics.pairwise import cosine_similarity
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -93,19 +93,11 @@ class Config:
         'Serie A': 'Serie_A_Logos'
     }
     
-    # Métriques pour l'analyse de similarité (versions simplifiées)
-    SIMILARITY_METRICS = [
-        'Minutes jouées',
-        'Buts',
-        'Passes décisives',
-        'Tirs',
-        'Passes clés',
-        'Passes tentées',
-        'Dribbles tentés',
-        'Dribbles réussis',
-        'Tacles gagnants',
-        'Interceptions'
-    ]
+    # Colonnes à exclure pour l'analyse de similarité (non numériques ou non pertinentes)
+    EXCLUDED_SIMILARITY_COLUMNS = {
+        'Joueur', 'Équipe', 'Compétition', 'Position', 'Nationalité', 'Né',
+        'Matchs', 'Titulaire', 'Remplaçant', 'Équipe non renseignée'
+    }
     
     # Métriques pour les histogrammes de comparaison
     HISTOGRAM_METRICS = [
@@ -256,6 +248,36 @@ class Utils:
         
         # Si vraiment aucune valeur marchande trouvée, retourner N/A
         return "N/A"
+    
+    @staticmethod
+    def cosine_similarity_manual(vec1: np.ndarray, vec2: np.ndarray) -> float:
+        """Calcule la similarité cosinus manuellement"""
+        try:
+            # Vérifier que les vecteurs ne sont pas vides
+            if len(vec1) == 0 or len(vec2) == 0:
+                return 0.0
+            
+            # Calculer le produit scalaire
+            dot_product = np.dot(vec1, vec2)
+            
+            # Calculer les normes
+            norm1 = np.linalg.norm(vec1)
+            norm2 = np.linalg.norm(vec2)
+            
+            # Éviter la division par zéro
+            if norm1 == 0 or norm2 == 0:
+                return 0.0
+            
+            # Calculer la similarité cosinus
+            similarity = dot_product / (norm1 * norm2)
+            
+            # S'assurer que la valeur est entre -1 et 1
+            similarity = np.clip(similarity, -1.0, 1.0)
+            
+            return float(similarity)
+        
+        except Exception:
+            return 0.0
     
     @staticmethod
     def image_to_base64(image: Image.Image) -> str:
@@ -696,6 +718,17 @@ class DataManager:
     def get_other_leagues_data(df: pd.DataFrame, player_competition: str) -> pd.DataFrame:
         """Récupère les données de toutes les autres ligues (sauf celle du joueur)"""
         return df[df['Compétition'] != player_competition]
+    
+    @staticmethod
+    def get_numeric_columns(df: pd.DataFrame) -> List[str]:
+        """Récupère toutes les colonnes numériques disponibles pour l'analyse de similarité"""
+        # Sélectionner toutes les colonnes numériques
+        numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+        
+        # Exclure les colonnes non pertinentes
+        relevant_columns = [col for col in numeric_columns if col not in Config.EXCLUDED_SIMILARITY_COLUMNS]
+        
+        return relevant_columns
 
 # ================================================================================================
 # GESTIONNAIRE D'IMAGES
@@ -853,111 +886,43 @@ class MetricsCalculator:
         }
 
 # ================================================================================================
-# ANALYSEUR DE JOUEURS SIMILAIRES
+# ANALYSEUR DE JOUEURS SIMILAIRES AVEC COSINE SIMILARITY
 # ================================================================================================
 
 class SimilarPlayerAnalyzer:
-    """Analyseur pour trouver des joueurs similaires"""
+    """Analyseur pour trouver des joueurs similaires avec Cosine Similarity"""
     
     @staticmethod
     def prepare_similarity_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
-        """Prépare les données pour l'analyse de similarité"""
-        # Sélectionner les colonnes disponibles pour l'analyse
-        available_metrics = []
-        for metric in Config.SIMILARITY_METRICS:
-            if metric in df.columns:
-                available_metrics.append(metric)
+        """Prépare les données pour l'analyse de similarité avec toutes les métriques numériques"""
+        # Obtenir toutes les colonnes numériques pertinentes
+        numeric_columns = DataManager.get_numeric_columns(df)
         
-        if not available_metrics:
-            st.warning("⚠️ Aucune métrique disponible pour l'analyse de similarité")
+        if not numeric_columns:
+            st.warning("⚠️ Aucune métrique numérique disponible pour l'analyse de similarité")
             return pd.DataFrame(), []
         
-        # Créer le DataFrame avec les métriques disponibles
+        # Créer le DataFrame avec toutes les métriques disponibles
         required_cols = ['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge']
-        similarity_df = df[required_cols + available_metrics].copy()
+        available_required = [col for col in required_cols if col in df.columns]
         
-        # Remplacer les valeurs manquantes par 0
-        for col in available_metrics:
+        similarity_df = df[available_required + numeric_columns].copy()
+        
+        # Remplacer les valeurs manquantes par 0 pour toutes les colonnes numériques
+        for col in numeric_columns:
             similarity_df[col] = pd.to_numeric(similarity_df[col], errors='coerce').fillna(0)
         
         # Filtrer les lignes avec des données valides
         similarity_df = similarity_df.dropna(subset=['Joueur'])
         
-        return similarity_df, available_metrics
+        # Afficher les métriques utilisées
+        st.info(f"📊 Analyse de similarité basée sur **{len(numeric_columns)}** métriques : {', '.join(numeric_columns[:10])}{'...' if len(numeric_columns) > 10 else ''}")
+        
+        return similarity_df, numeric_columns
     
     @staticmethod
-    def calculate_similarity_simple(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Calcule la similarité sans sklearn (version simplifiée)"""
-        try:
-            # Préparer les données
-            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
-            
-            if similarity_df.empty or not available_metrics:
-                return []
-            
-            # Obtenir les données du joueur cible
-            target_data = similarity_df[similarity_df['Joueur'] == target_player]
-            if target_data.empty:
-                return []
-            
-            target_values = target_data[available_metrics].iloc[0]
-            target_info = target_data.iloc[0]
-            
-            # Filtrer les autres joueurs (exclure le joueur cible)
-            other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
-            
-            if other_players.empty:
-                return []
-            
-            # Calculer la similarité de manière simple (somme des différences absolues normalisées)
-            similarities = []
-            
-            for idx, player_row in other_players.iterrows():
-                player_values = player_row[available_metrics]
-                
-                # Calculer la différence relative pour chaque métrique
-                total_diff = 0
-                valid_metrics = 0
-                
-                for metric in available_metrics:
-                    target_val = float(target_values[metric])
-                    player_val = float(player_values[metric])
-                    
-                    # Éviter la division par zéro
-                    max_val = max(abs(target_val), abs(player_val), 1)
-                    diff = abs(target_val - player_val) / max_val
-                    total_diff += diff
-                    valid_metrics += 1
-                
-                # Score de similarité (0-100)
-                if valid_metrics > 0:
-                    avg_diff = total_diff / valid_metrics
-                    similarity_score = max(0, 100 * (1 - avg_diff))
-                else:
-                    similarity_score = 0
-                
-                similarities.append({
-                    'joueur': player_row['Joueur'],
-                    'equipe': player_row['Équipe'],
-                    'competition': player_row['Compétition'],
-                    'position': player_row['Position'],
-                    'age': player_row['Âge'],
-                    'similarity_score': similarity_score,
-                    'data': player_row
-                })
-            
-            # Trier par score de similarité décroissant
-            similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
-            
-            return similarities[:num_similar]
-            
-        except Exception as e:
-            st.error(f"Erreur lors du calcul de similarité : {str(e)}")
-            return []
-    
-    @staticmethod
-    def calculate_similarity_advanced(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Calcule la similarité avec sklearn (version avancée)"""
+    def calculate_similarity_with_cosine(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
+        """Calcule la similarité avec Cosine Similarity (sklearn)"""
         try:
             # Préparer les données
             similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
@@ -987,15 +952,14 @@ class SimilarPlayerAnalyzer:
             scaler.fit(all_data)
             
             # Normaliser les données du joueur cible et des autres
-            target_normalized = scaler.transform([target_values])[0]
+            target_normalized = scaler.transform([target_values])
             others_normalized = scaler.transform(other_players[available_metrics].values)
             
-            # Calculer les distances euclidiennes
-            distances = euclidean_distances([target_normalized], others_normalized)[0]
+            # Calculer la similarité cosinus
+            similarities = cosine_similarity(target_normalized, others_normalized)[0]
             
             # Convertir en scores de similarité (0-100)
-            max_distance = np.max(distances) if len(distances) > 0 else 1
-            similarity_scores = 100 * (1 - distances / max_distance) if max_distance > 0 else [100] * len(distances)
+            similarity_scores = (similarities * 100).tolist()
             
             # Créer la liste des joueurs similaires
             similar_players = []
@@ -1007,7 +971,6 @@ class SimilarPlayerAnalyzer:
                     'position': row['Position'],
                     'age': row['Âge'],
                     'similarity_score': similarity_scores[i],
-                    'distance': distances[i],
                     'data': row
                 })
             
@@ -1017,16 +980,83 @@ class SimilarPlayerAnalyzer:
             return similar_players[:num_similar]
             
         except Exception as e:
-            st.error(f"Erreur lors du calcul de similarité avancé : {str(e)}")
+            st.error(f"Erreur lors du calcul de similarité avec sklearn : {str(e)}")
+            return []
+    
+    @staticmethod
+    def calculate_similarity_manual_cosine(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
+        """Calcule la similarité avec Cosine Similarity (implémentation manuelle)"""
+        try:
+            # Préparer les données
+            similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
+            
+            if similarity_df.empty or not available_metrics:
+                return []
+            
+            # Obtenir les données du joueur cible
+            target_data = similarity_df[similarity_df['Joueur'] == target_player]
+            if target_data.empty:
+                return []
+            
+            target_values = target_data[available_metrics].values[0]
+            target_info = target_data.iloc[0]
+            
+            # Filtrer les autres joueurs (exclure le joueur cible)
+            other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
+            
+            if other_players.empty:
+                return []
+            
+            # Normaliser les données manuellement
+            all_data = similarity_df[available_metrics].values
+            mean_vals = np.mean(all_data, axis=0)
+            std_vals = np.std(all_data, axis=0)
+            
+            # Éviter division par zéro
+            std_vals[std_vals == 0] = 1
+            
+            # Normaliser le joueur cible
+            target_normalized = (target_values - mean_vals) / std_vals
+            
+            # Calculer la similarité cosinus avec chaque joueur
+            similarities = []
+            
+            for idx, player_row in other_players.iterrows():
+                player_values = player_row[available_metrics].values
+                player_normalized = (player_values - mean_vals) / std_vals
+                
+                # Calculer la similarité cosinus
+                cosine_sim = Utils.cosine_similarity_manual(target_normalized, player_normalized)
+                
+                # Convertir en score de similarité (0-100)
+                similarity_score = cosine_sim * 100
+                
+                similarities.append({
+                    'joueur': player_row['Joueur'],
+                    'equipe': player_row['Équipe'],
+                    'competition': player_row['Compétition'],
+                    'position': player_row['Position'],
+                    'age': player_row['Âge'],
+                    'similarity_score': similarity_score,
+                    'data': player_row
+                })
+            
+            # Trier par score de similarité décroissant
+            similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
+            
+            return similarities[:num_similar]
+            
+        except Exception as e:
+            st.error(f"Erreur lors du calcul de similarité manuelle : {str(e)}")
             return []
     
     @staticmethod
     def calculate_similarity(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Point d'entrée principal pour le calcul de similarité"""
+        """Point d'entrée principal pour le calcul de similarité avec Cosine Similarity"""
         if SKLEARN_AVAILABLE:
-            return SimilarPlayerAnalyzer.calculate_similarity_advanced(target_player, df, num_similar)
+            return SimilarPlayerAnalyzer.calculate_similarity_with_cosine(target_player, df, num_similar)
         else:
-            return SimilarPlayerAnalyzer.calculate_similarity_simple(target_player, df, num_similar)
+            return SimilarPlayerAnalyzer.calculate_similarity_manual_cosine(target_player, df, num_similar)
 
 # ================================================================================================
 # GESTIONNAIRE DE GRAPHIQUES
@@ -1601,7 +1631,7 @@ class UIComponents:
                 Dashboard Football Professionnel
             </h1>
             <p style='color: rgba(255,255,255,0.9); margin: 16px 0 0 0; font-size: 1.25em; font-weight: 500;'>
-                Analyse avancée des performances - Saison 2024-25
+                Analyse avancée avec Cosine Similarity - Saison 2024-25
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -1816,7 +1846,7 @@ class UIComponents:
                 Dashboard Football Professionnel
             </h3>
             <p style='color: var(--text-primary); margin: 0; font-size: 1.1em; font-weight: 500;'>
-                Analyse avancée des performances footballistiques
+                Analyse avancée avec Cosine Similarity
             </p>
             <p style='color: var(--text-secondary); margin: 12px 0 0 0; font-size: 0.9em;'>
                 Données: FBRef | Design: Dashboard Pro | Saison 2024-25
@@ -2291,8 +2321,12 @@ class TabManager:
     
     @staticmethod
     def render_similar_players_tab(selected_player: str, df: pd.DataFrame):
-        """Rendu de l'onglet joueurs similaires avec histogrammes de comparaison"""
-        st.markdown("<h2 class='section-title-enhanced'>👥 Profils Similaires</h2>", unsafe_allow_html=True)
+        """Rendu de l'onglet joueurs similaires avec Cosine Similarity et histogrammes de comparaison"""
+        st.markdown("<h2 class='section-title-enhanced'>👥 Profils Similaires - Cosine Similarity</h2>", unsafe_allow_html=True)
+        
+        # Message d'information sur l'algorithme utilisé
+        algorithm_info = "Cosine Similarity avec sklearn" if SKLEARN_AVAILABLE else "Cosine Similarity (implémentation manuelle)"
+        st.info(f"🔬 **Algorithme utilisé**: {algorithm_info} - Analyse basée sur toutes les métriques numériques disponibles")
         
         # Configuration
         col1, col2 = st.columns([2, 1])
@@ -2309,12 +2343,8 @@ class TabManager:
                 help="Choisissez combien de joueurs similaires vous voulez voir"
             )
         
-        # Message d'information sur sklearn
-        if not SKLEARN_AVAILABLE:
-            st.info("ℹ️ Analyse de similarité en mode simplifié (scikit-learn non disponible)")
-        
         # Calcul des joueurs similaires
-        with st.spinner("🔍 Recherche de joueurs similaires..."):
+        with st.spinner("🔍 Recherche de joueurs similaires avec Cosine Similarity..."):
             similar_players = SimilarPlayerAnalyzer.calculate_similarity(selected_player, df, num_similar)
         
         if not similar_players:
@@ -2330,7 +2360,7 @@ class TabManager:
         with metrics_col1:
             avg_similarity = np.mean([p['similarity_score'] for p in similar_players])
             st.metric("Score de Similarité Moyen", f"{avg_similarity:.1f}%", 
-                     help="Score moyen de similarité des joueurs trouvés")
+                     help="Score moyen de similarité cosinus des joueurs trouvés")
         
         with metrics_col2:
             best_match = similar_players[0] if similar_players else None
@@ -2347,7 +2377,7 @@ class TabManager:
             # Compter les métriques disponibles pour l'analyse
             similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
             st.metric("Métriques Analysées", f"{len(available_metrics)}", 
-                     help="Nombre de métriques utilisées pour calculer la similarité")
+                     help="Nombre de métriques numériques utilisées pour calculer la similarité cosinus")
         
         # Cartes des joueurs similaires
         st.markdown("---")
@@ -2874,7 +2904,7 @@ class FootballDashboard:
                 <div class='metric-card-enhanced' style='padding: 24px;'>
                     <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>👥</div>
                     <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Profils Similaires</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Joueurs au style proche</p>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Cosine Similarity</p>
                 </div>
                 <div class='metric-card-enhanced' style='padding: 24px;'>
                     <div style='font-size: 3em; margin-bottom: 12px; color: var(--warning);'>🔄</div>

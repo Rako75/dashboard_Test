@@ -878,7 +878,7 @@ class SimilarPlayerAnalyzer:
     
     @staticmethod
     def calculate_similarity_simple(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Calcule la similarité sans sklearn (version simplifiée)"""
+        """Calcule la similarité sans sklearn (version simplifiée avec normalisation globale)"""
         try:
             # Préparer les données
             similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
@@ -900,13 +900,27 @@ class SimilarPlayerAnalyzer:
             if other_players.empty:
                 return []
             
-            # Calculer la similarité de manière simple (somme des différences absolues normalisées)
+            # Normalisation globale pour garantir la symétrie
+            # Calculer les min/max pour chaque métrique sur l'ensemble du dataset
+            metric_ranges = {}
+            for metric in available_metrics:
+                all_values = similarity_df[metric].astype(float)
+                min_val = all_values.min()
+                max_val = all_values.max()
+                range_val = max_val - min_val
+                metric_ranges[metric] = {
+                    'min': min_val,
+                    'max': max_val,
+                    'range': range_val if range_val > 0 else 1  # Éviter division par zéro
+                }
+            
+            # Calculer la similarité avec normalisation globale
             similarities = []
             
             for idx, player_row in other_players.iterrows():
                 player_values = player_row[available_metrics]
                 
-                # Calculer la différence relative pour chaque métrique
+                # Calculer la différence normalisée pour chaque métrique
                 total_diff = 0
                 valid_metrics = 0
                 
@@ -914,9 +928,19 @@ class SimilarPlayerAnalyzer:
                     target_val = float(target_values[metric])
                     player_val = float(player_values[metric])
                     
-                    # Éviter la division par zéro
-                    max_val = max(abs(target_val), abs(player_val), 1)
-                    diff = abs(target_val - player_val) / max_val
+                    # Normalisation basée sur l'étendue globale de la métrique
+                    metric_range = metric_ranges[metric]
+                    if metric_range['range'] > 0:
+                        # Normaliser les valeurs entre 0 et 1
+                        norm_target = (target_val - metric_range['min']) / metric_range['range']
+                        norm_player = (player_val - metric_range['min']) / metric_range['range']
+                        
+                        # Différence normalisée (entre 0 et 1)
+                        diff = abs(norm_target - norm_player)
+                    else:
+                        # Si toutes les valeurs sont identiques, différence = 0
+                        diff = 0
+                    
                     total_diff += diff
                     valid_metrics += 1
                 

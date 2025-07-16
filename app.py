@@ -873,7 +873,7 @@ class SimilarPlayerAnalyzer:
             return pd.DataFrame(), []
         
         # Créer le DataFrame avec les métriques disponibles
-        required_cols = ['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge']
+        required_cols = ['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge', 'Valeur marchande']
         similarity_df = df[required_cols + available_metrics].copy()
         
         # Remplacer les valeurs manquantes par 0

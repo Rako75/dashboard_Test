@@ -947,17 +947,9 @@ class SimilarPlayerAnalyzer:
                 })
             
             # Trier par score de similarité décroissant
-          # Supprimer les doublons basés sur le nom du joueur
-        seen = set()
-        unique_similarities = []
-        for p in similarities:
-        if p['joueur'] not in seen:
-        unique_similarities.append(p)
-        seen.add(p['joueur'])
-# Trier par score de similarité décroissant
-        unique_similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
-
-        return unique_similarities[:num_similar]
+            similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
+            
+            return similarities[:num_similar]
             
         except Exception as e:
             st.error(f"Erreur lors du calcul de similarité : {str(e)}")
@@ -1020,17 +1012,9 @@ class SimilarPlayerAnalyzer:
                 })
             
             # Trier par score de similarité décroissant
-           # Supprimer les doublons basés sur le nom du joueur
-        seen = set()
-        unique_similar_players = []
-        for p in similar_players:
-        if p['joueur'] not in seen:
-        unique_similar_players.append(p)
-        seen.add(p['joueur'])
-# Trier par score de similarité décroissant
-    unique_similar_players.sort(key=lambda x: x['similarity_score'], reverse=True)
-
-return unique_similar_players[:num_similar]
+            similar_players.sort(key=lambda x: x['similarity_score'], reverse=True)
+            
+            return similar_players[:num_similar]
             
         except Exception as e:
             st.error(f"Erreur lors du calcul de similarité avancé : {str(e)}")

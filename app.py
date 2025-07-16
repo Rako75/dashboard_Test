@@ -2166,7 +2166,7 @@ class TabManager:
             success_data = {
                 'Duels défensifs': player_data.get('Pourcentage de duels gagnés', 0),
                 'Duels aériens': player_data.get('Pourcentage de duels aériens gagnés', 0),
-                'Tacles réussis': (player_data.get('Tacles gagnants', 0) / max(player_data.get('Tacles tentés', player_data.get('Tacles gagnants', 1)), 1) * 100) if player_data.get('Tacles gagnants', 0) > 0 else 0
+                'Récupérations': min(100, (player_data.get('Ballons récupérés', 0) / max(player_data.get('Minutes jouées', 90), 1) * 90 * 10)) if player_data.get('Ballons récupérés', 0) > 0 else 0
             }
             
             fig_gauge = ChartManager.create_gauge_chart(success_data, "Efficacité Défensive (%)")

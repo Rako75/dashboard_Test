@@ -84,8 +84,9 @@ class Config:
         'Serie A': 'Serie_A_Logos'
     }
     
-    # Métriques pour l'analyse de similarité (versions simplifiées)
+    # Métriques pour l'analyse de similarité (version enrichie)
     SIMILARITY_METRICS = [
+        # Métriques de base (volume)
         'Minutes jouées',
         'Buts',
         'Passes décisives',
@@ -95,29 +96,64 @@ class Config:
         'Dribbles tentés',
         'Dribbles réussis',
         'Tacles gagnants',
-        'Interceptions'
+        'Interceptions',
+        
+        # Métriques de qualité/efficacité
+        'Pourcentage de passes réussies',
+        'Pourcentage de dribbles réussis',
+        'Ballons récupérés',
+        
+        # Métriques de progression
+        'Passes progressives',
+        'Courses progressives',
+        'Passes dans le dernier tiers',
+        
+        # Métriques physiques/aériennes
+        'Duels aériens gagnés',
+        'Duels défensifs gagnés',
+        
+        # Métriques de finition
+        'Tirs cadrés',
+        'Actions menant à un tir'
     ]
     
-    # Métriques pour les histogrammes de comparaison
+    # Métriques pour les histogrammes de comparaison (version enrichie)
     HISTOGRAM_METRICS = [
+        # Métriques offensives de base
         'Buts',
         'Passes décisives',
         'Tirs',
+        'Tirs cadrés',
         'Passes clés',
+        'Actions menant à un tir',
         'Dribbles réussis',
+        'Dribbles tentés',
+        
+        # Métriques défensives
         'Tacles gagnants',
         'Interceptions',
-        'Passes tentées',
-        'Passes progressives',
         'Ballons récupérés',
         'Duels aériens gagnés',
-        'Centres réussis',
-        'Actions menant à un tir',
+        'Duels défensifs gagnés',
+        'Dégagements',
+        
+        # Métriques de progression et technique
+        'Passes tentées',
+        'Passes progressives',
+        'Courses progressives',
         'Passes dans le dernier tiers',
         'Passes dans la surface',
-        'Dribbles tentés',
         'Touches de balle',
-        'Dégagements',
+        'Centres réussis',
+        
+        # Métriques de qualité (pourcentages)
+        'Pourcentage de passes réussies',
+        'Pourcentage de dribbles réussis',
+        'Pourcentage de tirs cadrés',
+        'Pourcentage de duels gagnés',
+        'Pourcentage de duels aériens gagnés',
+        
+        # Autres métriques utiles
         'Fautes commises',
         'Cartons jaunes'
     ]
@@ -1320,10 +1356,19 @@ class ChartManager:
                 'Passes dans le dernier tiers': ['Passes dans le dernier tiers', 'Passes dernier 1/3', 'Passes dernier tiers'],
                 'Passes dans la surface': ['Passes dans la surface', 'Passes dans la surface de réparation'],
                 'Duels aériens gagnés': ['Duels aériens gagnés', 'Duels aériens', 'Duels aériens réussis'],
+                'Duels défensifs gagnés': ['Duels défensifs gagnés', 'Duels gagnés', 'Duels défensifs'],
                 'Centres réussis': ['Centres réussis', 'Centres', 'Pourcentage de centres réussis'],
                 'Ballons récupérés': ['Ballons récupérés', 'Récupérations', 'Ballons récupérés par 90 minutes'],
                 'Fautes commises': ['Fautes commises', 'Fautes', 'Fautes par 90 minutes'],
-                'Touches de balle': ['Touches de balle', 'Touches', 'Touches par 90 minutes']
+                'Touches de balle': ['Touches de balle', 'Touches', 'Touches par 90 minutes'],
+                'Passes progressives': ['Passes progressives', 'Passes prog.', 'Progressive passes'],
+                'Courses progressives': ['Courses progressives', 'Courses prog.', 'Progressive carries', 'Conduites progressives'],
+                'Tirs cadrés': ['Tirs cadrés', 'Tirs en cadre', 'Shots on target'],
+                'Pourcentage de passes réussies': ['Pourcentage de passes réussies', '% passes réussies', 'Pass completion %', 'Précision passes'],
+                'Pourcentage de dribbles réussis': ['Pourcentage de dribbles réussis', '% dribbles réussis', 'Dribble success %', 'Précision dribbles'],
+                'Pourcentage de tirs cadrés': ['Pourcentage de tirs cadrés', '% tirs cadrés', 'Shot accuracy %', 'Précision tirs'],
+                'Pourcentage de duels gagnés': ['Pourcentage de duels gagnés', '% duels gagnés', 'Duel success %'],
+                'Pourcentage de duels aériens gagnés': ['Pourcentage de duels aériens gagnés', '% duels aériens gagnés', 'Aerial duel success %']
             }
             
             # Recherche directe
@@ -2405,6 +2450,7 @@ class TabManager:
         
         with col1:
             st.markdown("<h3 class='subsection-title-enhanced'>⚙️ Configuration de l'Analyse</h3>", unsafe_allow_html=True)
+            st.info("🎯 **Analyse enrichie** : Utilise 21 métriques couvrant le volume, l'efficacité, la progression, l'aspect physique et la finition pour une similarité plus précise.")
         
         with col2:
             num_similar = st.slider(
@@ -2419,6 +2465,22 @@ class TabManager:
         if not SKLEARN_AVAILABLE:
             st.info("ℹ️ Analyse de similarité en mode simplifié (scikit-learn non disponible)")
         
+        # Détails des métriques utilisées
+        with st.expander("📊 Voir les métriques utilisées pour l'analyse", expanded=False):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown("**📈 Volume & Base**")
+                st.markdown("• Minutes jouées\n• Buts\n• Passes décisives\n• Tirs\n• Passes clés\n• Passes tentées\n• Dribbles tentés")
+                
+            with col2:
+                st.markdown("**🎯 Qualité & Progression**")
+                st.markdown("• % Passes réussies\n• % Dribbles réussis\n• Passes progressives\n• Courses progressives\n• Passes dernier tiers\n• Ballons récupérés")
+                
+            with col3:
+                st.markdown("**💪 Physique & Finition**")
+                st.markdown("• Duels aériens gagnés\n• Duels défensifs gagnés\n• Tirs cadrés\n• Actions → Tir\n• Tacles gagnants\n• Interceptions")
+        
         # Calcul des joueurs similaires
         with st.spinner("🔍 Recherche de joueurs similaires..."):
             similar_players = SimilarPlayerAnalyzer.calculate_similarity(selected_player, df, num_similar)
@@ -2429,6 +2491,7 @@ class TabManager:
         
         # Affichage des résultats
         st.markdown(f"<h3 class='subsection-title-enhanced'>🎯 Top {len(similar_players)} joueurs les plus similaires à {selected_player}</h3>", unsafe_allow_html=True)
+        st.caption("*Basé sur 21 métriques couvrant toutes les dimensions du jeu (volume, efficacité, progression, physique, finition)*")
         
         # Métriques de résumé
         metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
@@ -2449,6 +2512,11 @@ class TabManager:
             st.metric("Compétitions Représentées", f"{unique_competitions}", 
                      help="Nombre de compétitions différentes")
         
+        with metrics_col4:
+            high_similarity_count = len([p for p in similar_players if p['similarity_score'] >= 80])
+            st.metric("Similarité Élevée (≥80%)", f"{high_similarity_count}/{len(similar_players)}", 
+                     help="Nombre de joueurs avec une similarité très élevée")
+        
         
         # Cartes des joueurs similaires
         st.markdown("---")
@@ -2465,6 +2533,7 @@ class TabManager:
         # Section pour les histogrammes de comparaison
         st.markdown("---")
         st.markdown("<h3 class='subsection-title-enhanced'>📊 Histogrammes de Comparaison</h3>", unsafe_allow_html=True)
+        st.caption("*Comparez une métrique spécifique entre le joueur sélectionné et ses profils similaires*")
         
         # Sélection de la métrique pour l'histogramme
         available_histogram_metrics = [metric for metric in Config.HISTOGRAM_METRICS if metric in df.columns]

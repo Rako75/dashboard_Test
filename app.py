@@ -1347,7 +1347,7 @@ class ChartManager:
         actual_column = find_column_name(metric, df.columns.tolist())
         
         if not actual_column:
-            st.error(f"La métrique '{metric}' n'existe pas dans les données. Colonnes disponibles: {sorted(df.columns.tolist())}")
+            st.error(f"La métrique '{metric}' n'existe pas dans les données")
             return go.Figure()
         
         # Obtenir les données du joueur cible
@@ -1372,27 +1372,31 @@ class ChartManager:
         else:
             data_quality.append("✅ Données disponibles")
         
-        # Ajouter les joueurs similaires
+        # Ajouter les joueurs similaires en accédant directement au DataFrame principal
         missing_data_count = 0
         for i, player_info in enumerate(similar_players):
-            player_data = player_info['data']
+            player_name = player_info['joueur']
             
-            # Utiliser le nom exact de la colonne trouvée
-            if actual_column in player_data.index:
-                raw_value = player_data[actual_column]
-            else:
-                raw_value = None
+            # Accéder directement aux données du DataFrame principal
+            player_data_from_df = df[df['Joueur'] == player_name]
             
-            # Gestion améliorée des valeurs manquantes
-            if pd.isna(raw_value) or raw_value is None:
+            if player_data_from_df.empty:
                 value = 0
                 missing_data_count += 1
-                data_quality.append("⚠️ Données manquantes")
+                data_quality.append("⚠️ Joueur non trouvé")
             else:
-                value = float(raw_value)
-                data_quality.append("✅ Données disponibles")
+                raw_value = player_data_from_df[actual_column].iloc[0]
+                
+                # Gestion améliorée des valeurs manquantes
+                if pd.isna(raw_value) or raw_value is None:
+                    value = 0
+                    missing_data_count += 1
+                    data_quality.append("⚠️ Données manquantes")
+                else:
+                    value = float(raw_value)
+                    data_quality.append("✅ Données disponibles")
             
-            player_names.append(player_info['joueur'])
+            player_names.append(player_name)
             player_values.append(value)
             
             # Couleur dégradée selon la similarité

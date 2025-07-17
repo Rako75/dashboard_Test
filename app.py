@@ -874,6 +874,9 @@ class SimilarPlayerAnalyzer:
         # Filtrer les lignes avec des données valides
         similarity_df = similarity_df.dropna(subset=['Joueur'])
         
+        # Supprimer les doublons basés sur le nom du joueur (garder le premier)
+        similarity_df = similarity_df.drop_duplicates(subset=['Joueur'], keep='first')
+        
         return similarity_df, available_metrics
     
     @staticmethod
@@ -2020,7 +2023,7 @@ class TabManager:
             st.plotly_chart(fig_bar, use_container_width=True)
             
             # Métriques avec st.metric
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Offensives</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Clés</h3>", unsafe_allow_html=True)
             
             metric_col1, metric_col2 = st.columns(2)
             with metric_col1:
@@ -2276,7 +2279,7 @@ class TabManager:
             technical_success = {
                 'Passes prog.': player_data.get('Pourcentage de passes progressives réussies', player_data.get('Pourcentage de passes réussies', 0)),
                 'Courses prog.': min(100, (player_data.get('Courses progressives', player_data.get('Dribbles réussis', 0)) / max(player_data.get('Minutes jouées', 90), 1) * 90 * 10)) if player_data.get('Courses progressives', player_data.get('Dribbles réussis', 0)) > 0 else 0,
-                'Touches de balle': min(100, (player_data.get('Touches de balle', 0) / max(player_data.get('Minutes jouées', 90), 1) * 90 / 100 * 100)) if player_data.get('Touches de balle', 0) > 0 else 0
+                'Touches/90': min(100, (player_data.get('Touches de balle', 0) / max(player_data.get('Minutes jouées', 90), 1) * 90 / 100 * 100)) if player_data.get('Touches de balle', 0) > 0 else 0
             }
             
             fig_gauge = ChartManager.create_gauge_chart(technical_success, "Maîtrise Technique (%)")

@@ -2550,25 +2550,20 @@ class TabManager:
                 # Informations supplémentaires sur l'histogramme
                 target_data = df[df['Joueur'] == selected_player]
                 if not target_data.empty:
-                    # Trouver le nom exact de la colonne (même logique que dans create_histogram_comparison)
+                    # Trouver le nom exact de la colonne
                     def find_column_name_quick(metric_name: str, df_columns: List[str]) -> Optional[str]:
-                        # Recherche directe
                         if metric_name in df_columns:
                             return metric_name
-                        # Recherche approximative
                         for col in df_columns:
                             if metric_name.lower() in col.lower() or col.lower() in metric_name.lower():
                                 return col
-                        return metric_name  # Fallback
+                        return metric_name
                     
                     actual_column = find_column_name_quick(selected_metric, df.columns.tolist())
                     target_value = target_data[actual_column].iloc[0]
                     
                     if not pd.isna(target_value):
                         similar_values = []
-                        valid_players = []
-                        
-                        # Collecter les valeurs des joueurs similaires
                         for player_info in similar_players:
                             player_name = player_info['joueur']
                             player_data_from_df = df[df['Joueur'] == player_name]
@@ -2577,19 +2572,11 @@ class TabManager:
                                 value = player_data_from_df[actual_column].iloc[0]
                                 if not pd.isna(value):
                                     similar_values.append(value)
-                                    valid_players.append(player_name)
                         
                         if similar_values:
                             avg_similar = np.mean(similar_values)
                             max_similar = np.max(similar_values)
                             min_similar = np.min(similar_values)
-                            
-                            # Trouver les joueurs avec max/min
-                            max_player = valid_players[similar_values.index(max_similar)]
-                            min_player = valid_players[similar_values.index(min_similar)]
-                            
-                            st.markdown("---")
-                            st.markdown("**📊 Statistiques de comparaison**")
                             
                             stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)
                             
@@ -2604,12 +2591,10 @@ class TabManager:
                             
                             with stats_col3:
                                 st.metric("Maximum", f"{max_similar:.1f}",
-                                         delta=max_player,
                                          help="Valeur maximale parmi les joueurs similaires")
                             
                             with stats_col4:
                                 st.metric("Minimum", f"{min_similar:.1f}",
-                                         delta=min_player,
                                          help="Valeur minimale parmi les joueurs similaires")
                 
                 # Informations supplémentaires sur l'histogramme

@@ -2629,22 +2629,8 @@ class TabManager:
                             max_similar = np.max(similar_values)
                             min_similar = np.min(similar_values)
                             
-                            stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)
-                            
-                            with stats_col1:
-                                st.metric(f"{selected_player}", f"{target_value:.1f}", 
-                                         help=f"Valeur du joueur sélectionné pour {selected_metric}")
-                            
-                            with stats_col2:
-                                st.metric("Moyenne Similaires", f"{avg_similar:.1f}",
-                                         delta=f"{target_value - avg_similar:.1f}",
-                                         help="Moyenne des joueurs similaires")
-                            
-                            
-                            
-                            with stats_col4:
-                                st.metric("Minimum", f"{min_similar:.1f}",
-                                         help="Valeur minimale parmi les joueurs similaires")
+                            stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)                    
+                        
         else:
             st.warning("⚠️ Aucune métrique numérique disponible pour les histogrammes de comparaison")
             

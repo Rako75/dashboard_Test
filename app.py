@@ -1328,16 +1328,31 @@ class ChartManager:
         player_names = [target_player]
         player_values = [float(target_value)]
         player_colors = [Config.COLORS['primary']]
+        data_quality = []
+        
+        # Vérifier la qualité des données du joueur cible
+        if pd.isna(target_data[metric].iloc[0]):
+            data_quality.append("⚠️ Données manquantes")
+        else:
+            data_quality.append("✅ Données disponibles")
         
         # Ajouter les joueurs similaires
+        missing_data_count = 0
         for i, player_info in enumerate(similar_players):
             player_data = player_info['data']
-            value = player_data.get(metric, 0)
-            if pd.isna(value):
+            raw_value = player_data.get(metric)
+            
+            # Gestion améliorée des valeurs manquantes
+            if pd.isna(raw_value) or raw_value is None:
                 value = 0
+                missing_data_count += 1
+                data_quality.append("⚠️ Données manquantes")
+            else:
+                value = float(raw_value)
+                data_quality.append("✅ Données disponibles")
             
             player_names.append(player_info['joueur'])
-            player_values.append(float(value))
+            player_values.append(value)
             
             # Couleur dégradée selon la similarité
             similarity_score = player_info['similarity_score']
@@ -1350,7 +1365,11 @@ class ChartManager:
             
             player_colors.append(color)
         
-        # Créer l'histogramme
+        # Afficher un avertissement si beaucoup de données manquantes
+        if missing_data_count > len(similar_players) * 0.5:
+            st.warning(f"⚠️ Attention: {missing_data_count}/{len(similar_players)} joueurs similaires ont des données manquantes pour '{metric}'")
+        
+        # Créer l'histogramme avec informations sur la qualité des données
         fig = go.Figure(data=[go.Bar(
             x=player_names,
             y=player_values,
@@ -1359,24 +1378,29 @@ class ChartManager:
                 line=dict(color='rgba(255,255,255,0.3)', width=2),
                 opacity=0.8
             ),
-            text=[f"{v:.1f}" for v in player_values],
+            text=[f"{v:.1f}" if v > 0 else "N/A" for v in player_values],
             textposition='outside',
             textfont=dict(color='white', size=14, family='Inter', weight=600),
-            hovertemplate='<b>%{x}</b><br>' + f'{metric}: %{{y:.2f}}<extra></extra>'
+            hovertemplate='<b>%{x}</b><br>' + f'{metric}: %{{y:.2f}}<br>' + 
+                         '<br>'.join([f"{name}: {qual}" for name, qual in zip(player_names, data_quality)]) +
+                         '<extra></extra>',
+            customdata=data_quality
         )])
         
-        # Ajouter une ligne horizontale pour la moyenne
-        avg_value = np.mean(player_values)
-        fig.add_hline(
-            y=avg_value,
-            line_dash="dash",
-            line_color="rgba(255,255,255,0.6)",
-            line_width=2,
-            annotation_text=f"Moyenne: {avg_value:.1f}",
-            annotation_position="top right",
-            annotation_font_color="white",
-            annotation_font_size=12
-        )
+        # Ajouter une ligne horizontale pour la moyenne (seulement sur les valeurs > 0)
+        non_zero_values = [v for v in player_values if v > 0]
+        if non_zero_values:
+            avg_value = np.mean(non_zero_values)
+            fig.add_hline(
+                y=avg_value,
+                line_dash="dash",
+                line_color="rgba(255,255,255,0.6)",
+                line_width=2,
+                annotation_text=f"Moyenne (données valides): {avg_value:.1f}",
+                annotation_position="top right",
+                annotation_font_color="white",
+                annotation_font_size=12
+            )
         
         # Mise en page haute qualité
         fig.update_layout(

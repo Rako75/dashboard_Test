@@ -1309,9 +1309,45 @@ class ChartManager:
                                   df: pd.DataFrame, metric: str) -> go.Figure:
         """Crée un histogramme de comparaison haute qualité pour une métrique spécifique"""
         
-        # Vérifier que la métrique existe
-        if metric not in df.columns:
-            st.error(f"La métrique '{metric}' n'existe pas dans les données")
+        # Fonction pour trouver la colonne correspondante
+        def find_column_name(metric_name: str, df_columns: List[str]) -> Optional[str]:
+            """Trouve le nom exact de la colonne correspondant à la métrique"""
+            # Correspondances spéciales pour les noms de colonnes
+            column_mappings = {
+                'Actions menant à un tir': ['Actions menant à un tir', 'Actions menant à un tir par 90 minutes', 'Actions → Tir', 'Actions menant à un tir par 90min'],
+                'Buts attendus': ['Buts attendus', 'Buts attendus par 90 minutes', 'xG', 'Expected Goals'],
+                'Passes décisives attendues': ['Passes décisives attendues', 'Passes décisives attendues par 90 minutes', 'xA', 'Expected Assists'],
+                'Passes dans le dernier tiers': ['Passes dans le dernier tiers', 'Passes dernier 1/3', 'Passes dernier tiers'],
+                'Passes dans la surface': ['Passes dans la surface', 'Passes dans la surface de réparation'],
+                'Duels aériens gagnés': ['Duels aériens gagnés', 'Duels aériens', 'Duels aériens réussis'],
+                'Centres réussis': ['Centres réussis', 'Centres', 'Pourcentage de centres réussis'],
+                'Ballons récupérés': ['Ballons récupérés', 'Récupérations', 'Ballons récupérés par 90 minutes'],
+                'Fautes commises': ['Fautes commises', 'Fautes', 'Fautes par 90 minutes'],
+                'Touches de balle': ['Touches de balle', 'Touches', 'Touches par 90 minutes']
+            }
+            
+            # Recherche directe
+            if metric_name in df_columns:
+                return metric_name
+            
+            # Recherche dans les mappings
+            possible_names = column_mappings.get(metric_name, [metric_name])
+            for name in possible_names:
+                if name in df_columns:
+                    return name
+            
+            # Recherche approximative (contient le mot clé)
+            for col in df_columns:
+                if metric_name.lower() in col.lower() or col.lower() in metric_name.lower():
+                    return col
+            
+            return None
+        
+        # Trouver le nom exact de la colonne
+        actual_column = find_column_name(metric, df.columns.tolist())
+        
+        if not actual_column:
+            st.error(f"La métrique '{metric}' n'existe pas dans les données. Colonnes disponibles: {sorted(df.columns.tolist())}")
             return go.Figure()
         
         # Obtenir les données du joueur cible
@@ -1320,7 +1356,7 @@ class ChartManager:
             st.error(f"Joueur '{target_player}' non trouvé")
             return go.Figure()
         
-        target_value = target_data[metric].iloc[0]
+        target_value = target_data[actual_column].iloc[0]
         if pd.isna(target_value):
             target_value = 0
         
@@ -1331,7 +1367,7 @@ class ChartManager:
         data_quality = []
         
         # Vérifier la qualité des données du joueur cible
-        if pd.isna(target_data[metric].iloc[0]):
+        if pd.isna(target_data[actual_column].iloc[0]):
             data_quality.append("⚠️ Données manquantes")
         else:
             data_quality.append("✅ Données disponibles")
@@ -1340,7 +1376,12 @@ class ChartManager:
         missing_data_count = 0
         for i, player_info in enumerate(similar_players):
             player_data = player_info['data']
-            raw_value = player_data.get(metric)
+            
+            # Utiliser le nom exact de la colonne trouvée
+            if actual_column in player_data.index:
+                raw_value = player_data[actual_column]
+            else:
+                raw_value = None
             
             # Gestion améliorée des valeurs manquantes
             if pd.isna(raw_value) or raw_value is None:
@@ -1365,9 +1406,9 @@ class ChartManager:
             
             player_colors.append(color)
         
-        # Afficher un avertissement si beaucoup de données manquantes
+        # Afficher un avertissement seulement si vraiment beaucoup de données manquantes
         if missing_data_count > len(similar_players) * 0.5:
-            st.warning(f"⚠️ Attention: {missing_data_count}/{len(similar_players)} joueurs similaires ont des données manquantes pour '{metric}'")
+            st.warning(f"⚠️ Attention: {missing_data_count}/{len(similar_players)} joueurs similaires ont des données manquantes pour '{metric}' (colonne: '{actual_column}')")
         
         # Créer l'histogramme avec informations sur la qualité des données
         fig = go.Figure(data=[go.Bar(
@@ -1382,9 +1423,7 @@ class ChartManager:
             textposition='outside',
             textfont=dict(color='white', size=14, family='Inter', weight=600),
             hovertemplate='<b>%{x}</b><br>' + f'{metric}: %{{y:.2f}}<br>' + 
-                         '<br>'.join([f"{name}: {qual}" for name, qual in zip(player_names, data_quality)]) +
-                         '<extra></extra>',
-            customdata=data_quality
+                         f'Colonne: {actual_column}<extra></extra>'
         )])
         
         # Ajouter une ligne horizontale pour la moyenne (seulement sur les valeurs > 0)

@@ -2499,7 +2499,7 @@ class TabManager:
         excluded_columns = [
             'Joueur', 'Équipe', 'Compétition', 'Position', 'Nationalité', 
             'Âge', 'Valeur marchande', 'Nom', 'Club', 'League', 'Team',
-            'Player', 'Nation', 'Age', 'Market Value'
+            'Player', 'Nation', 'Age', 'Market Value', 'Column1'
         ]
         
         available_histogram_metrics = []

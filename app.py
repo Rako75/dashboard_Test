@@ -117,47 +117,6 @@ class Config:
         'Actions menant à un tir'
     ]
     
-    # Métriques pour les histogrammes de comparaison (version enrichie)
-    HISTOGRAM_METRICS = [
-        # Métriques offensives de base
-        'Buts',
-        'Passes décisives',
-        'Tirs',
-        'Tirs cadrés',
-        'Passes clés',
-        'Actions menant à un tir',
-        'Dribbles réussis',
-        'Dribbles tentés',
-        
-        # Métriques défensives
-        'Tacles gagnants',
-        'Interceptions',
-        'Ballons récupérés',
-        'Duels aériens gagnés',
-        'Duels défensifs gagnés',
-        'Dégagements',
-        
-        # Métriques de progression et technique
-        'Passes tentées',
-        'Passes progressives',
-        'Courses progressives',
-        'Passes dans le dernier tiers',
-        'Passes dans la surface',
-        'Touches de balle',
-        'Centres réussis',
-        
-        # Métriques de qualité (pourcentages)
-        'Pourcentage de passes réussies',
-        'Pourcentage de dribbles réussis',
-        'Pourcentage de tirs cadrés',
-        'Pourcentage de duels gagnés',
-        'Pourcentage de duels aériens gagnés',
-        
-        # Autres métriques utiles
-        'Fautes commises',
-        'Cartons jaunes'
-    ]
-    
     # Métriques étendues pour l'analyse comparative
     COMPREHENSIVE_METRICS = {
         'offensive': [
@@ -2533,25 +2492,53 @@ class TabManager:
         # Section pour les histogrammes de comparaison
         st.markdown("---")
         st.markdown("<h3 class='subsection-title-enhanced'>📊 Histogrammes de Comparaison</h3>", unsafe_allow_html=True)
-        st.caption("*Comparez une métrique spécifique entre le joueur sélectionné et ses profils similaires*")
+        st.caption("*Comparez n'importe quelle métrique entre le joueur sélectionné et ses profils similaires*")
         
-        # Sélection de la métrique pour l'histogramme
-        available_histogram_metrics = [metric for metric in Config.HISTOGRAM_METRICS if metric in df.columns]
+        # Obtenir TOUTES les métriques numériques disponibles
+        # Exclure les colonnes non-numériques
+        excluded_columns = [
+            'Joueur', 'Équipe', 'Compétition', 'Position', 'Nationalité', 
+            'Âge', 'Valeur marchande', 'Nom', 'Club', 'League', 'Team',
+            'Player', 'Nation', 'Age', 'Market Value'
+        ]
+        
+        available_histogram_metrics = []
+        for col in df.columns:
+            # Vérifier si c'est une colonne numérique et pas exclue
+            if col not in excluded_columns:
+                # Vérifier si la colonne contient des données numériques
+                try:
+                    pd.to_numeric(df[col].dropna().iloc[:5], errors='raise')
+                    available_histogram_metrics.append(col)
+                except (ValueError, TypeError, IndexError):
+                    continue
+        
+        # Trier les métriques par ordre alphabétique pour une meilleure navigation
+        available_histogram_metrics = sorted(available_histogram_metrics)
         
         if available_histogram_metrics:
             # Interface pour choisir la métrique
-            metric_col1, metric_col2 = st.columns([2, 1])
+            metric_col1, metric_col2, metric_col3 = st.columns([2, 1, 1])
             
             with metric_col1:
                 selected_metric = st.selectbox(
-                    "📈 Choisissez une métrique pour l'histogramme de comparaison :",
+                    f"📈 Choisissez une métrique pour l'histogramme ({len(available_histogram_metrics)} disponibles) :",
                     available_histogram_metrics,
                     index=0,
-                    help="Sélectionnez la métrique à comparer entre le joueur sélectionné et les joueurs similaires"
+                    help="Sélectionnez n'importe quelle métrique numérique du dataset pour comparer les joueurs"
                 )
             
             with metric_col2:
-                st.info(f"🎯 Comparaison sur : **{selected_metric}**")
+                st.info(f"🎯 **{selected_metric}**")
+            
+            with metric_col3:
+                # Afficher quelques stats sur la métrique sélectionnée
+                if selected_metric in df.columns:
+                    non_null_count = df[selected_metric].count()
+                    total_count = len(df)
+                    coverage = (non_null_count / total_count) * 100
+                    st.metric("Couverture données", f"{coverage:.0f}%", 
+                             help=f"{non_null_count}/{total_count} joueurs ont des données pour cette métrique")
             
             # Créer et afficher l'histogramme haute qualité
             if selected_metric:
@@ -2596,7 +2583,50 @@ class TabManager:
                                 st.metric("Minimum", f"{min_similar:.1f}",
                                          help="Valeur minimale parmi les joueurs similaires")
         else:
-            st.warning("⚠️ Aucune métrique disponible pour les histogrammes de comparaison")
+            st.warning("⚠️ Aucune métrique numérique disponible pour les histogrammes de comparaison")
+            
+        # Afficher des informations sur les métriques disponibles
+        if available_histogram_metrics:
+            with st.expander(f"📋 Voir toutes les {len(available_histogram_metrics)} métriques disponibles", expanded=False):
+                # Organiser les métriques par catégories approximatives
+                offensive_metrics = [m for m in available_histogram_metrics if any(keyword in m.lower() for keyword in ['but', 'tir', 'pass', 'assist', 'xg', 'xa', 'action'])]
+                defensive_metrics = [m for m in available_histogram_metrics if any(keyword in m.lower() for keyword in ['tacl', 'intercept', 'duel', 'récup', 'dégage', 'bloc'])]
+                technical_metrics = [m for m in available_histogram_metrics if any(keyword in m.lower() for keyword in ['dribbl', 'touch', 'course', 'progress', 'centr', 'pourc'])]
+                other_metrics = [m for m in available_histogram_metrics if m not in offensive_metrics + defensive_metrics + technical_metrics]
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    if offensive_metrics:
+                        st.markdown("**🎯 Offensives**")
+                        for metric in offensive_metrics[:8]:  # Limiter l'affichage
+                            st.markdown(f"• {metric}")
+                        if len(offensive_metrics) > 8:
+                            st.markdown(f"• ... et {len(offensive_metrics) - 8} autres")
+                
+                with col2:
+                    if defensive_metrics:
+                        st.markdown("**🛡️ Défensives**")
+                        for metric in defensive_metrics[:8]:
+                            st.markdown(f"• {metric}")
+                        if len(defensive_metrics) > 8:
+                            st.markdown(f"• ... et {len(defensive_metrics) - 8} autres")
+                
+                with col3:
+                    if technical_metrics:
+                        st.markdown("**🎨 Techniques**")
+                        for metric in technical_metrics[:8]:
+                            st.markdown(f"• {metric}")
+                        if len(technical_metrics) > 8:
+                            st.markdown(f"• ... et {len(technical_metrics) - 8} autres")
+                
+                with col4:
+                    if other_metrics:
+                        st.markdown("**📊 Autres**")
+                        for metric in other_metrics[:8]:
+                            st.markdown(f"• {metric}")
+                        if len(other_metrics) > 8:
+                            st.markdown(f"• ... et {len(other_metrics) - 8} autres")
     
     @staticmethod
     def render_comparison_tab(df: pd.DataFrame, selected_player: str):

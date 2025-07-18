@@ -2635,10 +2635,7 @@ class TabManager:
                                 st.metric(f"{selected_player}", f"{target_value:.1f}", 
                                          help=f"Valeur du joueur sélectionné pour {selected_metric}")
                             
-                            with stats_col2:
-                                st.metric("Moyenne Similaires", f"{avg_similar:.1f}",
-                                         delta=f"{target_value - avg_similar:.1f}",
-                                         help="Moyenne des joueurs similaires")
+                         
                             
                             with stats_col3:
                                 st.metric("Maximum", f"{max_similar:.1f}",

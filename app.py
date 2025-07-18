@@ -645,19 +645,11 @@ class DataManager:
     """Gestionnaire centralisé pour les données"""
     
     @staticmethod
-    def find_column_name(possible_names: List[str], df_columns: List[str]) -> Optional[str]:
-        """Trouve le nom exact de la colonne parmi plusieurs possibilités"""
-        for name in possible_names:
-            if name in df_columns:
-                return name
-        return None
-    
-    @staticmethod
     @st.cache_data
     def load_data(file_path: str = 'df_BIG2025.csv') -> Optional[pd.DataFrame]:
         """Charge les données depuis le fichier CSV"""
         try:
-            df = pd.read_csv(file_path, encoding='utf-8', delimiter=',')
+            df = pd.read_csv(file_path, encoding='utf-8', delimiter=';')
             return df
         except FileNotFoundError:
             st.error(f"❌ Fichier '{file_path}' non trouvé.")
@@ -669,57 +661,27 @@ class DataManager:
     @staticmethod
     def filter_by_competition(df: pd.DataFrame, competition: str) -> pd.DataFrame:
         """Filtre les données par compétition"""
-        competition_col = DataManager.find_column_name(
-            ['Compétition', 'Competition', 'League', 'Ligue', 'Liga'], 
-            df.columns.tolist()
-        )
-        if competition_col:
-            return df[df[competition_col] == competition]
-        return df
+        return df[df['Compétition'] == competition]
     
     @staticmethod
     def filter_by_minutes(df: pd.DataFrame, min_minutes: int) -> pd.DataFrame:
         """Filtre les données par minutes jouées"""
-        minutes_col = DataManager.find_column_name(
-            ['Minutes jouées', 'Minutes joués', 'Minutes', 'Min'], 
-            df.columns.tolist()
-        )
-        if minutes_col:
-            return df[df[minutes_col] >= min_minutes]
-        return df
+        return df[df['Minutes jouées'] >= min_minutes]
     
     @staticmethod
     def get_competitions(df: pd.DataFrame) -> List[str]:
         """Récupère la liste des compétitions"""
-        competition_col = DataManager.find_column_name(
-            ['Compétition', 'Competition', 'League', 'Ligue', 'Liga'], 
-            df.columns.tolist()
-        )
-        if competition_col:
-            return sorted(df[competition_col].dropna().unique())
-        return []
+        return sorted(df['Compétition'].dropna().unique())
     
     @staticmethod
     def get_players(df: pd.DataFrame) -> List[str]:
         """Récupère la liste des joueurs"""
-        player_col = DataManager.find_column_name(
-            ['Joueur', 'Player', 'Nom', 'Name'], 
-            df.columns.tolist()
-        )
-        if player_col:
-            return sorted(df[player_col].dropna().unique())
-        return []
+        return sorted(df['Joueur'].dropna().unique())
     
     @staticmethod
     def get_other_leagues_data(df: pd.DataFrame, player_competition: str) -> pd.DataFrame:
         """Récupère les données de toutes les autres ligues (sauf celle du joueur)"""
-        competition_col = DataManager.find_column_name(
-            ['Compétition', 'Competition', 'League', 'Ligue', 'Liga'], 
-            df.columns.tolist()
-        )
-        if competition_col:
-            return df[df[competition_col] != player_competition]
-        return df
+        return df[df['Compétition'] != player_competition]
 
 # ================================================================================================
 # GESTIONNAIRE D'IMAGES
@@ -2588,20 +2550,25 @@ class TabManager:
                 # Informations supplémentaires sur l'histogramme
                 target_data = df[df['Joueur'] == selected_player]
                 if not target_data.empty:
-                    # Trouver le nom exact de la colonne
+                    # Trouver le nom exact de la colonne (même logique que dans create_histogram_comparison)
                     def find_column_name_quick(metric_name: str, df_columns: List[str]) -> Optional[str]:
+                        # Recherche directe
                         if metric_name in df_columns:
                             return metric_name
+                        # Recherche approximative
                         for col in df_columns:
                             if metric_name.lower() in col.lower() or col.lower() in metric_name.lower():
                                 return col
-                        return metric_name
+                        return metric_name  # Fallback
                     
                     actual_column = find_column_name_quick(selected_metric, df.columns.tolist())
                     target_value = target_data[actual_column].iloc[0]
                     
                     if not pd.isna(target_value):
                         similar_values = []
+                        valid_players = []
+                        
+                        # Collecter les valeurs des joueurs similaires
                         for player_info in similar_players:
                             player_name = player_info['joueur']
                             player_data_from_df = df[df['Joueur'] == player_name]
@@ -2610,11 +2577,19 @@ class TabManager:
                                 value = player_data_from_df[actual_column].iloc[0]
                                 if not pd.isna(value):
                                     similar_values.append(value)
+                                    valid_players.append(player_name)
                         
                         if similar_values:
                             avg_similar = np.mean(similar_values)
                             max_similar = np.max(similar_values)
                             min_similar = np.min(similar_values)
+                            
+                            # Trouver les joueurs avec max/min
+                            max_player = valid_players[similar_values.index(max_similar)]
+                            min_player = valid_players[similar_values.index(min_similar)]
+                            
+                            st.markdown("---")
+                            st.markdown("**📊 Statistiques de comparaison**")
                             
                             stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)
                             
@@ -2629,10 +2604,12 @@ class TabManager:
                             
                             with stats_col3:
                                 st.metric("Maximum", f"{max_similar:.1f}",
+                                         delta=max_player,
                                          help="Valeur maximale parmi les joueurs similaires")
                             
                             with stats_col4:
                                 st.metric("Minimum", f"{min_similar:.1f}",
+                                         delta=min_player,
                                          help="Valeur minimale parmi les joueurs similaires")
                 
                 # Informations supplémentaires sur l'histogramme

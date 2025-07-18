@@ -1,0 +1,285 @@
+/* =====================================================================
+   TRANSFORMATION STREAMLIT - INTERFACE MODERNE
+===================================================================== */
+
+/* Supprimer tous les éléments Streamlit */
+#MainMenu, footer, header, .stDeployButton, .stDecoration,
+[data-testid="stHeader"], [data-testid="manage-app-button"],
+.reportview-container .main footer, .reportview-container .main header,
+section[data-testid="sidebar"] { 
+    display: none !important; 
+}
+
+/* Container principal */
+.main .block-container {
+    padding: 0 !important;
+    max-width: none !important;
+}
+
+/* Variables de couleurs modernes */
+:root {
+    --primary: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+    --secondary: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+    --accent: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    --surface: linear-gradient(145deg, rgba(26, 29, 35, 0.95), rgba(45, 55, 72, 0.95));
+    --glass: rgba(26, 29, 35, 0.8);
+    --border: rgba(255, 255, 255, 0.12);
+    --text-primary: #ffffff;
+    --text-secondary: #e2e8f0;
+    --text-muted: #a0aec0;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.4);
+}
+
+/* Background de l'application */
+.stApp {
+    background: linear-gradient(135deg, #0e1117 0%, #1a1d23 100%);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* =====================================================================
+   NAVIGATION MODERNE
+===================================================================== */
+
+.top-navigation {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    margin: -1rem -1rem 2rem -1rem;
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-primary);
+    font-weight: 800;
+    font-size: 1.5rem;
+}
+
+.nav-brand-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* =====================================================================
+   CARTES MODERNES
+===================================================================== */
+
+.modern-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow);
+}
+
+.modern-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary);
+}
+
+.modern-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(49, 130, 206, 0.3);
+}
+
+/* =====================================================================
+   MÉTRIQUES AVEC ANIMATIONS
+===================================================================== */
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    cursor: pointer;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    border-color: rgba(49, 130, 206, 0.4);
+    box-shadow: 0 15px 35px rgba(49, 130, 206, 0.2);
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: var(--primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.metric-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* =====================================================================
+   BOUTONS MODERNES
+===================================================================== */
+
+.btn-modern {
+    background: var(--primary);
+    border: none;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(49, 130, 206, 0.4);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(49, 130, 206, 0.6);
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    box-shadow: 0 4px 15px rgba(56, 161, 105, 0.4);
+}
+
+.btn-secondary:hover {
+    box-shadow: 0 8px 25px rgba(56, 161, 105, 0.6);
+}
+
+/* =====================================================================
+   ANIMATIONS
+===================================================================== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.animate-fade-up { 
+    animation: fadeInUp 0.6s ease forwards; 
+}
+
+.animate-slide-right { 
+    animation: slideInRight 0.6s ease forwards; 
+}
+
+/* =====================================================================
+   RESPONSIVE
+===================================================================== */
+
+@media (max-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .modern-card {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .top-navigation {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =====================================================================
+   SCROLLBAR PERSONNALISÉE
+===================================================================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(26, 29, 35, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(49, 130, 206, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(49, 130, 206, 0.7);
+}

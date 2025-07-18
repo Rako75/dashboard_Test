@@ -645,6 +645,14 @@ class DataManager:
     """Gestionnaire centralisé pour les données"""
     
     @staticmethod
+    def find_column_name(possible_names: List[str], df_columns: List[str]) -> Optional[str]:
+        """Trouve le nom exact de la colonne parmi plusieurs possibilités"""
+        for name in possible_names:
+            if name in df_columns:
+                return name
+        return None
+    
+    @staticmethod
     @st.cache_data
     def load_data(file_path: str = 'df_BIG2025.csv') -> Optional[pd.DataFrame]:
         """Charge les données depuis le fichier CSV"""
@@ -661,27 +669,57 @@ class DataManager:
     @staticmethod
     def filter_by_competition(df: pd.DataFrame, competition: str) -> pd.DataFrame:
         """Filtre les données par compétition"""
-        return df[df['Compétition'] == competition]
+        competition_col = DataManager.find_column_name(
+            ['Compétition', 'Competition', 'League', 'Ligue', 'Liga'], 
+            df.columns.tolist()
+        )
+        if competition_col:
+            return df[df[competition_col] == competition]
+        return df
     
     @staticmethod
     def filter_by_minutes(df: pd.DataFrame, min_minutes: int) -> pd.DataFrame:
         """Filtre les données par minutes jouées"""
-        return df[df['Minutes jouées'] >= min_minutes]
+        minutes_col = DataManager.find_column_name(
+            ['Minutes jouées', 'Minutes joués', 'Minutes', 'Min'], 
+            df.columns.tolist()
+        )
+        if minutes_col:
+            return df[df[minutes_col] >= min_minutes]
+        return df
     
     @staticmethod
     def get_competitions(df: pd.DataFrame) -> List[str]:
         """Récupère la liste des compétitions"""
-        return sorted(df['Compétition'].dropna().unique())
+        competition_col = DataManager.find_column_name(
+            ['Compétition', 'Competition', 'League', 'Ligue', 'Liga'], 
+            df.columns.tolist()
+        )
+        if competition_col:
+            return sorted(df[competition_col].dropna().unique())
+        return []
     
     @staticmethod
     def get_players(df: pd.DataFrame) -> List[str]:
         """Récupère la liste des joueurs"""
-        return sorted(df['Joueur'].dropna().unique())
+        player_col = DataManager.find_column_name(
+            ['Joueur', 'Player', 'Nom', 'Name'], 
+            df.columns.tolist()
+        )
+        if player_col:
+            return sorted(df[player_col].dropna().unique())
+        return []
     
     @staticmethod
     def get_other_leagues_data(df: pd.DataFrame, player_competition: str) -> pd.DataFrame:
         """Récupère les données de toutes les autres ligues (sauf celle du joueur)"""
-        return df[df['Compétition'] != player_competition]
+        competition_col = DataManager.find_column_name(
+            ['Compétition', 'Competition', 'League', 'Ligue', 'Liga'], 
+            df.columns.tolist()
+        )
+        if competition_col:
+            return df[df[competition_col] != player_competition]
+        return df
 
 # ================================================================================================
 # GESTIONNAIRE D'IMAGES

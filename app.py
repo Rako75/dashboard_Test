@@ -2611,39 +2611,6 @@ class TabManager:
                                 st.metric("Minimum", f"{min_similar:.1f}",
                                          delta=min_player,
                                          help="Valeur minimale parmi les joueurs similaires")
-                
-                # Informations supplémentaires sur l'histogramme
-                target_data = df[df['Joueur'] == selected_player]
-                if not target_data.empty:
-                    target_value = target_data[selected_metric].iloc[0]
-                    if not pd.isna(target_value):
-                        similar_values = []
-                        for player_info in similar_players:
-                            player_data = player_info['data']
-                            value = player_data.get(selected_metric, 0)
-                            if not pd.isna(value):
-                                similar_values.append(value)
-                        
-                        if similar_values:
-                            avg_similar = np.mean(similar_values)
-                            max_similar = np.max(similar_values)
-                            min_similar = np.min(similar_values)
-                            
-                            stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)
-                            
-                            with stats_col1:
-                                st.metric(f"{selected_player}", f"{target_value:.1f}", 
-                                         help=f"Valeur du joueur sélectionné pour {selected_metric}")
-                            
-                         
-                            
-                            with stats_col3:
-                                st.metric("Maximum", f"{max_similar:.1f}",
-                                         help="Valeur maximale parmi les joueurs similaires")
-                            
-                            with stats_col4:
-                                st.metric("Minimum", f"{min_similar:.1f}",
-                                         help="Valeur minimale parmi les joueurs similaires")
         else:
             st.warning("⚠️ Aucune métrique numérique disponible pour les histogrammes de comparaison")
             

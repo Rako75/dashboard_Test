@@ -34,7 +34,7 @@ class Config:
         "page_title": "Football Analytics Pro",
         "page_icon": "⚽",
         "layout": "wide",
-        "initial_sidebar_state": "collapsed"
+        "initial_sidebar_state": "expanded"
     }
     
     # Palette de couleurs modernes
@@ -98,15 +98,15 @@ class Config:
     ]
 
 # ================================================================================================
-# GESTIONNAIRE DE STYLES CSS AVANCÉ
+# GESTIONNAIRE DE STYLES CSS MODERNE
 # ================================================================================================
 
-class AdvancedStyleManager:
-    """Gestionnaire des styles CSS ultra-personnalisés"""
+class ModernStyleManager:
+    """Gestionnaire des styles CSS modernes et sûrs"""
     
     @staticmethod
-    def get_custom_css() -> str:
-        """Retourne le CSS ultra-personnalisé pour masquer Streamlit"""
+    def get_modern_css() -> str:
+        """Retourne le CSS moderne sans casser Streamlit"""
         return """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -145,120 +145,74 @@ class AdvancedStyleManager:
             --radius-2xl: 24px;
             
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        /* RESET ET BASE */
-        * {
-            box-sizing: border-box;
-        }
-        
-        /* MASQUER COMPLÈTEMENT STREAMLIT */
-        .stApp > header,
-        .stApp > .main > div:first-child,
-        .stDeployButton,
-        .stDecoration,
-        [data-testid="manage-app-button"],
-        [data-testid="stHeader"],
-        [data-testid="stToolbar"],
-        .stMainBlockContainer > div:first-child,
-        .stAppViewContainer > .main > div:first-child,
-        #MainMenu,
-        footer,
-        .stException {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            position: absolute !important;
-            z-index: -1000 !important;
-        }
-        
-        /* STRUCTURE PRINCIPALE */
+        /* BASE STYLING */
         .stApp {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a202c 50%, var(--bg-secondary) 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a202c 50%, var(--bg-secondary) 100%) !important;
+            color: var(--text-primary) !important;
         }
         
-        .main .block-container {
-            padding: 0 !important;
-            max-width: 100% !important;
-            margin: 0 !important;
+        /* MASQUER SEULEMENT LES ÉLÉMENTS NON ESSENTIELS */
+        .stDeployButton,
+        [data-testid="manage-app-button"],
+        .stDecoration,
+        #MainMenu,
+        footer {
+            display: none !important;
         }
         
-        /* NAVBAR PERSONNALISÉE */
-        .custom-navbar {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-primary);
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .navbar-stats {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .navbar-stat {
+        /* HEADER MODERNE */
+        .main-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 2rem;
+            border-radius: var(--radius-2xl);
             text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: var(--shadow-xl);
         }
         
-        .navbar-stat-value {
+        .main-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+        
+        .main-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: white;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .main-subtitle {
             font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--primary);
+            color: rgba(255, 255, 255, 0.9);
+            margin: 1rem 0 0 0;
+            position: relative;
+            z-index: 1;
         }
         
-        .navbar-stat-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        /* SIDEBAR MODERNE */
+        .sidebar .sidebar-content {
+            background: var(--bg-secondary) !important;
+            border-right: 1px solid var(--border-primary) !important;
         }
         
-        /* LAYOUT PRINCIPAL */
-        .app-container {
-            display: flex;
-            min-height: calc(100vh - 80px);
-        }
-        
-        .sidebar-custom {
-            width: 350px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-primary);
-            padding: 2rem;
-            overflow-y: auto;
-            position: sticky;
-            top: 80px;
-            height: calc(100vh - 80px);
-        }
-        
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-        
-        /* SIDEBAR PERSONNALISÉE */
-        .sidebar-header {
+        .sidebar-header-custom {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             padding: 1.5rem;
             border-radius: var(--radius-xl);
@@ -266,17 +220,6 @@ class AdvancedStyleManager:
             margin-bottom: 2rem;
             position: relative;
             overflow: hidden;
-        }
-        
-        .sidebar-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            opacity: 0.3;
         }
         
         .sidebar-title {
@@ -296,159 +239,41 @@ class AdvancedStyleManager:
             z-index: 1;
         }
         
-        /* FORMULAIRES PERSONNALISÉS */
-        .custom-select {
-            position: relative;
-            margin-bottom: 1.5rem;
+        /* COMPOSANTS STREAMLIT STYLÉS */
+        .stSelectbox > div > div {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-primary) !important;
+            border-radius: var(--radius-md) !important;
+            color: var(--text-primary) !important;
         }
         
-        .custom-select label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .stSlider > div > div {
+            background: var(--bg-tertiary) !important;
         }
         
-        .custom-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-primary);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 0.875rem;
-            transition: var(--transition);
+        .stTextInput > div > div > input {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-primary) !important;
+            border-radius: var(--radius-md) !important;
+            color: var(--text-primary) !important;
         }
         
-        .custom-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-        
-        /* BOUTONS PERSONNALISÉS */
-        .custom-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-        }
-        
-        .custom-button:hover {
-            background: #5b61d8;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .custom-button-secondary {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-primary);
-        }
-        
-        .custom-button-secondary:hover {
-            background: var(--bg-surface);
-            border-color: var(--primary);
-        }
-        
-        /* CARTES MODERNES */
-        .modern-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: var(--radius-xl);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-            transition: var(--transition-slow);
-        }
-        
-        .modern-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
-        }
-        
-        .modern-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--primary);
-        }
-        
-        /* PLAYER HEADER */
-        .player-hero {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            padding: 3rem 2rem;
-            border-radius: var(--radius-2xl);
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .player-hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
-        }
-        
-        .player-name {
-            font-size: 3rem;
-            font-weight: 900;
-            color: white;
-            margin: 0;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .player-subtitle {
-            font-size: 1.25rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin: 1rem 0 0 0;
-            position: relative;
-            z-index: 1;
+        .stTextInput > div > div > input:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
         }
         
         /* MÉTRIQUES MODERNES */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-        
         .metric-card-modern {
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
             padding: 1.5rem;
             text-align: center;
-            transition: var(--transition-slow);
+            transition: var(--transition);
             position: relative;
             overflow: hidden;
+            margin-bottom: 1rem;
         }
         
         .metric-card-modern::before {
@@ -489,114 +314,224 @@ class AdvancedStyleManager:
             letter-spacing: 0.5px;
         }
         
-        /* NAVIGATION TABS PERSONNALISÉE */
-        .custom-tabs {
-            display: flex;
-            background: var(--bg-secondary);
-            border-radius: var(--radius-xl);
-            padding: 0.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid var(--border-primary);
-            gap: 0.25rem;
+        /* GRILLE DE MÉTRIQUES */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
         }
         
-        .custom-tab {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            background: transparent;
-            border: none;
-            border-radius: var(--radius-lg);
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
+        /* PLAYER HERO SECTION */
+        .player-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 3rem 2rem;
+            border-radius: var(--radius-2xl);
             text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: var(--shadow-xl);
         }
         
-        .custom-tab:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
+        .player-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
         }
         
-        .custom-tab.active {
-            background: var(--primary);
+        .player-name {
+            font-size: 3rem;
+            font-weight: 900;
             color: white;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .player-subtitle {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 1rem 0 0 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* CARTES MODERNES */
+        .modern-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
             box-shadow: var(--shadow-md);
         }
         
-        /* MASQUER LES ÉLÉMENTS STREAMLIT NATIFS */
-        .stSelectbox, .stSlider, .stTabs, .stColumns, .stMetric {
-            background: transparent !important;
+        .modern-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
         }
         
-        .stSelectbox > div > div {
+        .modern-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary);
+        }
+        
+        /* NAVIGATION TABS STYLÉE */
+        .stTabs [data-baseweb="tab-list"] {
+            background: var(--bg-secondary) !important;
+            border-radius: var(--radius-xl) !important;
+            padding: 0.5rem !important;
+            border: 1px solid var(--border-primary) !important;
+            gap: 0.25rem !important;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            background: transparent !important;
+            border: none !important;
+            border-radius: var(--radius-lg) !important;
+            color: var(--text-muted) !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            padding: 1rem 1.5rem !important;
+            transition: var(--transition) !important;
+        }
+        
+        .stTabs [data-baseweb="tab"]:hover {
+            background: var(--bg-tertiary) !important;
+            color: var(--text-secondary) !important;
+        }
+        
+        .stTabs [aria-selected="true"] {
+            background: var(--primary) !important;
+            color: white !important;
+            box-shadow: var(--shadow-md) !important;
+        }
+        
+        /* MÉTRIQUES STREAMLIT STYLÉES */
+        [data-testid="metric-container"] {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-primary) !important;
+            padding: 1rem !important;
+            border-radius: var(--radius-lg) !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        
+        [data-testid="metric-container"]:hover {
+            border-color: var(--primary) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: var(--shadow-md) !important;
+        }
+        
+        [data-testid="metric-container"] > div {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-testid="metric-container"] [data-testid="metric-value"] {
+            color: var(--primary) !important;
+            font-weight: 700 !important;
+        }
+        
+        /* BOUTONS MODERNES */
+        .stButton > button {
+            background: var(--primary) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: var(--radius-md) !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            transition: var(--transition) !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        
+        .stButton > button:hover {
+            background: #5b61d8 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: var(--shadow-md) !important;
+        }
+        
+        /* COLONNES STYLÉES */
+        .stColumns > div {
+            background: transparent !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* TEXTE MODERNE */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+        
+        p, span, div {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* PROGRESS BAR */
+        .stProgress > div > div {
+            background: linear-gradient(90deg, var(--primary), var(--accent)) !important;
+            border-radius: var(--radius-sm) !important;
+        }
+        
+        /* EXPANDER */
+        .streamlit-expanderHeader {
+            background: var(--bg-tertiary) !important;
+            border-radius: var(--radius-md) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .streamlit-expanderContent {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-primary) !important;
+            border-radius: var(--radius-md) !important;
+        }
+        
+        /* ALERTS ET MESSAGES */
+        .stAlert {
             background: var(--bg-tertiary) !important;
             border: 1px solid var(--border-primary) !important;
             border-radius: var(--radius-md) !important;
             color: var(--text-primary) !important;
         }
         
-        .stTabs [data-baseweb="tab-list"] {
-            display: none !important;
+        .stSuccess {
+            background: rgba(6, 214, 160, 0.1) !important;
+            border-color: var(--success) !important;
         }
         
-        .stTabs [data-baseweb="tab-panel"] {
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
+        .stWarning {
+            background: rgba(251, 191, 36, 0.1) !important;
+            border-color: var(--warning) !important;
         }
         
-        /* RESPONSIVE DESIGN */
-        @media (max-width: 1024px) {
-            .app-container {
-                flex-direction: column;
-            }
-            
-            .sidebar-custom {
-                width: 100%;
-                height: auto;
-                position: relative;
-                top: 0;
-            }
-            
-            .custom-navbar {
-                padding: 1rem;
-            }
-            
-            .navbar-stats {
-                gap: 1rem;
-            }
-            
-            .player-name {
-                font-size: 2rem;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 1rem;
-            }
+        .stError {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border-color: var(--danger) !important;
         }
         
-        @media (max-width: 640px) {
-            .navbar-stats {
-                display: none;
-            }
-            
-            .player-name {
-                font-size: 1.5rem;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .custom-tabs {
-                flex-direction: column;
-            }
+        .stInfo {
+            background: rgba(99, 102, 241, 0.1) !important;
+            border-color: var(--primary) !important;
         }
         
-        /* ANIMATIONS AVANCÉES */
+        /* ANIMATIONS */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -608,84 +543,31 @@ class AdvancedStyleManager:
             }
         }
         
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.8;
-            }
-        }
-        
         .animate-fade-in {
             animation: fadeInUp 0.6s ease-out;
         }
         
-        .animate-slide-in {
-            animation: slideInLeft 0.4s ease-out;
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .player-name {
+                font-size: 2rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+            
+            .modern-card {
+                padding: 1rem;
+            }
         }
         
-        .animate-pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        /* LOADING STATES */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* TOOLTIPS PERSONNALISÉS */
-        .tooltip {
-            position: relative;
-            cursor: help;
-        }
-        
-        .tooltip::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            padding: 0.5rem 0.75rem;
-            border-radius: var(--radius-md);
-            font-size: 0.75rem;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-            border: 1px solid var(--border-primary);
-            z-index: 1000;
-        }
-        
-        .tooltip:hover::after {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        /* SCROLLBARS PERSONNALISÉS */
+        /* SCROLLBAR PERSONNALISÉE */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -704,52 +586,13 @@ class AdvancedStyleManager:
         }
         </style>
         """
-    
-    @staticmethod
-    def render_custom_navbar(df: pd.DataFrame):
-        """Rendu de la navbar personnalisée"""
-        total_players = len(df)
-        total_competitions = df['Compétition'].nunique()
-        total_teams = df['Équipe'].nunique()
-        total_minutes = int(df['Minutes jouées'].sum())
-        avg_age = df['Âge'].mean()
-        
-        st.markdown(f"""
-        <div class="custom-navbar">
-            <div class="navbar-brand">
-                <i class="fas fa-futbol"></i> Football Analytics Pro
-            </div>
-            <div class="navbar-stats">
-                <div class="navbar-stat">
-                    <div class="navbar-stat-value">{total_players:,}</div>
-                    <div class="navbar-stat-label">Joueurs</div>
-                </div>
-                <div class="navbar-stat">
-                    <div class="navbar-stat-value">{total_competitions}</div>
-                    <div class="navbar-stat-label">Ligues</div>
-                </div>
-                <div class="navbar-stat">
-                    <div class="navbar-stat-value">{total_teams}</div>
-                    <div class="navbar-stat-label">Équipes</div>
-                </div>
-                <div class="navbar-stat">
-                    <div class="navbar-stat-value">{total_minutes:,}</div>
-                    <div class="navbar-stat-label">Minutes</div>
-                </div>
-                <div class="navbar-stat">
-                    <div class="navbar-stat-value">{avg_age:.1f}</div>
-                    <div class="navbar-stat-label">Âge Moyen</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
 
 # ================================================================================================
-# UTILITAIRES AMÉLIORÉS
+# UTILITAIRES
 # ================================================================================================
 
 class Utils:
-    """Fonctions utilitaires améliorées"""
+    """Fonctions utilitaires"""
     
     @staticmethod
     def format_market_value(value: Union[str, int, float]) -> str:
@@ -796,8 +639,7 @@ class Utils:
         possible_columns = [
             'Valeur marchande', 'Market Value', 'valeur_marchande', 
             'Valeur', 'Value', 'market_value', 'Valeur en €', 'Valeur (€)',
-            'Market_Value', 'Valeur_marchande', 'VALEUR_MARCHANDE',
-            'Valeur_Marchande', 'MARKET_VALUE', 'MarketValue'
+            'Market_Value', 'Valeur_marchande'
         ]
         
         for col in possible_columns:
@@ -818,7 +660,7 @@ class Utils:
         return base64.b64encode(buffer.getvalue()).decode()
 
 # ================================================================================================
-# GESTIONNAIRE DE DONNÉES AMÉLIORÉ
+# GESTIONNAIRE DE DONNÉES
 # ================================================================================================
 
 class DataManager:
@@ -840,31 +682,26 @@ class DataManager:
     
     @staticmethod
     def filter_by_competition(df: pd.DataFrame, competition: str) -> pd.DataFrame:
-        """Filtre les données par compétition"""
         return df[df['Compétition'] == competition]
     
     @staticmethod
     def filter_by_minutes(df: pd.DataFrame, min_minutes: int) -> pd.DataFrame:
-        """Filtre les données par minutes jouées"""
         return df[df['Minutes jouées'] >= min_minutes]
     
     @staticmethod
     def get_competitions(df: pd.DataFrame) -> List[str]:
-        """Récupère la liste des compétitions"""
         return sorted(df['Compétition'].dropna().unique())
     
     @staticmethod
     def get_players(df: pd.DataFrame) -> List[str]:
-        """Récupère la liste des joueurs"""
         return sorted(df['Joueur'].dropna().unique())
     
     @staticmethod
     def get_other_leagues_data(df: pd.DataFrame, player_competition: str) -> pd.DataFrame:
-        """Récupère les données de toutes les autres ligues"""
         return df[df['Compétition'] != player_competition]
 
 # ================================================================================================
-# GESTIONNAIRE D'IMAGES AMÉLIORÉ
+# GESTIONNAIRE D'IMAGES
 # ================================================================================================
 
 class ImageManager:
@@ -872,7 +709,6 @@ class ImageManager:
     
     @staticmethod
     def get_player_photo(player_name: str) -> Optional[str]:
-        """Récupère le chemin de la photo du joueur"""
         extensions = ['.jpg', '.jpeg', '.JPG', '.JPEG', '.png', '.PNG']
         
         for ext in extensions:
@@ -890,7 +726,6 @@ class ImageManager:
     
     @staticmethod
     def get_club_logo(competition: str, team_name: str) -> Optional[str]:
-        """Récupère le chemin du logo du club"""
         folder = Config.LOGO_FOLDERS.get(competition)
         if not folder:
             return None
@@ -905,279 +740,14 @@ class ImageManager:
         return None
 
 # ================================================================================================
-# COMPOSANTS UI MODERNES
-# ================================================================================================
-
-class ModernUIComponents:
-    """Composants d'interface utilisateur ultra-modernes"""
-    
-    @staticmethod
-    def render_custom_sidebar(df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
-        """Rendu de la sidebar personnalisée"""
-        
-        # Conteneur principal de la sidebar
-        sidebar_html = f"""
-        <div class="sidebar-custom animate-slide-in">
-            <div class="sidebar-header">
-                <h2 class="sidebar-title">
-                    <i class="fas fa-cogs"></i> Configuration
-                </h2>
-                <p class="sidebar-subtitle">Sélectionnez votre analyse</p>
-            </div>
-        """
-        
-        st.markdown(sidebar_html, unsafe_allow_html=True)
-        
-        # Sélection de la compétition avec style personnalisé
-        st.markdown("""
-        <div class="custom-select">
-            <label><i class="fas fa-trophy"></i> Compétition</label>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        competitions = DataManager.get_competitions(df)
-        selected_competition = st.selectbox(
-            "", 
-            competitions,
-            index=0,
-            key="comp_select",
-            label_visibility="collapsed"
-        )
-        
-        df_filtered = DataManager.filter_by_competition(df, selected_competition)
-        
-        # Filtre par minutes avec slider personnalisé
-        st.markdown("""
-        <div class="custom-select">
-            <label><i class="fas fa-clock"></i> Minutes Jouées (Minimum)</label>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        min_minutes_filter = 0
-        if not df_filtered['Minutes jouées'].empty:
-            min_minutes = int(df_filtered['Minutes jouées'].min())
-            max_minutes = int(df_filtered['Minutes jouées'].max())
-            
-            min_minutes_filter = st.slider(
-                "",
-                min_value=min_minutes,
-                max_value=max_minutes,
-                value=min_minutes,
-                step=90,
-                label_visibility="collapsed"
-            )
-        
-        df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
-        nb_joueurs = len(df_filtered_minutes)
-        
-        # Statistiques du filtrage
-        st.markdown(f"""
-        <div class="modern-card" style="margin: 1rem 0; padding: 1rem;">
-            <div class="metrics-grid" style="grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                <div class="metric-card-modern" style="padding: 1rem;">
-                    <div class="metric-value-modern" style="font-size: 1.5rem;">{nb_joueurs}</div>
-                    <div class="metric-label-modern">Joueurs</div>
-                </div>
-                <div class="metric-card-modern" style="padding: 1rem;">
-                    <div class="metric-value-modern" style="font-size: 1.5rem;">{df_filtered_minutes['Équipe'].nunique()}</div>
-                    <div class="metric-label-modern">Équipes</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Sélection du joueur
-        st.markdown("""
-        <div class="custom-select">
-            <label><i class="fas fa-user"></i> Joueur</label>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        selected_player = None
-        if not df_filtered_minutes.empty:
-            # Recherche de joueur
-            search_term = st.text_input(
-                "", 
-                placeholder="🔍 Rechercher un joueur...",
-                key="player_search",
-                label_visibility="collapsed"
-            )
-            
-            joueurs = DataManager.get_players(df_filtered_minutes)
-            if search_term:
-                joueurs = [j for j in joueurs if search_term.lower() in j.lower()]
-            
-            if joueurs:
-                selected_player = st.selectbox(
-                    "",
-                    joueurs,
-                    index=0,
-                    key="player_select",
-                    label_visibility="collapsed"
-                )
-        
-        # Footer de la sidebar
-        st.markdown("""
-        <div class="modern-card" style="text-align: center; padding: 1.5rem; margin-top: 2rem;">
-            <h4 style="color: var(--primary); margin: 0 0 0.5rem 0;">
-                <i class="fas fa-chart-line"></i> Analytics Pro
-            </h4>
-            <p style="color: var(--text-muted); margin: 0; font-size: 0.8rem;">
-                Analyse Football Avancée
-            </p>
-        </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        return selected_competition, selected_player, df_filtered_minutes
-    
-    @staticmethod
-    def render_player_hero(player_data: pd.Series, competition: str):
-        """Affiche le hero section du joueur"""
-        valeur_marchande = Utils.get_market_value_safe(player_data)
-        
-        # Photo du joueur
-        photo_html = ""
-        photo_path = ImageManager.get_player_photo(player_data['Joueur'])
-        if photo_path and os.path.exists(photo_path):
-            try:
-                image = Image.open(photo_path)
-                photo_base64 = Utils.image_to_base64(image)
-                photo_html = f"""
-                <div style="position: absolute; top: 1rem; left: 1rem; width: 80px; height: 80px; 
-                           border-radius: 50%; overflow: hidden; border: 3px solid rgba(255,255,255,0.3);">
-                    <img src="data:image/jpeg;base64,{photo_base64}" 
-                         style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
-                """
-            except Exception:
-                pass
-        
-        # Logo du club
-        logo_html = ""
-        logo_path = ImageManager.get_club_logo(competition, player_data['Équipe'])
-        if logo_path and os.path.exists(logo_path):
-            try:
-                image = Image.open(logo_path)
-                logo_base64 = Utils.image_to_base64(image)
-                logo_html = f"""
-                <div style="position: absolute; top: 1rem; right: 1rem; width: 60px; height: 60px;">
-                    <img src="data:image/png;base64,{logo_base64}" 
-                         style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
-                """
-            except Exception:
-                pass
-        
-        st.markdown(f"""
-        <div class="player-hero animate-fade-in">
-            {photo_html}
-            {logo_html}
-            <h1 class="player-name">{player_data['Joueur']}</h1>
-            <p class="player-subtitle">
-                <i class="fas fa-map-marker-alt"></i> {player_data['Position']} • 
-                <i class="fas fa-flag"></i> {player_data['Nationalité']} • 
-                <i class="fas fa-calendar"></i> {player_data['Âge']} ans
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Métriques principales
-        st.markdown(f"""
-        <div class="metrics-grid animate-fade-in">
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">
-                    <i class="fas fa-running"></i> {int(player_data['Minutes jouées'])}
-                </div>
-                <div class="metric-label-modern">Minutes Jouées</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">
-                    <i class="fas fa-euro-sign"></i> {valeur_marchande}
-                </div>
-                <div class="metric-label-modern">Valeur Marchande</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">
-                    <i class="fas fa-shield-alt"></i> {player_data['Équipe']}
-                </div>
-                <div class="metric-label-modern">Équipe</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">
-                    <i class="fas fa-trophy"></i> {competition}
-                </div>
-                <div class="metric-label-modern">Compétition</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    @staticmethod
-    def render_custom_tabs():
-        """Rendu des onglets personnalisés avec JavaScript"""
-        st.markdown("""
-        <div class="custom-tabs" id="customTabs">
-            <button class="custom-tab active" onclick="switchTab(0)" id="tab0">
-                <i class="fas fa-crosshairs"></i> Performance Offensive
-            </button>
-            <button class="custom-tab" onclick="switchTab(1)" id="tab1">
-                <i class="fas fa-shield-alt"></i> Performance Défensive
-            </button>
-            <button class="custom-tab" onclick="switchTab(2)" id="tab2">
-                <i class="fas fa-magic"></i> Performance Technique
-            </button>
-            <button class="custom-tab" onclick="switchTab(3)" id="tab3">
-                <i class="fas fa-users"></i> Profils Similaires
-            </button>
-            <button class="custom-tab" onclick="switchTab(4)" id="tab4">
-                <i class="fas fa-exchange-alt"></i> Comparaison
-            </button>
-        </div>
-        
-        <script>
-        function switchTab(tabIndex) {
-            // Retirer la classe active de tous les onglets
-            document.querySelectorAll('.custom-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Ajouter la classe active à l'onglet sélectionné
-            document.getElementById('tab' + tabIndex).classList.add('active');
-            
-            // Stocker l'onglet actif dans le sessionStorage
-            sessionStorage.setItem('activeTab', tabIndex);
-        }
-        
-        // Restaurer l'onglet actif au chargement de la page
-        document.addEventListener('DOMContentLoaded', function() {
-            const activeTab = sessionStorage.getItem('activeTab') || 0;
-            switchTab(parseInt(activeTab));
-        });
-        </script>
-        """, unsafe_allow_html=True)
-    
-    @staticmethod
-    def render_loading_state(message: str = "Chargement en cours..."):
-        """Affiche un état de chargement moderne"""
-        st.markdown(f"""
-        <div class="modern-card" style="text-align: center; padding: 3rem;">
-            <div class="loading-spinner" style="margin: 0 auto 1rem auto;"></div>
-            <h3 style="color: var(--text-secondary); margin: 0; font-weight: 500;">
-                {message}
-            </h3>
-        </div>
-        """, unsafe_allow_html=True)
-
-# ================================================================================================
-# CALCULATEUR DE MÉTRIQUES AMÉLIORÉ
+# CALCULATEUR DE MÉTRIQUES
 # ================================================================================================
 
 class MetricsCalculator:
-    """Calculateur de métriques et percentiles amélioré"""
+    """Calculateur de métriques et percentiles"""
     
     @staticmethod
     def calculate_percentiles(player_name: str, df: pd.DataFrame) -> List[int]:
-        """Calcule les percentiles pour le pizza chart"""
         player = df[df["Joueur"] == player_name].iloc[0]
         percentiles = []
 
@@ -1210,42 +780,35 @@ class MetricsCalculator:
         return percentiles
 
 # ================================================================================================
-# ANALYSEUR DE JOUEURS SIMILAIRES AMÉLIORÉ
+# ANALYSEUR DE JOUEURS SIMILAIRES
 # ================================================================================================
 
 class SimilarPlayerAnalyzer:
-    """Analyseur pour trouver des joueurs similaires amélioré"""
+    """Analyseur pour trouver des joueurs similaires"""
     
     @staticmethod
     def calculate_similarity(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Calcule la similarité entre joueurs"""
         try:
-            # Préparer les données
             similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
             
             if similarity_df.empty or not available_metrics:
                 return []
             
-            # Obtenir les données du joueur cible
             target_data = similarity_df[similarity_df['Joueur'] == target_player]
             if target_data.empty:
                 return []
             
             target_values = target_data[available_metrics].iloc[0]
-            
-            # Filtrer les autres joueurs
             other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
             
             if other_players.empty:
                 return []
             
-            # Calcul de similarité simple
             similarities = []
             
             for idx, player_row in other_players.iterrows():
                 player_values = player_row[available_metrics]
                 
-                # Calculer la similarité
                 total_diff = 0
                 valid_metrics = 0
                 
@@ -1253,7 +816,6 @@ class SimilarPlayerAnalyzer:
                     target_val = float(target_values[metric])
                     player_val = float(player_values[metric])
                     
-                    # Normalisation simple
                     max_val = max(target_val, player_val, 1)
                     diff = abs(target_val - player_val) / max_val
                     
@@ -1276,9 +838,7 @@ class SimilarPlayerAnalyzer:
                     'data': player_row
                 })
             
-            # Trier par score de similarité
             similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
-            
             return similarities[:num_similar]
             
         except Exception as e:
@@ -1287,7 +847,6 @@ class SimilarPlayerAnalyzer:
     
     @staticmethod
     def prepare_similarity_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
-        """Prépare les données pour l'analyse de similarité"""
         available_metrics = []
         for metric in Config.SIMILARITY_METRICS:
             if metric in df.columns:
@@ -1299,7 +858,6 @@ class SimilarPlayerAnalyzer:
         required_cols = ['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge']
         similarity_df = df[required_cols + available_metrics].copy()
         
-        # Remplacer les valeurs manquantes par 0
         for col in available_metrics:
             similarity_df[col] = pd.to_numeric(similarity_df[col], errors='coerce').fillna(0)
         
@@ -1309,15 +867,14 @@ class SimilarPlayerAnalyzer:
         return similarity_df, available_metrics
 
 # ================================================================================================
-# GESTIONNAIRE DE GRAPHIQUES AMÉLIORÉ
+# GESTIONNAIRE DE GRAPHIQUES
 # ================================================================================================
 
 class ChartManager:
-    """Gestionnaire centralisé pour les graphiques amélioré"""
+    """Gestionnaire centralisé pour les graphiques"""
     
     @staticmethod
     def create_modern_chart(data: Dict[str, float], title: str, chart_type: str = 'bar') -> go.Figure:
-        """Crée un graphique moderne avec le nouveau style"""
         if chart_type == 'bar':
             fig = go.Figure(data=[go.Bar(
                 x=list(data.keys()),
@@ -1361,47 +918,194 @@ class ChartManager:
         return fig
 
 # ================================================================================================
-# APPLICATION PRINCIPALE MODERNISÉE
+# COMPOSANTS UI MODERNES
+# ================================================================================================
+
+class ModernUIComponents:
+    """Composants d'interface utilisateur modernes"""
+    
+    @staticmethod
+    def render_main_header():
+        """Affiche l'en-tête principal moderne"""
+        st.markdown("""
+        <div class='main-header animate-fade-in'>
+            <h1 class='main-title'>
+                <i class="fas fa-futbol"></i> Football Analytics Pro
+            </h1>
+            <p class='main-subtitle'>
+                Analyse avancée des performances footballistiques - Saison 2024-25
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_sidebar_header():
+        """Affiche l'en-tête de la sidebar"""
+        st.markdown("""
+        <div class='sidebar-header-custom'>
+            <h2 class='sidebar-title'>
+                <i class="fas fa-cogs"></i> Configuration
+            </h2>
+            <p class='sidebar-subtitle'>Sélectionnez votre analyse</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_player_hero(player_data: pd.Series, competition: str):
+        """Affiche le hero section du joueur"""
+        valeur_marchande = Utils.get_market_value_safe(player_data)
+        
+        # Photo et logo
+        photo_html = ""
+        logo_html = ""
+        
+        photo_path = ImageManager.get_player_photo(player_data['Joueur'])
+        if photo_path and os.path.exists(photo_path):
+            try:
+                image = Image.open(photo_path)
+                photo_base64 = Utils.image_to_base64(image)
+                photo_html = f"""
+                <div style="position: absolute; top: 1rem; left: 1rem; width: 80px; height: 80px; 
+                           border-radius: 50%; overflow: hidden; border: 3px solid rgba(255,255,255,0.3);">
+                    <img src="data:image/jpeg;base64,{photo_base64}" 
+                         style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                """
+            except Exception:
+                pass
+        
+        logo_path = ImageManager.get_club_logo(competition, player_data['Équipe'])
+        if logo_path and os.path.exists(logo_path):
+            try:
+                image = Image.open(logo_path)
+                logo_base64 = Utils.image_to_base64(image)
+                logo_html = f"""
+                <div style="position: absolute; top: 1rem; right: 1rem; width: 60px; height: 60px;">
+                    <img src="data:image/png;base64,{logo_base64}" 
+                         style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                """
+            except Exception:
+                pass
+        
+        st.markdown(f"""
+        <div class="player-hero animate-fade-in">
+            {photo_html}
+            {logo_html}
+            <h1 class="player-name">{player_data['Joueur']}</h1>
+            <p class="player-subtitle">
+                <i class="fas fa-map-marker-alt"></i> {player_data['Position']} • 
+                <i class="fas fa-flag"></i> {player_data['Nationalité']} • 
+                <i class="fas fa-calendar"></i> {player_data['Âge']} ans
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Métriques principales avec Streamlit metrics stylées
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(
+                "⏱️ Minutes Jouées", 
+                f"{int(player_data['Minutes jouées']):,}",
+                help="Total des minutes jouées cette saison"
+            )
+        
+        with col2:
+            st.metric(
+                "💰 Valeur Marchande", 
+                valeur_marchande,
+                help="Valeur marchande estimée"
+            )
+        
+        with col3:
+            st.metric(
+                "🏟️ Équipe", 
+                player_data['Équipe'],
+                help="Club actuel"
+            )
+        
+        with col4:
+            st.metric(
+                "🏆 Compétition", 
+                competition,
+                help="Championnat"
+            )
+    
+    @staticmethod
+    def render_similar_player_card(player_info: Dict, rank: int):
+        """Affiche une carte de joueur similaire moderne"""
+        similarity_score = player_info['similarity_score']
+        player_data = player_info['data']
+        
+        if similarity_score >= 85:
+            score_color = Config.COLORS['success']
+        elif similarity_score >= 70:
+            score_color = Config.COLORS['warning']
+        else:
+            score_color = Config.COLORS['primary']
+        
+        valeur_marchande = Utils.get_market_value_safe(player_data)
+        
+        st.markdown(f"""
+        <div class="modern-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <h4 style="color: var(--text-primary); margin: 0 0 0.5rem 0; font-size: 1.25rem;">
+                        #{rank} {player_info['joueur']}
+                    </h4>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <span style="color: var(--text-secondary);"><i class="fas fa-shield-alt"></i> {player_info['equipe']}</span>
+                        <span style="color: var(--text-secondary);"><i class="fas fa-trophy"></i> {player_info['competition']}</span>
+                        <span style="color: var(--text-secondary);"><i class="fas fa-map-marker-alt"></i> {player_info['position']}</span>
+                        <span style="color: var(--text-secondary);"><i class="fas fa-calendar"></i> {player_info['age']} ans</span>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="background: {score_color}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 700; margin-bottom: 0.5rem;">
+                        {similarity_score:.1f}% similaire
+                    </div>
+                    <div style="color: var(--accent); font-weight: 600;">
+                        {valeur_marchande}
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ================================================================================================
+# APPLICATION PRINCIPALE
 # ================================================================================================
 
 class ModernFootballDashboard:
-    """Classe principale de l'application modernisée"""
+    """Classe principale de l'application moderne"""
     
     def __init__(self):
-        """Initialisation de l'application"""
         self._configure_page()
         self._load_styles()
     
     def _configure_page(self):
-        """Configuration de la page Streamlit"""
         st.set_page_config(**Config.PAGE_CONFIG)
     
     def _load_styles(self):
-        """Chargement des styles CSS personnalisés"""
-        st.markdown(AdvancedStyleManager.get_custom_css(), unsafe_allow_html=True)
+        st.markdown(ModernStyleManager.get_modern_css(), unsafe_allow_html=True)
     
     def run(self):
-        """Méthode principale d'exécution de l'application"""
-        # Chargement des données avec état de loading moderne
-        with st.spinner(""):
-            ModernUIComponents.render_loading_state("Chargement des données...")
-            df = DataManager.load_data()
+        # Chargement des données
+        df = DataManager.load_data()
         
         if df is None:
             self._render_error_page()
             return
         
-        # Structure principale de l'application
-        st.markdown('<div class="app-container">', unsafe_allow_html=True)
+        # En-tête principal
+        ModernUIComponents.render_main_header()
         
-        # Navbar personnalisée
-        AdvancedStyleManager.render_custom_navbar(df)
+        # Affichage des statistiques générales
+        self._render_data_overview(df)
         
-        # Sidebar personnalisée (maintenant intégrée dans le layout)
-        selected_competition, selected_player, df_filtered = ModernUIComponents.render_custom_sidebar(df)
-        
-        # Contenu principal
-        st.markdown('<div class="main-content">', unsafe_allow_html=True)
+        # Sidebar avec sélections
+        selected_competition, selected_player, df_filtered = self._render_modern_sidebar(df)
         
         if selected_player:
             # Données du joueur
@@ -1410,38 +1114,157 @@ class ModernFootballDashboard:
             # Hero section du joueur
             ModernUIComponents.render_player_hero(player_data, selected_competition)
             
-            # Navigation par onglets personnalisée
-            ModernUIComponents.render_custom_tabs()
-            
-            # Contenu des onglets (utilisation des onglets Streamlit mais masqués)
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(["Offensive", "Défensive", "Technique", "Similaires", "Comparaison"])
-            
-            with tab1:
-                self._render_offensive_analysis(player_data, df, selected_competition)
-            
-            with tab2:
-                self._render_defensive_analysis(player_data, df, selected_competition)
-            
-            with tab3:
-                self._render_technical_analysis(player_data, df, selected_competition)
-            
-            with tab4:
-                self._render_similar_players_analysis(selected_player, df)
-            
-            with tab5:
-                self._render_comparison_analysis(df, selected_player)
+            # Onglets d'analyse
+            self._render_analysis_tabs(player_data, df, selected_competition, selected_player)
         
         else:
             self._render_no_player_selected()
-        
-        st.markdown('</div>', unsafe_allow_html=True)  # fin main-content
-        st.markdown('</div>', unsafe_allow_html=True)  # fin app-container
     
-    def _render_offensive_analysis(self, player_data: pd.Series, df: pd.DataFrame, competition: str):
-        """Analyse offensive moderne"""
-        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
+    def _render_data_overview(self, df: pd.DataFrame):
+        """Aperçu des données avec métriques stylées"""
+        col1, col2, col3, col4, col5 = st.columns(5)
         
-        # Métriques offensives principales
+        with col1:
+            st.metric("👥 Joueurs", f"{len(df):,}")
+        
+        with col2:
+            st.metric("🏆 Compétitions", f"{df['Compétition'].nunique()}")
+        
+        with col3:
+            st.metric("⚽ Équipes", f"{df['Équipe'].nunique()}")
+        
+        with col4:
+            total_minutes = df['Minutes jouées'].sum()
+            st.metric("⏱️ Minutes", f"{total_minutes:,.0f}")
+        
+        with col5:
+            avg_age = df['Âge'].mean()
+            st.metric("📅 Âge Moyen", f"{avg_age:.1f} ans")
+    
+    def _render_modern_sidebar(self, df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
+        """Rendu de la sidebar moderne"""
+        with st.sidebar:
+            ModernUIComponents.render_sidebar_header()
+            
+            # Sélection de la compétition
+            st.markdown("**🏆 Compétition**")
+            competitions = DataManager.get_competitions(df)
+            selected_competition = st.selectbox(
+                "", 
+                competitions,
+                index=0,
+                label_visibility="collapsed"
+            )
+            
+            df_filtered = DataManager.filter_by_competition(df, selected_competition)
+            
+            st.markdown("---")
+            
+            # Filtre par minutes
+            st.markdown("**⏱️ Minutes Jouées (Minimum)**")
+            min_minutes_filter = 0
+            if not df_filtered['Minutes jouées'].empty:
+                min_minutes = int(df_filtered['Minutes jouées'].min())
+                max_minutes = int(df_filtered['Minutes jouées'].max())
+                
+                min_minutes_filter = st.slider(
+                    "",
+                    min_value=min_minutes,
+                    max_value=max_minutes,
+                    value=min_minutes,
+                    step=90,
+                    label_visibility="collapsed"
+                )
+            
+            df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
+            nb_joueurs = len(df_filtered_minutes)
+            
+            # Statistiques du filtrage
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Joueurs", nb_joueurs)
+            with col2:
+                st.metric("Équipes", df_filtered_minutes['Équipe'].nunique())
+            
+            st.markdown("---")
+            
+            # Sélection du joueur
+            st.markdown("**👤 Joueur**")
+            selected_player = None
+            if not df_filtered_minutes.empty:
+                search_term = st.text_input(
+                    "", 
+                    placeholder="🔍 Rechercher un joueur...",
+                    label_visibility="collapsed"
+                )
+                
+                joueurs = DataManager.get_players(df_filtered_minutes)
+                if search_term:
+                    joueurs = [j for j in joueurs if search_term.lower() in j.lower()]
+                
+                if joueurs:
+                    selected_player = st.selectbox(
+                        "",
+                        joueurs,
+                        index=0,
+                        label_visibility="collapsed"
+                    )
+            
+            # Footer sidebar
+            st.markdown("---")
+            st.markdown("""
+            <div style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: 12px;">
+                <h4 style="color: var(--primary); margin: 0 0 0.5rem 0;">
+                    <i class="fas fa-chart-line"></i> Analytics Pro
+                </h4>
+                <p style="color: var(--text-muted); margin: 0; font-size: 0.8rem;">
+                    Analyse Football Avancée
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            return selected_competition, selected_player, df_filtered_minutes
+    
+    def _render_analysis_tabs(self, player_data: pd.Series, df: pd.DataFrame, 
+                             competition: str, selected_player: str):
+        """Rendu des onglets d'analyse"""
+        
+        df_other_leagues = DataManager.get_other_leagues_data(df, competition)
+        
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "🎯 Performance Offensive", 
+            "🛡️ Performance Défensive", 
+            "🎨 Performance Technique",
+            "👥 Profils Similaires", 
+            "🔄 Comparaison"
+        ])
+        
+        with tab1:
+            self._render_offensive_analysis(player_data, df_other_leagues)
+        
+        with tab2:
+            self._render_defensive_analysis(player_data, df_other_leagues)
+        
+        with tab3:
+            self._render_technical_analysis(player_data, df_other_leagues)
+        
+        with tab4:
+            self._render_similar_players_analysis(selected_player, df)
+        
+        with tab5:
+            self._render_comparison_analysis(df, selected_player)
+    
+    def _render_offensive_analysis(self, player_data: pd.Series, df_comparison: pd.DataFrame):
+        """Analyse offensive"""
+        st.markdown("""
+        <div class="modern-card">
+            <h3 style="color: var(--primary); margin: 0 0 1rem 0;">
+                🎯 Analyse Performance Offensive
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Métriques offensives
         offensive_metrics = {
             'Buts': player_data.get('Buts', 0),
             'Passes décisives': player_data.get('Passes décisives', 0),
@@ -1451,40 +1274,36 @@ class ModernFootballDashboard:
         
         fig = ChartManager.create_modern_chart(
             offensive_metrics, 
-            "🎯 Performance Offensive - Actions Totales",
-            'bar'
+            "Actions Offensives Totales"
         )
         st.plotly_chart(fig, use_container_width=True)
         
         # Métriques par 90 minutes
         minutes_90 = player_data['Minutes jouées'] / 90 if player_data['Minutes jouées'] > 0 else 1
         
-        st.markdown(f"""
-        <div class="metrics-grid" style="margin: 2rem 0;">
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Buts', 0) / minutes_90:.2f}</div>
-                <div class="metric-label-modern">Buts / 90min</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Passes décisives', 0) / minutes_90:.2f}</div>
-                <div class="metric-label-modern">Passes D. / 90min</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Tirs', 0) / minutes_90:.2f}</div>
-                <div class="metric-label-modern">Tirs / 90min</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Passes clés', 0) / minutes_90:.2f}</div>
-                <div class="metric-label-modern">Passes Clés / 90min</div>
-            </div>
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Buts / 90min", f"{player_data.get('Buts', 0) / minutes_90:.2f}")
+        
+        with col2:
+            st.metric("Passes D. / 90min", f"{player_data.get('Passes décisives', 0) / minutes_90:.2f}")
+        
+        with col3:
+            st.metric("Tirs / 90min", f"{player_data.get('Tirs', 0) / minutes_90:.2f}")
+        
+        with col4:
+            st.metric("Passes Clés / 90min", f"{player_data.get('Passes clés', 0) / minutes_90:.2f}")
+    
+    def _render_defensive_analysis(self, player_data: pd.Series, df_comparison: pd.DataFrame):
+        """Analyse défensive"""
+        st.markdown("""
+        <div class="modern-card">
+            <h3 style="color: var(--accent); margin: 0 0 1rem 0;">
+                🛡️ Analyse Performance Défensive
+            </h3>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    def _render_defensive_analysis(self, player_data: pd.Series, df: pd.DataFrame, competition: str):
-        """Analyse défensive moderne"""
-        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
         
         defensive_metrics = {
             'Tacles': player_data.get('Tacles gagnants', 0),
@@ -1493,41 +1312,34 @@ class ModernFootballDashboard:
             'Duels aériens': player_data.get('Duels aériens gagnés', 0)
         }
         
-        fig = ChartManager.create_modern_chart(
-            defensive_metrics, 
-            "🛡️ Performance Défensive - Actions Totales",
-            'bar'
-        )
+        fig = ChartManager.create_modern_chart(defensive_metrics, "Actions Défensives Totales")
         st.plotly_chart(fig, use_container_width=True)
         
         minutes_90 = player_data['Minutes jouées'] / 90 if player_data['Minutes jouées'] > 0 else 1
         
-        st.markdown(f"""
-        <div class="metrics-grid" style="margin: 2rem 0;">
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Tacles gagnants', 0) / minutes_90:.2f}</div>
-                <div class="metric-label-modern">Tacles / 90min</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Interceptions', 0) / minutes_90:.2f}</div>
-                <div class="metric-label-modern">Interceptions / 90min</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Pourcentage de duels gagnés', 0):.1f}%</div>
-                <div class="metric-label-modern">% Duels Gagnés</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Pourcentage de duels aériens gagnés', 0):.1f}%</div>
-                <div class="metric-label-modern">% Duels Aériens</div>
-            </div>
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Tacles / 90min", f"{player_data.get('Tacles gagnants', 0) / minutes_90:.2f}")
+        
+        with col2:
+            st.metric("Interceptions / 90min", f"{player_data.get('Interceptions', 0) / minutes_90:.2f}")
+        
+        with col3:
+            st.metric("% Duels Gagnés", f"{player_data.get('Pourcentage de duels gagnés', 0):.1f}%")
+        
+        with col4:
+            st.metric("% Duels Aériens", f"{player_data.get('Pourcentage de duels aériens gagnés', 0):.1f}%")
+    
+    def _render_technical_analysis(self, player_data: pd.Series, df_comparison: pd.DataFrame):
+        """Analyse technique"""
+        st.markdown("""
+        <div class="modern-card">
+            <h3 style="color: var(--secondary); margin: 0 0 1rem 0;">
+                🎨 Analyse Performance Technique
+            </h3>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    def _render_technical_analysis(self, player_data: pd.Series, df: pd.DataFrame, competition: str):
-        """Analyse technique moderne"""
-        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
         
         technical_metrics = {
             'Passes tentées': player_data.get('Passes tentées', 0),
@@ -1536,143 +1348,69 @@ class ModernFootballDashboard:
             'Passes progressives': player_data.get('Passes progressives', 0)
         }
         
-        fig = ChartManager.create_modern_chart(
-            technical_metrics, 
-            "🎨 Performance Technique - Actions Totales",
-            'bar'
-        )
+        fig = ChartManager.create_modern_chart(technical_metrics, "Actions Techniques Totales")
         st.plotly_chart(fig, use_container_width=True)
         
-        st.markdown(f"""
-        <div class="metrics-grid" style="margin: 2rem 0;">
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Pourcentage de passes réussies', 0):.1f}%</div>
-                <div class="metric-label-modern">% Passes Réussies</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Pourcentage de dribbles réussis', 0):.1f}%</div>
-                <div class="metric-label-modern">% Dribbles Réussis</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Passes progressives', 0)}</div>
-                <div class="metric-label-modern">Passes Progressives</div>
-            </div>
-            <div class="metric-card-modern">
-                <div class="metric-value-modern">{player_data.get('Passes dans le dernier tiers', 0)}</div>
-                <div class="metric-label-modern">Passes Dernier Tiers</div>
-            </div>
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("% Passes Réussies", f"{player_data.get('Pourcentage de passes réussies', 0):.1f}%")
+        
+        with col2:
+            st.metric("% Dribbles Réussis", f"{player_data.get('Pourcentage de dribbles réussis', 0):.1f}%")
+        
+        with col3:
+            st.metric("Passes Progressives", f"{player_data.get('Passes progressives', 0)}")
+        
+        with col4:
+            st.metric("Passes Dernier Tiers", f"{player_data.get('Passes dans le dernier tiers', 0)}")
+    
+    def _render_similar_players_analysis(self, selected_player: str, df: pd.DataFrame):
+        """Analyse des joueurs similaires"""
+        st.markdown("""
+        <div class="modern-card">
+            <h3 style="color: var(--secondary); margin: 0 0 1rem 0;">
+                👥 Profils Similaires
+            </h3>
+            <p style="color: var(--text-secondary); margin: 0;">
+                Utilise 20+ métriques pour identifier des profils de jeu similaires
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    def _render_similar_players_analysis(self, selected_player: str, df: pd.DataFrame):
-        """Analyse des joueurs similaires moderne"""
-        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
-        
         # Configuration
         col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            st.markdown("""
-            <div class="modern-card">
-                <h3 style="color: var(--primary); margin: 0 0 1rem 0;">
-                    <i class="fas fa-search"></i> Analyse de Similarité
-                </h3>
-                <p style="color: var(--text-secondary); margin: 0;">
-                    Utilise 20+ métriques pour identifier des profils de jeu similaires
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
         
         with col2:
             num_similar = st.slider("Nombre de joueurs", 1, 10, 5)
         
         # Calcul des joueurs similaires
-        with st.spinner(""):
-            ModernUIComponents.render_loading_state("Recherche de profils similaires...")
+        with st.spinner("Recherche de profils similaires..."):
             similar_players = SimilarPlayerAnalyzer.calculate_similarity(selected_player, df, num_similar)
         
         if similar_players:
-            # Affichage moderne des résultats
-            st.markdown(f"""
-            <div class="modern-card">
-                <h3 style="color: var(--secondary); margin: 0 0 1rem 0;">
-                    <i class="fas fa-users"></i> Top {len(similar_players)} Profils Similaires
-                </h3>
-            </div>
-            """, unsafe_allow_html=True)
+            st.success(f"✅ {len(similar_players)} profils trouvés !")
             
-            # Cartes des joueurs similaires
+            # Affichage des joueurs similaires
             for i, player_info in enumerate(similar_players):
-                similarity_score = player_info['similarity_score']
-                
-                # Couleur selon le score
-                if similarity_score >= 85:
-                    score_color = Config.COLORS['success']
-                elif similarity_score >= 70:
-                    score_color = Config.COLORS['warning']
-                else:
-                    score_color = Config.COLORS['primary']
-                
-                valeur_marchande = Utils.get_market_value_safe(player_info['data'])
-                
-                st.markdown(f"""
-                <div class="modern-card" style="margin: 1rem 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <h4 style="color: var(--text-primary); margin: 0 0 0.5rem 0; font-size: 1.25rem;">
-                                #{i+1} {player_info['joueur']}
-                            </h4>
-                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                <span style="color: var(--text-secondary);"><i class="fas fa-shield-alt"></i> {player_info['equipe']}</span>
-                                <span style="color: var(--text-secondary);"><i class="fas fa-trophy"></i> {player_info['competition']}</span>
-                                <span style="color: var(--text-secondary);"><i class="fas fa-map-marker-alt"></i> {player_info['position']}</span>
-                                <span style="color: var(--text-secondary);"><i class="fas fa-calendar"></i> {player_info['age']} ans</span>
-                            </div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="background: {score_color}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 700;">
-                                {similarity_score:.1f}% similaire
-                            </div>
-                            <div style="color: var(--accent); font-weight: 600; margin-top: 0.5rem;">
-                                {valeur_marchande}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                ModernUIComponents.render_similar_player_card(player_info, i + 1)
         
         else:
-            st.markdown("""
-            <div class="modern-card" style="text-align: center; padding: 3rem;">
-                <h3 style="color: var(--warning); margin: 0 0 1rem 0;">
-                    <i class="fas fa-exclamation-triangle"></i> Aucun profil trouvé
-                </h3>
-                <p style="color: var(--text-secondary); margin: 0;">
-                    Impossible de trouver des joueurs similaires avec les données disponibles.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.warning("⚠️ Aucun profil similaire trouvé")
     
     def _render_comparison_analysis(self, df: pd.DataFrame, selected_player: str):
-        """Analyse comparative moderne"""
-        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
-        
+        """Analyse comparative"""
         st.markdown("""
         <div class="modern-card">
             <h3 style="color: var(--primary); margin: 0 0 1rem 0;">
-                <i class="fas fa-exchange-alt"></i> Analyse Comparative
+                🔄 Analyse Comparative
             </h3>
             <p style="color: var(--text-secondary); margin: 0;">
-                Comparez les performances avec d'autres joueurs ou la moyenne de la ligue
+                Comparez les performances avec d'autres joueurs
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Configuration de la comparaison
         competitions = sorted(df['Compétition'].dropna().unique())
         
         col1, col2 = st.columns(2)
@@ -1692,60 +1430,37 @@ class ModernFootballDashboard:
             player2 = st.selectbox("Joueur", df_comp2['Joueur'].sort_values(), key="player2")
         
         if player1 and player2 and player1 != player2:
-            # Données des joueurs
             p1_data = df_comp1[df_comp1['Joueur'] == player1].iloc[0]
             p2_data = df_comp2[df_comp2['Joueur'] == player2].iloc[0]
             
-            # Comparaison visuelle
             st.markdown(f"""
             <div class="modern-card">
                 <h4 style="color: var(--accent); margin: 0 0 1.5rem 0; text-align: center;">
-                    <i class="fas fa-vs"></i> {player1} vs {player2}
+                    ⚔️ {player1} vs {player2}
                 </h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                    <div style="text-align: center;">
-                        <h5 style="color: var(--primary); margin: 0 0 1rem 0;">{player1}</h5>
-                        <div style="color: var(--text-secondary); margin-bottom: 0.5rem;">{comp1} • {p1_data['Équipe']}</div>
-                        <div style="color: var(--text-secondary);">{p1_data['Position']} • {p1_data['Âge']} ans</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <h5 style="color: var(--secondary); margin: 0 0 1rem 0;">{player2}</h5>
-                        <div style="color: var(--text-secondary); margin-bottom: 0.5rem;">{comp2} • {p2_data['Équipe']}</div>
-                        <div style="color: var(--text-secondary);">{p2_data['Position']} • {p2_data['Âge']} ans</div>
-                    </div>
-                </div>
             </div>
             """, unsafe_allow_html=True)
             
-            # Métriques de comparaison
+            # Comparaison des métriques principales
             comparison_metrics = ['Buts', 'Passes décisives', 'Tirs', 'Passes clés', 'Minutes jouées']
-            
-            st.markdown('<div class="metrics-grid" style="margin: 2rem 0;">', unsafe_allow_html=True)
             
             for metric in comparison_metrics:
                 val1 = p1_data.get(metric, 0)
                 val2 = p2_data.get(metric, 0)
                 
-                winner_color = Config.COLORS['primary'] if val1 > val2 else Config.COLORS['secondary']
+                col1, col2, col3 = st.columns([1, 1, 1])
                 
-                st.markdown(f"""
-                <div class="metric-card-modern">
-                    <div class="metric-label-modern">{metric}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                        <span style="color: {'var(--primary)' if val1 > val2 else 'var(--text-secondary)'}; font-weight: {'700' if val1 > val2 else '500'};">
-                            {val1}
-                        </span>
-                        <span style="color: var(--text-muted);">vs</span>
-                        <span style="color: {'var(--secondary)' if val2 > val1 else 'var(--text-secondary)'}; font-weight: {'700' if val2 > val1 else '500'};">
-                            {val2}
-                        </span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+                with col1:
+                    st.metric(f"{player1} - {metric}", f"{val1}", 
+                             delta=f"{val1-val2}" if val1 > val2 else None)
+                
+                with col2:
+                    st.markdown(f"<div style='text-align: center; padding: 1rem; color: var(--text-muted);'>{metric}</div>", 
+                               unsafe_allow_html=True)
+                
+                with col3:
+                    st.metric(f"{player2} - {metric}", f"{val2}",
+                             delta=f"{val2-val1}" if val2 > val1 else None)
     
     def _render_no_player_selected(self):
         """Affiche le message quand aucun joueur n'est sélectionné"""
@@ -1758,81 +1473,34 @@ class ModernFootballDashboard:
             <p style="color: var(--text-secondary); font-size: 1.1rem; margin: 0 0 2rem 0; line-height: 1.6;">
                 Utilisez les filtres dans la sidebar pour choisir une compétition et un joueur à analyser.
             </p>
-            
-            <div class="metrics-grid" style="max-width: 800px; margin: 0 auto;">
-                <div class="metric-card-modern" style="padding: 2rem;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);">🎯</div>
-                    <h4 style="color: var(--text-primary); margin: 0 0 0.5rem 0;">Performance Offensive</h4>
-                    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Buts, passes, actions offensives</p>
-                </div>
-                <div class="metric-card-modern" style="padding: 2rem;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem; color: var(--accent);">🛡️</div>
-                    <h4 style="color: var(--text-primary); margin: 0 0 0.5rem 0;">Performance Défensive</h4>
-                    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Tacles, interceptions, duels</p>
-                </div>
-                <div class="metric-card-modern" style="padding: 2rem;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem; color: var(--secondary);">🎨</div>
-                    <h4 style="color: var(--text-primary); margin: 0 0 0.5rem 0;">Performance Technique</h4>
-                    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Passes, dribbles, technique</p>
-                </div>
-                <div class="metric-card-modern" style="padding: 2rem;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem; color: var(--warning);">👥</div>
-                    <h4 style="color: var(--text-primary); margin: 0 0 0.5rem 0;">Profils Similaires</h4>
-                    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Joueurs au style proche</p>
-                </div>
-            </div>
         </div>
         """, unsafe_allow_html=True)
     
     def _render_error_page(self):
-        """Affiche la page d'erreur moderne"""
+        """Affiche la page d'erreur"""
         st.markdown("""
         <div class="modern-card" style="text-align: center; padding: 4rem 2rem; border-color: var(--danger);">
             <div style="font-size: 4rem; margin-bottom: 2rem; color: var(--danger);">⚠️</div>
             <h1 style="color: var(--danger); margin: 0 0 1rem 0; font-size: 2.5rem;">
                 Erreur de Chargement
             </h1>
-            <p style="color: var(--text-secondary); font-size: 1.1rem; margin: 0 0 2rem 0; line-height: 1.6;">
-                Impossible de charger les données. Veuillez vérifier la présence du fichier de données.
+            <p style="color: var(--text-secondary); font-size: 1.1rem; margin: 0 0 2rem 0;">
+                Impossible de charger les données. Veuillez vérifier la présence du fichier 'df_BIG2025.csv'.
             </p>
-            
-            <div class="modern-card" style="max-width: 600px; margin: 2rem auto 0 auto; padding: 2rem;">
-                <h3 style="color: var(--secondary); margin: 0 0 1rem 0;">📋 Fichiers requis</h3>
-                <div style="text-align: left; color: var(--text-primary);">
-                    <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-primary);">
-                        <strong>df_BIG2025.csv</strong> - Données principales
-                    </div>
-                    <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-primary);">
-                        <strong>images_joueurs/</strong> - Photos des joueurs
-                    </div>
-                    <div style="padding: 0.75rem 0;">
-                        <strong>*_Logos/</strong> - Logos des équipes
-                    </div>
-                </div>
-            </div>
-            
-            <button onclick="window.location.reload()" 
-                    class="custom-button" style="margin-top: 2rem;">
-                <i class="fas fa-redo"></i> Réessayer
-            </button>
         </div>
         """, unsafe_allow_html=True)
 
 # ================================================================================================
-# POINT D'ENTRÉE DE L'APPLICATION
+# POINT D'ENTRÉE
 # ================================================================================================
 
 def main():
-    """Point d'entrée principal de l'application"""
+    """Point d'entrée principal"""
     try:
         dashboard = ModernFootballDashboard()
         dashboard.run()
     except Exception as e:
-        st.error(f"❌ Erreur inattendue : {str(e)}")
-        
-        with st.expander("🔍 Détails de l'erreur", expanded=False):
-            import traceback
-            st.code(traceback.format_exc())
+        st.error(f"❌ Erreur : {str(e)}")
 
 if __name__ == "__main__":
     main()

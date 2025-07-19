@@ -21,7 +21,6 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-    st.warning("⚠️ scikit-learn n'est pas installé. La fonctionnalité de joueurs similaires sera limitée.")
 
 # ================================================================================================
 # CONFIGURATION ET CONSTANTES
@@ -32,26 +31,27 @@ class Config:
     
     # Configuration de la page Streamlit
     PAGE_CONFIG = {
-        "page_title": "Dashboard Football Pro",
+        "page_title": "Football Analytics Pro",
         "page_icon": "⚽",
         "layout": "wide",
-        "initial_sidebar_state": "expanded"
+        "initial_sidebar_state": "collapsed"
     }
     
-    # Palette de couleurs
+    # Palette de couleurs sobre et professionnelle
     COLORS = {
-        'primary': '#1f77b4',
-        'secondary': '#2ca02c',
-        'accent': '#ff7f0e',
-        'success': '#17a2b8',
-        'warning': '#ffc107',
-        'danger': '#dc3545',
-        'dark': '#212529',
-        'light': '#f8f9fa',
-        'gradient': ['#1f77b4', '#2ca02c', '#ff7f0e', '#17a2b8', '#ffc107']
+        'primary': '#2563eb',      # Blue-600
+        'secondary': '#059669',    # Emerald-600
+        'accent': '#dc2626',       # Red-600
+        'success': '#16a34a',      # Green-600
+        'warning': '#ea580c',      # Orange-600
+        'danger': '#dc2626',       # Red-600
+        'dark': '#0f172a',         # Slate-900
+        'light': '#f8fafc',        # Slate-50
+        'muted': '#64748b',        # Slate-500
+        'gradient': ['#2563eb', '#059669', '#ea580c', '#16a34a', '#dc2626']
     }
     
-    # Configuration des radars
+    # Configuration des radars (identique)
     RADAR_METRICS = {
         "Buts\nsans pénalty": "Buts (sans penalty)",
         "Passes déc.": "Passes décisives", 
@@ -75,7 +75,7 @@ class Config:
         "Dégagements": "Dégagements"
     }
     
-    # Mapping des dossiers de logos
+    # Mapping des dossiers de logos (identique)
     LOGO_FOLDERS = {
         'Bundliga': 'Bundliga_Logos',
         'La Liga': 'La_Liga_Logos',
@@ -84,67 +84,18 @@ class Config:
         'Serie A': 'Serie_A_Logos'
     }
     
-    # Métriques pour l'analyse de similarité (version enrichie)
+    # Métriques pour l'analyse de similarité (identique)
     SIMILARITY_METRICS = [
-        # Métriques de base (volume)
-        'Minutes jouées',
-        'Buts',
-        'Passes décisives',
-        'Tirs',
-        'Passes clés',
-        'Passes tentées',
-        'Dribbles tentés',
-        'Dribbles réussis',
-        'Tacles gagnants',
-        'Interceptions',
-        
-        # Métriques de qualité/efficacité
-        'Pourcentage de passes réussies',
-        'Pourcentage de dribbles réussis',
-        'Ballons récupérés',
-        
-        # Métriques de progression
-        'Passes progressives',
-        'Courses progressives',
-        'Passes dans le dernier tiers',
-        
-        # Métriques physiques/aériennes
-        'Duels aériens gagnés',
-        'Duels défensifs gagnés',
-        
-        # Métriques de finition
-        'Tirs cadrés',
-        'Actions menant à un tir'
+        'Minutes jouées', 'Buts', 'Passes décisives', 'Tirs', 'Passes clés',
+        'Passes tentées', 'Dribbles tentés', 'Dribbles réussis', 'Tacles gagnants',
+        'Interceptions', 'Pourcentage de passes réussies', 'Pourcentage de dribbles réussis',
+        'Ballons récupérés', 'Passes progressives', 'Courses progressives',
+        'Passes dans le dernier tiers', 'Duels aériens gagnés', 'Duels défensifs gagnés',
+        'Tirs cadrés', 'Actions menant à un tir'
     ]
-    
-    # Métriques étendues pour l'analyse comparative
-    COMPREHENSIVE_METRICS = {
-        'offensive': [
-            'Buts', 'Passes décisives', 'Tirs', 'Tirs cadrés', 'Passes clés',
-            'Actions menant à un tir', 'Actions menant à un but', 'Dribbles réussis',
-            'Buts attendus', 'Passes décisives attendues', 'Centres réussis', 'Buts de la tête'
-        ],
-        'defensive': [
-            'Tacles gagnants', 'Interceptions', 'Ballons récupérés', 'Dégagements',
-            'Duels défensifs gagnés', 'Duels aériens gagnés', 'Tirs bloqués',
-            'Fautes commises', 'Cartons jaunes', 'Cartons rouges', 'Duels gagnés', 'Erreurs menant à un tir'
-        ],
-        'technical': [
-            'Passes tentées', 'Passes progressives', 'Passes dans le dernier tiers',
-            'Passes dans la surface', 'Centres tentés', 'Centres réussis',
-            'Dribbles tentés', 'Touches de balle', 'Ballons perdus', 'Passes longues tentées',
-            'Passes longues réussies', 'Passes courtes tentées'
-        ],
-        'passing': [
-            'Passes tentées', 'Passes réussies', 'Passes progressives', 'Passes clés',
-            'Passes dans le dernier tiers', 'Passes dans la surface', 'Passes longues tentées',
-            'Passes longues réussies', 'Passes courtes tentées', 'Passes courtes réussies',
-            'Centres tentés', 'Centres réussis'
-        ]
-    }
 
 # ================================================================================================
-# UTILITAIRES
+# UTILITAIRES (code identique)
 # ================================================================================================
 
 class Utils:
@@ -156,12 +107,9 @@ class Utils:
         if pd.isna(value) or value is None:
             return "N/A"
         
-        # Conversion en nombre si c'est une chaîne
         if isinstance(value, str):
             try:
-                # Nettoyer la chaîne: enlever €, M, K, etc. et garder seulement les chiffres et le point décimal
                 clean_value = value.replace('€', '').replace('M', '').replace('K', '').replace('B', '').replace(',', '').replace(' ', '')
-                # Gérer les cas comme "50.5M" ou "2.3K"
                 if 'M' in value.upper():
                     clean_value = str(float(clean_value) * 1_000_000)
                 elif 'K' in value.upper():
@@ -178,13 +126,11 @@ class Utils:
         
         try:
             value = float(value)
-            # Vérifier que la valeur est positive et raisonnable
-            if value <= 0 or value > 1_000_000_000_000:  # Plus de 1000 milliards semble irréaliste
+            if value <= 0 or value > 1_000_000_000_000:
                 return "N/A"
         except (ValueError, TypeError):
             return "N/A"
         
-        # Formatage selon les seuils
         if value >= 1_000_000_000:
             return f"{value/1_000_000_000:.1f}B€"
         elif value >= 1_000_000:
@@ -197,7 +143,6 @@ class Utils:
     @staticmethod
     def get_market_value_safe(player_data: pd.Series) -> str:
         """Récupère la valeur marchande exacte depuis les données du joueur"""
-        # Liste étendue des colonnes possibles pour la valeur marchande
         possible_columns = [
             'Valeur marchande', 'Market Value', 'valeur_marchande', 
             'Valeur', 'Value', 'market_value', 'Valeur en €', 'Valeur (€)',
@@ -207,17 +152,14 @@ class Utils:
             'Transfer Value', 'transfer_value', 'Prix', 'price', 'Price'
         ]
         
-        # Essayer de récupérer la vraie valeur marchande depuis les données exactes du joueur
         for col in possible_columns:
             if col in player_data.index and pd.notna(player_data.get(col)):
                 value = player_data[col]
-                # Vérifier que ce n'est pas une valeur vide ou zéro
                 if value != 0 and str(value).lower() not in ['nan', 'null', '', '0', 'none', 'n/a', 'na']:
                     formatted_value = Utils.format_market_value(value)
                     if formatted_value != "N/A":
                         return formatted_value
         
-        # Si aucune valeur trouvée, essayer les colonnes numériques qui pourraient être des valeurs marchandes
         for col in player_data.index:
             if any(keyword in col.lower() for keyword in ['val', 'market', 'price', 'prix', 'cost', 'worth']):
                 if pd.notna(player_data.get(col)):
@@ -227,12 +169,10 @@ class Utils:
                         if formatted_value != "N/A":
                             return formatted_value
         
-        # Dernière tentative : chercher des colonnes numériques avec des valeurs dans la fourchette des valeurs marchandes
         for col in player_data.index:
             if pd.notna(player_data.get(col)):
                 try:
                     value = float(player_data[col])
-                    # Valeurs typiques de valeurs marchandes (entre 50K et 200M)
                     if 50_000 <= value <= 200_000_000:
                         formatted_value = Utils.format_market_value(value)
                         if formatted_value != "N/A":
@@ -240,7 +180,6 @@ class Utils:
                 except (ValueError, TypeError):
                     continue
         
-        # Si vraiment aucune valeur marchande trouvée, retourner N/A
         return "N/A"
     
     @staticmethod
@@ -257,116 +196,238 @@ class Utils:
         return ','.join(str(int(hex_color[i:i+2], 16)) for i in (0, 2, 4))
 
 # ================================================================================================
-# GESTIONNAIRE DE STYLES CSS
+# GESTIONNAIRE DE STYLES CSS - VERSION SOBRE
 # ================================================================================================
 
 class StyleManager:
-    """Gestionnaire des styles CSS"""
+    """Gestionnaire des styles CSS - Version sobre et professionnelle"""
     
     @staticmethod
     def get_css() -> str:
-        """Retourne le CSS personnalisé"""
+        """Retourne le CSS personnalisé sobre et professionnel"""
         return """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
+        /* Variables CSS sobres et professionnelles */
         :root {
-            --primary-color: #1f77b4;
-            --secondary-color: #2ca02c;
-            --accent-color: #ff7f0e;
-            --background-dark: #0e1117;
-            --background-card: #1a1d23;
-            --background-surface: #262730;
-            --text-primary: #ffffff;
-            --text-secondary: #e2e8f0;
-            --text-muted: #a0aec0;
-            --border-color: #4a5568;
-            --border-light: #2d3748;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --spacing-xs: 4px;
-            --spacing-sm: 8px;
-            --spacing-md: 16px;
-            --spacing-lg: 24px;
-            --spacing-xl: 32px;
+            --primary: #2563eb;
+            --secondary: #059669;
+            --accent: #ea580c;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
         }
         
+        /* Reset et base */
+        * {
+            box-sizing: border-box;
+        }
+        
+        /* Masquer complètement tous les éléments Streamlit */
+        .stApp > header,
+        .stApp > footer,
+        .stDeployButton,
+        .stDecoration,
+        [data-testid="manage-app-button"],
+        [data-testid="stSidebarUserContent"] > div:first-child,
+        .reportview-container .main .block-container {
+            display: none !important;
+        }
+        
+        /* App container */
         .stApp {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--background-dark) 0%, #1a1d23 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
             color: var(--text-primary);
+            line-height: 1.5;
         }
         
+        /* Main container */
         .main .block-container {
-            padding-top: var(--spacing-lg);
-            padding-bottom: var(--spacing-lg);
-            max-width: 1400px;
+            padding: 0 !important;
+            max-width: none !important;
+            margin: 0 !important;
         }
         
-        /* Onglets améliorés */
-        .stTabs [data-baseweb="tab-list"] {
-            background: var(--background-card);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-xs);
-            margin-bottom: var(--spacing-lg);
-            border: 2px solid var(--border-color);
-            box-shadow: var(--shadow);
+        /* Header personnalisé */
+        .custom-header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            margin-bottom: 0;
+            box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
+            z-index: 1000;
         }
         
-        .stTabs [data-baseweb="tab"] {
-            background: transparent;
-            color: var(--text-secondary);
-            border-radius: var(--radius-sm);
-            font-weight: 500;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            border: none;
-            padding: var(--spacing-md) var(--spacing-lg);
-            margin: 0 var(--spacing-xs);
-            position: relative;
-        }
-        
-        .stTabs [data-baseweb="tab"]:hover {
-            background: rgba(31, 119, 180, 0.1);
-            color: var(--text-primary);
-            transform: translateY(-1px);
-        }
-        
-        .stTabs [aria-selected="true"] {
-            background: var(--primary-color);
-            color: white;
-            box-shadow: 0 4px 12px rgba(31, 119, 180, 0.4);
+        .custom-header h1 {
+            margin: 0;
+            font-size: 1.75rem;
             font-weight: 600;
-            border-bottom: 3px solid var(--accent-color);
+            color: var(--text-primary);
         }
         
-        /* Cartes joueur */
+        .custom-header p {
+            margin: 0.25rem 0 0 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Navigation personnalisée */
+        .custom-navigation {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            margin: 0;
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+        }
+        
+        .nav-item {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            font-family: inherit;
+        }
+        
+        .nav-item:hover {
+            color: var(--primary);
+            background: var(--bg-tertiary);
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--bg-tertiary);
+        }
+        
+        /* Content area */
+        .content-area {
+            padding: 2rem;
+            background: var(--bg-secondary);
+            min-height: calc(100vh - 120px);
+        }
+        
+        /* Player selector */
+        .player-selector {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .player-selector h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Breadcrumbs */
+        .breadcrumbs {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .breadcrumbs .active {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .card-header {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Player header card */
         .player-header-card {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            padding: var(--spacing-xl);
-            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
             text-align: center;
-            margin-bottom: var(--spacing-xl);
+            border: none;
             box-shadow: var(--shadow-lg);
         }
         
+        .player-header-card h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .player-header-card p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        /* Player info card */
         .player-info-card {
-            background: var(--background-card);
-            padding: var(--spacing-xl);
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            border: 2px solid var(--border-color);
-            box-shadow: var(--shadow-lg);
-            margin: var(--spacing-lg) 0;
+            padding: 2rem;
             text-align: center;
+            box-shadow: var(--shadow);
             position: relative;
-            overflow: hidden;
         }
         
         .player-info-card::before {
@@ -376,138 +437,144 @@ class StyleManager:
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
         }
         
-        .player-metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--spacing-md);
-            margin-top: var(--spacing-xl);
-            max-width: 100%;
-        }
-        
-        @media (max-width: 768px) {
-            .player-metrics-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .player-metrics-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .metric-card-enhanced {
-            background: var(--background-surface);
-            padding: var(--spacing-md);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-light);
-            text-align: center;
-            transition: all 0.3s ease;
-            min-height: 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .metric-card-enhanced:hover {
-            border-color: var(--primary-color);
-            box-shadow: 0 8px 25px rgba(31, 119, 180, 0.3);
-            transform: translateY(-3px);
-        }
-        
-        .metric-value-enhanced {
-            font-size: 1.75rem;
+        .player-info-card h2 {
+            margin: 0 0 2rem 0;
+            font-size: 2rem;
             font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: var(--spacing-xs);
-            line-height: 1.2;
-            word-break: break-word;
+            color: var(--text-primary);
         }
         
-        .metric-label-enhanced {
-            font-size: 0.8rem;
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .metric-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .metric-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+            transform: translateY(-1px);
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
             color: var(--text-muted);
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            line-height: 1.3;
+            letter-spacing: 0.05em;
         }
         
-        /* Cartes de joueurs similaires avec logo */
+        /* Similar player cards */
         .similar-player-card {
-            background: var(--background-card);
-            padding: var(--spacing-lg);
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            border: 2px solid var(--border-color);
-            box-shadow: var(--shadow);
-            margin: var(--spacing-md) 0;
-            transition: all 0.3s ease;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
             position: relative;
-            overflow: hidden;
         }
         
         .similar-player-card:hover {
-            border-color: var(--secondary-color);
-            box-shadow: 0 12px 30px rgba(44, 160, 44, 0.3);
-            transform: translateY(-5px);
-        }
-        
-        .similar-player-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            border-color: var(--secondary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
         
         .similarity-score {
-            background: var(--secondary-color);
-            color: white;
-            padding: var(--spacing-xs) var(--spacing-md);
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: 0.9em;
             position: absolute;
-            top: var(--spacing-md);
-            right: var(--spacing-md);
+            top: 1rem;
+            right: 1rem;
+            background: var(--secondary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 600;
         }
         
         .player-header-with-logo {
             display: flex;
             align-items: center;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-md);
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
         
         .club-logo-small {
             width: 40px;
             height: 40px;
             object-fit: contain;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            background: var(--bg-tertiary);
             padding: 4px;
         }
         
-        /* Titres de sections */
-        .section-title-enhanced {
-            color: var(--text-primary);
-            font-size: 2rem;
-            font-weight: 800;
-            text-align: center;
-            margin: var(--spacing-xl) 0 var(--spacing-lg) 0;
-            letter-spacing: -0.025em;
-            position: relative;
-            padding-bottom: var(--spacing-md);
+        /* Images */
+        .image-container {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
         }
         
-        .section-title-enhanced::after {
+        .club-logo-container {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+        }
+        
+        .club-logo-container:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Section titles */
+        .section-title {
+            color: var(--text-primary);
+            font-size: 1.875rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 2rem 0 1.5rem 0;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+        
+        .section-title::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -515,130 +582,164 @@ class StyleManager:
             transform: translateX(-50%);
             width: 60px;
             height: 3px;
-            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             border-radius: 2px;
         }
         
-        .subsection-title-enhanced {
-            color: var(--primary-color);
+        .subsection-title {
+            color: var(--primary);
             font-size: 1.25rem;
             font-weight: 600;
-            margin: var(--spacing-lg) 0 var(--spacing-md) 0;
-            border-left: 4px solid var(--primary-color);
-            padding-left: var(--spacing-md);
-            letter-spacing: -0.025em;
+            margin: 1.5rem 0 1rem 0;
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
         }
         
-        /* Conteneurs d'images */
-        .image-container {
-            background: var(--background-surface);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-            border: 2px solid var(--border-color);
-            overflow: hidden;
-            height: 320px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-lg);
+        /* Streamlit elements override */
+        .stSelectbox > div > div {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
         }
         
-        .club-logo-container {
-            background: var(--background-surface);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-lg);
-            border: 2px solid var(--border-color);
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+        .stSelectbox label {
+            color: var(--text-primary);
+            font-weight: 500;
         }
         
-        .club-logo-container:hover {
-            border-color: var(--primary-color);
-            box-shadow: 0 8px 25px rgba(31, 119, 180, 0.3);
+        .stMetric {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
         }
         
-        /* Légendes */
-        .chart-legend {
-            background: var(--background-surface);
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-sm);
-            padding: var(--spacing-sm) var(--spacing-md);
-            margin: var(--spacing-md) 0;
-            display: inline-flex;
-            align-items: center;
-            gap: var(--spacing-md);
-            font-size: 0.85rem;
+        .stMetric label {
+            color: var(--text-secondary) !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
         }
         
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-xs);
+        .stMetric [data-testid="metric-value"] {
+            color: var(--text-primary) !important;
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
         }
         
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
+        .stSlider > div > div {
+            color: var(--text-primary);
         }
         
-        /* Breadcrumbs */
-        .breadcrumbs {
-            background: var(--background-surface);
-            padding: 12px 20px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 20px;
-            border-left: 4px solid var(--primary-color);
+        .stSpinner {
+            color: var(--primary);
         }
         
-        /* Sidebar */
-        .sidebar-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            padding: 20px;
-            border-radius: var(--radius-md);
-            text-align: center;
-            margin-bottom: var(--spacing-lg);
+        /* Info boxes */
+        .stInfo {
+            background: var(--bg-primary);
+            border: 1px solid var(--primary);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius);
+        }
+        
+        .stSuccess {
+            background: var(--bg-primary);
+            border: 1px solid var(--success);
+            border-left: 4px solid var(--success);
+            border-radius: var(--radius);
+        }
+        
+        .stWarning {
+            background: var(--bg-primary);
+            border: 1px solid var(--warning);
+            border-left: 4px solid var(--warning);
+            border-radius: var(--radius);
+        }
+        
+        .stError {
+            background: var(--bg-primary);
+            border: 1px solid var(--danger);
+            border-left: 4px solid var(--danger);
+            border-radius: var(--radius);
         }
         
         /* Footer */
-        .dashboard-footer {
-            background: var(--background-card);
-            padding: var(--spacing-lg);
-            border-radius: var(--radius-md);
+        .custom-footer {
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
             text-align: center;
-            margin-top: 40px;
-            border: 1px solid var(--border-color);
+            margin-top: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .custom-footer h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .custom-header,
+            .custom-navigation,
+            .content-area {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .player-header-card h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .custom-navigation {
+                flex-wrap: wrap;
+            }
         }
         
         /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .animated-card {
-            animation: fadeInUp 0.6s ease-out;
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
         }
         
-        /* Masquer éléments inutiles */
-        .stDeployButton, .stDecoration, [data-testid="manage-app-button"] {
-            display: none !important;
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
         }
         </style>
         """
 
 # ================================================================================================
-# GESTIONNAIRE DE DONNÉES
+# GESTIONNAIRE DE DONNÉES (identique)
 # ================================================================================================
 
 class DataManager:
@@ -684,7 +785,7 @@ class DataManager:
         return df[df['Compétition'] != player_competition]
 
 # ================================================================================================
-# GESTIONNAIRE D'IMAGES
+# GESTIONNAIRE D'IMAGES (identique)
 # ================================================================================================
 
 class ImageManager:
@@ -695,20 +796,17 @@ class ImageManager:
         """Récupère le chemin de la photo du joueur"""
         extensions = ['.jpg', '.jpeg', '.JPG', '.JPEG', '.png', '.PNG']
         
-        # Recherche directe
         for ext in extensions:
             photo_path = f"images_joueurs/{player_name}{ext}"
             if os.path.exists(photo_path):
                 return photo_path
         
-        # Recherche avec patterns
         for ext in extensions:
             pattern = f"images_joueurs/*{player_name}*{ext}"
             files = glob.glob(pattern)
             if files:
                 return files[0]
                 
-            # Essayer avec nom inversé
             if " " in player_name:
                 parts = player_name.split(" ")
                 if len(parts) >= 2:
@@ -729,20 +827,17 @@ class ImageManager:
         
         extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']
         
-        # Recherche directe
         for ext in extensions:
             logo_path = f"{folder}/{team_name}{ext}"
             if os.path.exists(logo_path):
                 return logo_path
         
-        # Recherche avec patterns
         for ext in extensions:
             pattern = f"{folder}/*{team_name}*{ext}"
             files = glob.glob(pattern)
             if files:
                 return files[0]
                 
-            # Variations de nom
             clean_team = team_name.replace(" ", "_").replace("'", "").replace("-", "_")
             pattern = f"{folder}/*{clean_team}*{ext}"
             files = glob.glob(pattern)
@@ -752,7 +847,7 @@ class ImageManager:
         return None
 
 # ================================================================================================
-# CALCULATEUR DE MÉTRIQUES
+# CALCULATEUR DE MÉTRIQUES (identique)
 # ================================================================================================
 
 class MetricsCalculator:
@@ -839,7 +934,7 @@ class MetricsCalculator:
         }
 
 # ================================================================================================
-# ANALYSEUR DE JOUEURS SIMILAIRES
+# ANALYSEUR DE JOUEURS SIMILAIRES (identique, code conservé)
 # ================================================================================================
 
 class SimilarPlayerAnalyzer:
@@ -848,7 +943,6 @@ class SimilarPlayerAnalyzer:
     @staticmethod
     def prepare_similarity_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
         """Prépare les données pour l'analyse de similarité"""
-        # Sélectionner les colonnes disponibles pour l'analyse
         available_metrics = []
         for metric in Config.SIMILARITY_METRICS:
             if metric in df.columns:
@@ -858,33 +952,26 @@ class SimilarPlayerAnalyzer:
             st.warning("⚠️ Aucune métrique disponible pour l'analyse de similarité")
             return pd.DataFrame(), []
         
-        # Créer le DataFrame avec les métriques disponibles
         required_cols = ['Joueur', 'Équipe', 'Compétition', 'Position', 'Âge', 'Valeur marchande']
         similarity_df = df[required_cols + available_metrics].copy()
         
-        # Remplacer les valeurs manquantes par 0
         for col in available_metrics:
             similarity_df[col] = pd.to_numeric(similarity_df[col], errors='coerce').fillna(0)
         
-        # Filtrer les lignes avec des données valides
         similarity_df = similarity_df.dropna(subset=['Joueur'])
-        
-        # Supprimer les doublons basés sur le nom du joueur (garder le premier)
         similarity_df = similarity_df.drop_duplicates(subset=['Joueur'], keep='first')
         
         return similarity_df, available_metrics
     
     @staticmethod
     def calculate_similarity_simple(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Calcule la similarité sans sklearn (version simplifiée avec normalisation globale)"""
+        """Calcule la similarité sans sklearn"""
         try:
-            # Préparer les données
             similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
             
             if similarity_df.empty or not available_metrics:
                 return []
             
-            # Obtenir les données du joueur cible
             target_data = similarity_df[similarity_df['Joueur'] == target_player]
             if target_data.empty:
                 return []
@@ -892,14 +979,11 @@ class SimilarPlayerAnalyzer:
             target_values = target_data[available_metrics].iloc[0]
             target_info = target_data.iloc[0]
             
-            # Filtrer les autres joueurs (exclure le joueur cible)
             other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
             
             if other_players.empty:
                 return []
             
-            # Normalisation globale pour garantir la symétrie
-            # Calculer les min/max pour chaque métrique sur l'ensemble du dataset
             metric_ranges = {}
             for metric in available_metrics:
                 all_values = similarity_df[metric].astype(float)
@@ -909,16 +993,14 @@ class SimilarPlayerAnalyzer:
                 metric_ranges[metric] = {
                     'min': min_val,
                     'max': max_val,
-                    'range': range_val if range_val > 0 else 1  # Éviter division par zéro
+                    'range': range_val if range_val > 0 else 1
                 }
             
-            # Calculer la similarité avec normalisation globale
             similarities = []
             
             for idx, player_row in other_players.iterrows():
                 player_values = player_row[available_metrics]
                 
-                # Calculer la différence normalisée pour chaque métrique
                 total_diff = 0
                 valid_metrics = 0
                 
@@ -926,23 +1008,18 @@ class SimilarPlayerAnalyzer:
                     target_val = float(target_values[metric])
                     player_val = float(player_values[metric])
                     
-                    # Normalisation basée sur l'étendue globale de la métrique
                     metric_range = metric_ranges[metric]
                     if metric_range['range'] > 0:
-                        # Normaliser les valeurs entre 0 et 1
                         norm_target = (target_val - metric_range['min']) / metric_range['range']
                         norm_player = (player_val - metric_range['min']) / metric_range['range']
                         
-                        # Différence normalisée (entre 0 et 1)
                         diff = abs(norm_target - norm_player)
                     else:
-                        # Si toutes les valeurs sont identiques, différence = 0
                         diff = 0
                     
                     total_diff += diff
                     valid_metrics += 1
                 
-                # Score de similarité (0-100)
                 if valid_metrics > 0:
                     avg_diff = total_diff / valid_metrics
                     similarity_score = max(0, 100 * (1 - avg_diff))
@@ -959,7 +1036,6 @@ class SimilarPlayerAnalyzer:
                     'data': player_row
                 })
             
-            # Trier par score de similarité décroissant
             similarities.sort(key=lambda x: x['similarity_score'], reverse=True)
             
             return similarities[:num_similar]
@@ -970,15 +1046,13 @@ class SimilarPlayerAnalyzer:
     
     @staticmethod
     def calculate_similarity_advanced(target_player: str, df: pd.DataFrame, num_similar: int = 5) -> List[Dict]:
-        """Calcule la similarité avec sklearn (version avancée)"""
+        """Calcule la similarité avec sklearn"""
         try:
-            # Préparer les données
             similarity_df, available_metrics = SimilarPlayerAnalyzer.prepare_similarity_data(df)
             
             if similarity_df.empty or not available_metrics:
                 return []
             
-            # Obtenir les données du joueur cible
             target_data = similarity_df[similarity_df['Joueur'] == target_player]
             if target_data.empty:
                 return []
@@ -986,31 +1060,24 @@ class SimilarPlayerAnalyzer:
             target_values = target_data[available_metrics].values[0]
             target_info = target_data.iloc[0]
             
-            # Filtrer les autres joueurs (exclure le joueur cible)
             other_players = similarity_df[similarity_df['Joueur'] != target_player].copy()
             
             if other_players.empty:
                 return []
             
-            # Normaliser les données
             scaler = StandardScaler()
             
-            # Données pour normalisation (inclut le joueur cible)
             all_data = similarity_df[available_metrics].values
             scaler.fit(all_data)
             
-            # Normaliser les données du joueur cible et des autres
             target_normalized = scaler.transform([target_values])[0]
             others_normalized = scaler.transform(other_players[available_metrics].values)
             
-            # Calculer les distances euclidiennes
             distances = euclidean_distances([target_normalized], others_normalized)[0]
             
-            # Convertir en scores de similarité (0-100)
             max_distance = np.max(distances) if len(distances) > 0 else 1
             similarity_scores = 100 * (1 - distances / max_distance) if max_distance > 0 else [100] * len(distances)
             
-            # Créer la liste des joueurs similaires
             similar_players = []
             for i, (idx, row) in enumerate(other_players.iterrows()):
                 similar_players.append({
@@ -1024,7 +1091,6 @@ class SimilarPlayerAnalyzer:
                     'data': row
                 })
             
-            # Trier par score de similarité décroissant
             similar_players.sort(key=lambda x: x['similarity_score'], reverse=True)
             
             return similar_players[:num_similar]
@@ -1042,7 +1108,7 @@ class SimilarPlayerAnalyzer:
             return SimilarPlayerAnalyzer.calculate_similarity_simple(target_player, df, num_similar)
 
 # ================================================================================================
-# GESTIONNAIRE DE GRAPHIQUES
+# GESTIONNAIRE DE GRAPHIQUES (identique mais avec nouvelles couleurs)
 # ================================================================================================
 
 class ChartManager:
@@ -1056,34 +1122,34 @@ class ChartManager:
             y=list(data.values()),
             marker=dict(
                 color=color_palette,
-                line=dict(color='rgba(255,255,255,0.2)', width=1),
+                line=dict(color='rgba(15,23,42,0.2)', width=1),
                 cornerradius=4
             ),
             text=[f"{v:.1f}" for v in data.values()],
             textposition='outside',
-            textfont=dict(color='white', size=13, family='Inter')
+            textfont=dict(color='#0f172a', size=13, family='Inter')
         )])
         
         fig.update_layout(
             title=dict(
                 text=title,
-                font=dict(size=16, color='white', family='Inter', weight=600),
+                font=dict(size=16, color='#0f172a', family='Inter', weight=600),
                 x=0.5,
                 y=0.95
             ),
             xaxis=dict(
-                tickfont=dict(color='white', size=11, family='Inter'),
+                tickfont=dict(color='#475569', size=11, family='Inter'),
                 tickangle=45,
                 showgrid=False
             ),
             yaxis=dict(
-                tickfont=dict(color='white', size=11, family='Inter'),
-                gridcolor='rgba(255,255,255,0.15)',
+                tickfont=dict(color='#475569', size=11, family='Inter'),
+                gridcolor='rgba(226,232,240,0.5)',
                 showgrid=True
             ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
+            font=dict(color='#0f172a', family='Inter'),
             height=400,
             margin=dict(t=60, b=80, l=60, r=60)
         )
@@ -1112,28 +1178,28 @@ class ChartManager:
                     gauge=dict(
                         axis=dict(
                             range=[0, 100], 
-                            tickcolor='white', 
+                            tickcolor='#475569', 
                             tickfont=dict(size=10, family='Inter'),
                             ticksuffix='%'
                         ),
                         bar=dict(color=color, thickness=0.7),
-                        bgcolor="rgba(26, 29, 35, 0.8)",
+                        bgcolor="rgba(248, 250, 252, 0.8)",
                         borderwidth=2,
-                        bordercolor="rgba(255,255,255,0.3)",
+                        bordercolor="rgba(226,232,240,0.5)",
                         steps=[
-                            {'range': [0, 33], 'color': 'rgba(255,255,255,0.05)'},
-                            {'range': [33, 66], 'color': 'rgba(255,255,255,0.1)'},
-                            {'range': [66, 100], 'color': 'rgba(255,255,255,0.15)'}
+                            {'range': [0, 33], 'color': 'rgba(241,245,249,0.5)'},
+                            {'range': [33, 66], 'color': 'rgba(226,232,240,0.5)'},
+                            {'range': [66, 100], 'color': 'rgba(203,213,225,0.5)'}
                         ],
                         threshold={
-                            'line': {'color': "white", 'width': 3},
+                            'line': {'color': "#0f172a", 'width': 3},
                             'thickness': 0.75,
                             'value': 80
                         }
                     ),
                     number={
                         'suffix': '%', 
-                        'font': {'color': 'white', 'size': 16, 'family': 'Inter', 'weight': 600}
+                        'font': {'color': '#0f172a', 'size': 16, 'family': 'Inter', 'weight': 600}
                     }
                 ),
                 row=1, col=i+1
@@ -1142,13 +1208,13 @@ class ChartManager:
         fig.update_layout(
             height=340,
             title_text=title,
-            title_font_color='white',
+            title_font_color='#0f172a',
             title_font_size=18,
             title_font_family='Inter',
             title_x=0.5,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter', size=11),
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
+            font=dict(color='#0f172a', family='Inter', size=11),
             margin=dict(t=80, b=60, l=40, r=40)
         )
         
@@ -1165,7 +1231,7 @@ class ChartManager:
             x=list(player_data.keys()),
             y=list(player_data.values()),
             marker_color=Config.COLORS['primary'],
-            marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
+            marker_line=dict(color='rgba(15,23,42,0.2)', width=1),
             text=[f"{v:.2f}" for v in player_data.values()],
             textposition='outside',
             textfont=dict(size=11, family='Inter', weight=600)
@@ -1176,7 +1242,7 @@ class ChartManager:
             x=list(avg_data.keys()),
             y=list(avg_data.values()),
             marker_color=Config.COLORS['secondary'],
-            marker_line=dict(color='rgba(255,255,255,0.2)', width=1),
+            marker_line=dict(color='rgba(15,23,42,0.2)', width=1),
             text=[f"{v:.2f}" for v in avg_data.values()],
             textposition='outside',
             textfont=dict(size=11, family='Inter', weight=600)
@@ -1185,22 +1251,22 @@ class ChartManager:
         fig.update_layout(
             title=dict(
                 text=title,
-                font=dict(color='white', size=18, family='Inter', weight=700),
+                font=dict(color='#0f172a', size=18, family='Inter', weight=700),
                 x=0.5
             ),
             barmode='group',
             bargap=0.15,
             bargroupgap=0.1,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
+            font=dict(color='#0f172a', family='Inter'),
             xaxis=dict(
-                tickfont=dict(color='white', size=11),
+                tickfont=dict(color='#475569', size=11),
                 showgrid=False
             ),
             yaxis=dict(
-                tickfont=dict(color='white', size=11), 
-                gridcolor='rgba(255,255,255,0.15)',
+                tickfont=dict(color='#475569', size=11), 
+                gridcolor='rgba(226,232,240,0.5)',
                 showgrid=True
             ),
             height=420,
@@ -1211,8 +1277,8 @@ class ChartManager:
                 xanchor="center",
                 x=0.5,
                 font=dict(size=12, family='Inter'),
-                bgcolor='rgba(26, 29, 35, 0.8)',
-                bordercolor='rgba(255,255,255,0.2)',
+                bgcolor='rgba(248, 250, 252, 0.8)',
+                bordercolor='rgba(226,232,240,0.5)',
                 borderwidth=1
             ),
             margin=dict(t=100, b=60, l=60, r=60)
@@ -1227,7 +1293,6 @@ class ChartManager:
         """Crée un radar chart professionnel"""
         fig = go.Figure()
         
-        # Performance du joueur
         fig.add_trace(go.Scatterpolar(
             r=percentiles,
             theta=list(metrics.keys()),
@@ -1240,12 +1305,11 @@ class ChartManager:
             customdata=list(metrics.values())
         ))
         
-        # Moyenne de comparaison
         fig.add_trace(go.Scatterpolar(
             r=avg_percentiles,
             theta=list(metrics.keys()),
             mode='lines',
-            line=dict(color='rgba(255,255,255,0.6)', width=2, dash='dash'),
+            line=dict(color='rgba(100,116,139,0.6)', width=2, dash='dash'),
             name=f'Moyenne {comparison_label}',
             showlegend=True,
             hovertemplate='<b>%{theta}</b><br>Moyenne: %{r:.0f}<extra></extra>'
@@ -1256,9 +1320,9 @@ class ChartManager:
                 radialaxis=dict(
                     visible=True,
                     range=[0, 100],
-                    gridcolor='rgba(255,255,255,0.2)',
-                    tickcolor='white',
-                    tickfont=dict(color='white', size=10, family='Inter'),
+                    gridcolor='rgba(226,232,240,0.4)',
+                    tickcolor='#475569',
+                    tickfont=dict(color='#475569', size=10, family='Inter'),
                     showticklabels=True,
                     tickmode='linear',
                     tick0=0,
@@ -1266,19 +1330,19 @@ class ChartManager:
                     ticksuffix='%'
                 ),
                 angularaxis=dict(
-                    gridcolor='rgba(255,255,255,0.2)',
-                    tickcolor='white',
-                    tickfont=dict(color='white', size=11, family='Inter', weight=500),
-                    linecolor='rgba(255,255,255,0.3)'
+                    gridcolor='rgba(226,232,240,0.4)',
+                    tickcolor='#475569',
+                    tickfont=dict(color='#475569', size=11, family='Inter', weight=500),
+                    linecolor='rgba(226,232,240,0.4)'
                 ),
-                bgcolor='rgba(26, 29, 35, 0.8)'
+                bgcolor='rgba(248, 250, 252, 0.6)'
             ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
+            font=dict(color='#0f172a', family='Inter'),
             title=dict(
                 text=f"Analyse Radar - {player_name}",
-                font=dict(size=18, color='white', family='Inter', weight=700),
+                font=dict(size=18, color='#0f172a', family='Inter', weight=700),
                 x=0.5,
                 y=0.95
             ),
@@ -1288,9 +1352,9 @@ class ChartManager:
                 y=-0.2,
                 xanchor="center",
                 x=0.5,
-                font=dict(color='white', size=12),
-                bgcolor='rgba(26, 29, 35, 0.8)',
-                bordercolor='rgba(255,255,255,0.2)',
+                font=dict(color='#0f172a', size=12),
+                bgcolor='rgba(248, 250, 252, 0.8)',
+                bordercolor='rgba(226,232,240,0.5)',
                 borderwidth=1
             ),
             height=500,
@@ -1304,10 +1368,8 @@ class ChartManager:
                                   df: pd.DataFrame, metric: str) -> go.Figure:
         """Crée un histogramme de comparaison haute qualité pour une métrique spécifique"""
         
-        # Fonction pour trouver la colonne correspondante
         def find_column_name(metric_name: str, df_columns: List[str]) -> Optional[str]:
             """Trouve le nom exact de la colonne correspondant à la métrique"""
-            # Correspondances spéciales pour les noms de colonnes
             column_mappings = {
                 'Actions menant à un tir': ['Actions menant à un tir', 'Actions menant à un tir par 90 minutes', 'Actions → Tir', 'Actions menant à un tir par 90min'],
                 'Buts attendus': ['Buts attendus', 'Buts attendus par 90 minutes', 'xG', 'Expected Goals'],
@@ -1330,31 +1392,26 @@ class ChartManager:
                 'Pourcentage de duels aériens gagnés': ['Pourcentage de duels aériens gagnés', '% duels aériens gagnés', 'Aerial duel success %']
             }
             
-            # Recherche directe
             if metric_name in df_columns:
                 return metric_name
             
-            # Recherche dans les mappings
             possible_names = column_mappings.get(metric_name, [metric_name])
             for name in possible_names:
                 if name in df_columns:
                     return name
             
-            # Recherche approximative (contient le mot clé)
             for col in df_columns:
                 if metric_name.lower() in col.lower() or col.lower() in metric_name.lower():
                     return col
             
             return None
         
-        # Trouver le nom exact de la colonne
         actual_column = find_column_name(metric, df.columns.tolist())
         
         if not actual_column:
             st.error(f"La métrique '{metric}' n'existe pas dans les données")
             return go.Figure()
         
-        # Obtenir les données du joueur cible
         target_data = df[df['Joueur'] == target_player]
         if target_data.empty:
             st.error(f"Joueur '{target_player}' non trouvé")
@@ -1364,24 +1421,20 @@ class ChartManager:
         if pd.isna(target_value):
             target_value = 0
         
-        # Préparer les données pour l'histogramme
         player_names = [target_player]
         player_values = [float(target_value)]
         player_colors = [Config.COLORS['primary']]
         data_quality = []
         
-        # Vérifier la qualité des données du joueur cible
         if pd.isna(target_data[actual_column].iloc[0]):
             data_quality.append("⚠️ Données manquantes")
         else:
             data_quality.append("✅ Données disponibles")
         
-        # Ajouter les joueurs similaires en accédant directement au DataFrame principal
         missing_data_count = 0
         for i, player_info in enumerate(similar_players):
             player_name = player_info['joueur']
             
-            # Accéder directement aux données du DataFrame principal
             player_data_from_df = df[df['Joueur'] == player_name]
             
             if player_data_from_df.empty:
@@ -1391,7 +1444,6 @@ class ChartManager:
             else:
                 raw_value = player_data_from_df[actual_column].iloc[0]
                 
-                # Gestion améliorée des valeurs manquantes
                 if pd.isna(raw_value) or raw_value is None:
                     value = 0
                     missing_data_count += 1
@@ -1403,7 +1455,6 @@ class ChartManager:
             player_names.append(player_name)
             player_values.append(value)
             
-            # Couleur dégradée selon la similarité
             similarity_score = player_info['similarity_score']
             if similarity_score >= 85:
                 color = Config.COLORS['secondary']
@@ -1414,64 +1465,60 @@ class ChartManager:
             
             player_colors.append(color)
         
-        # Afficher un avertissement seulement si vraiment beaucoup de données manquantes
         if missing_data_count > len(similar_players) * 0.5:
             st.warning(f"⚠️ Attention: {missing_data_count}/{len(similar_players)} joueurs similaires ont des données manquantes pour '{metric}' (colonne: '{actual_column}')")
         
-        # Créer l'histogramme avec informations sur la qualité des données
         fig = go.Figure(data=[go.Bar(
             x=player_names,
             y=player_values,
             marker=dict(
                 color=player_colors,
-                line=dict(color='rgba(255,255,255,0.3)', width=2),
+                line=dict(color='rgba(15,23,42,0.3)', width=2),
                 opacity=0.8
             ),
             text=[f"{v:.1f}" if v > 0 else "N/A" for v in player_values],
             textposition='outside',
-            textfont=dict(color='white', size=14, family='Inter', weight=600),
+            textfont=dict(color='#0f172a', size=14, family='Inter', weight=600),
             hovertemplate='<b>%{x}</b><br>' + f'{metric}: %{{y:.2f}}<br>' + 
                          f'Colonne: {actual_column}<extra></extra>'
         )])
         
-        # Ajouter une ligne horizontale pour la moyenne (seulement sur les valeurs > 0)
         non_zero_values = [v for v in player_values if v > 0]
         if non_zero_values:
             avg_value = np.mean(non_zero_values)
             fig.add_hline(
                 y=avg_value,
                 line_dash="dash",
-                line_color="rgba(255,255,255,0.6)",
+                line_color="rgba(100,116,139,0.6)",
                 line_width=2,
                 annotation_text=f"Moyenne (données valides): {avg_value:.1f}",
                 annotation_position="top right",
-                annotation_font_color="white",
+                annotation_font_color="#475569",
                 annotation_font_size=12
             )
         
-        # Mise en page haute qualité
         fig.update_layout(
             title=dict(
                 text=f"Comparaison: {metric}",
-                font=dict(size=24, color='white', family='Inter', weight=700),
+                font=dict(size=24, color='#0f172a', family='Inter', weight=700),
                 x=0.5,
                 y=0.95
             ),
             xaxis=dict(
-                tickfont=dict(color='white', size=14, family='Inter'),
+                tickfont=dict(color='#475569', size=14, family='Inter'),
                 tickangle=45,
                 showgrid=False,
-                title=dict(text="Joueurs", font=dict(color='white', size=16, family='Inter'))
+                title=dict(text="Joueurs", font=dict(color='#475569', size=16, family='Inter'))
             ),
             yaxis=dict(
-                tickfont=dict(color='white', size=14, family='Inter'),
-                gridcolor='rgba(255,255,255,0.15)',
+                tickfont=dict(color='#475569', size=14, family='Inter'),
+                gridcolor='rgba(226,232,240,0.5)',
                 showgrid=True,
-                title=dict(text=metric, font=dict(color='white', size=16, family='Inter'))
+                title=dict(text=metric, font=dict(color='#475569', size=16, family='Inter'))
             ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
+            font=dict(color='#0f172a', family='Inter'),
             height=600,
             margin=dict(t=100, b=150, l=80, r=80),
             showlegend=False
@@ -1480,7 +1527,7 @@ class ChartManager:
         return fig
 
 # ================================================================================================
-# ANALYSEUR DE PERFORMANCE
+# ANALYSEUR DE PERFORMANCE (identique)
 # ================================================================================================
 
 class PerformanceAnalyzer:
@@ -1491,7 +1538,6 @@ class PerformanceAnalyzer:
         """Analyse complète de la performance offensive"""
         metrics = MetricsCalculator.calculate_offensive_metrics(player_data)
         
-        # Calcul des moyennes des autres ligues
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1504,7 +1550,6 @@ class PerformanceAnalyzer:
         avg_metrics['Dribbles réussis/90'] = (df_comparison.get('Dribbles réussis', pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
         avg_metrics['Actions → Tir/90'] = df_comparison.get('Actions menant à un tir par 90 minutes', pd.Series([0]*len(df_comparison))).mean()
         
-        # Calcul des percentiles
         percentiles = []
         avg_percentiles = []
         
@@ -1541,7 +1586,6 @@ class PerformanceAnalyzer:
         """Analyse complète de la performance défensive"""
         metrics = MetricsCalculator.calculate_defensive_metrics(player_data)
         
-        # Calcul des moyennes des autres ligues
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1563,7 +1607,6 @@ class PerformanceAnalyzer:
                 column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés')
                 avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
         
-        # Calcul des percentiles
         percentiles = []
         avg_percentiles = []
         
@@ -1610,7 +1653,6 @@ class PerformanceAnalyzer:
         """Analyse complète de la performance technique"""
         metrics = MetricsCalculator.calculate_technical_metrics(player_data)
         
-        # Calcul des moyennes des autres ligues
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1632,7 +1674,6 @@ class PerformanceAnalyzer:
                 column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
                 avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
         
-        # Calcul des percentiles
         percentiles = []
         avg_percentiles = []
         
@@ -1675,35 +1716,29 @@ class PerformanceAnalyzer:
         }
 
 # ================================================================================================
-# COMPOSANTS UI
+# COMPOSANTS UI - VERSION SOBRE
 # ================================================================================================
 
 class UIComponents:
-    """Composants d'interface utilisateur réutilisables"""
+    """Composants d'interface utilisateur réutilisables - Version sobre"""
     
     @staticmethod
     def render_header():
-        """Affiche l'en-tête principal"""
+        """Affiche l'en-tête personnalisé sobre"""
         st.markdown("""
-        <div class='player-header-card animated-card'>
-            <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
-                Dashboard Football Professionnel
-            </h1>
-            <p style='color: rgba(255,255,255,0.9); margin: 16px 0 0 0; font-size: 1.25em; font-weight: 500;'>
-                Analyse avancée des performances - Saison 2024-25
-            </p>
+        <div class='custom-header fade-in'>
+            <h1>Football Analytics Pro</h1>
+            <p>Analyse avancée des performances • Saison 2024-25</p>
         </div>
         """, unsafe_allow_html=True)
 
     @staticmethod
     def render_breadcrumbs(competition, team, player):
-        """Affiche le fil d'Ariane (breadcrumbs)"""
+        """Affiche le fil d'Ariane sobre"""
         st.markdown(
             f"""
-            <div class='breadcrumbs'>
-                <span style='color:var(--primary-color); font-weight:600;'>{competition}</span> &nbsp;›&nbsp;
-                <span style='color:var(--accent-color); font-weight:600;'>{team}</span> &nbsp;›&nbsp;
-                <span style='color:var(--text-primary); font-weight:600;'>{player}</span>
+            <div class='breadcrumbs fade-in'>
+                <span>{competition}</span> / <span>{team}</span> / <span class='active'>{player}</span>
             </div>
             """,
             unsafe_allow_html=True
@@ -1711,7 +1746,7 @@ class UIComponents:
     
     @staticmethod
     def render_player_card(player_data: pd.Series, competition: str):
-        """Affiche la carte complète du joueur"""
+        """Affiche la carte complète du joueur avec style sobre"""
         valeur_marchande = Utils.get_market_value_safe(player_data)
         
         container = st.container()
@@ -1724,34 +1759,32 @@ class UIComponents:
             
             with col2:
                 st.markdown(f"""
-                <div class='player-info-card animated-card'>
-                    <h2 class='section-title-enhanced' style='margin-bottom: var(--spacing-xl); font-size: 2.5em; color: var(--text-primary);'>
-                        {player_data['Joueur']}
-                    </h2>
-                    <div class='player-metrics-grid'>
-                        <div class='metric-card-enhanced'>
-                            <div class='metric-value-enhanced'>{player_data['Âge']}</div>
-                            <div class='metric-label-enhanced'>Âge</div>
+                <div class='player-info-card fade-in'>
+                    <h2>{player_data['Joueur']}</h2>
+                    <div class='metrics-grid'>
+                        <div class='metric-card'>
+                            <div class='metric-value'>{player_data['Âge']}</div>
+                            <div class='metric-label'>Âge</div>
                         </div>
-                        <div class='metric-card-enhanced'>
-                            <div class='metric-value-enhanced'>{player_data['Position']}</div>
-                            <div class='metric-label-enhanced'>Position</div>
+                        <div class='metric-card'>
+                            <div class='metric-value'>{player_data['Position']}</div>
+                            <div class='metric-label'>Position</div>
                         </div>
-                        <div class='metric-card-enhanced'>
-                            <div class='metric-value-enhanced'>{player_data['Nationalité']}</div>
-                            <div class='metric-label-enhanced'>Nationalité</div>
+                        <div class='metric-card'>
+                            <div class='metric-value'>{player_data['Nationalité']}</div>
+                            <div class='metric-label'>Nationalité</div>
                         </div>
-                        <div class='metric-card-enhanced'>
-                            <div class='metric-value-enhanced'>{int(player_data['Minutes jouées'])}</div>
-                            <div class='metric-label-enhanced'>Minutes Jouées</div>
+                        <div class='metric-card'>
+                            <div class='metric-value'>{int(player_data['Minutes jouées'])}</div>
+                            <div class='metric-label'>Minutes Jouées</div>
                         </div>
-                        <div class='metric-card-enhanced'>
-                            <div class='metric-value-enhanced' style='color: var(--accent-color);'>{valeur_marchande}</div>
-                            <div class='metric-label-enhanced'>Valeur Marchande</div>
+                        <div class='metric-card'>
+                            <div class='metric-value' style='color: var(--accent);'>{valeur_marchande}</div>
+                            <div class='metric-label'>Valeur Marchande</div>
                         </div>
-                        <div class='metric-card-enhanced'>
-                            <div class='metric-value-enhanced'>{player_data['Équipe']}</div>
-                            <div class='metric-label-enhanced'>Équipe</div>
+                        <div class='metric-card'>
+                            <div class='metric-value'>{player_data['Équipe']}</div>
+                            <div class='metric-label'>Équipe</div>
                         </div>
                     </div>
                 </div>
@@ -1762,20 +1795,19 @@ class UIComponents:
     
     @staticmethod
     def render_similar_player_card(player_info: Dict, rank: int):
+        """Carte de joueur similaire avec style sobre"""
         similarity_score = player_info['similarity_score']
         player_data = player_info['data']
 
-        # Couleur basée sur le score de similarité
         if similarity_score >= 85:
-            score_color = "#2ca02c"  # Vert
+            score_color = Config.COLORS['secondary']
         elif similarity_score >= 70:
-            score_color = "#ff7f0e"  # Orange
+            score_color = Config.COLORS['warning']
         else:
-            score_color = "#1f77b4"  # Bleu
+            score_color = Config.COLORS['primary']
 
         valeur_marchande = Utils.get_market_value_safe(player_data)
 
-        # Logo du club (déjà existant)
         logo_path = ImageManager.get_club_logo(player_info['competition'], player_info['equipe'])
         logo_html = ""
         if logo_path and os.path.exists(logo_path):
@@ -1784,53 +1816,51 @@ class UIComponents:
                 logo_base64 = Utils.image_to_base64(image)
                 logo_html = f'<img src="data:image/png;base64,{logo_base64}" class="club-logo-small" alt="{player_info["equipe"]}">'
             except Exception:
-                logo_html = f'<div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: white;">🏟️</div>'
+                logo_html = '<div style="width: 40px; height: 40px; background: var(--gray-200); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: var(--text-muted);">🏟️</div>'
         else:
-            logo_html = f'<div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: white;">🏟️</div>'
+            logo_html = '<div style="width: 40px; height: 40px; background: var(--gray-200); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; color: var(--text-muted);">🏟️</div>'
 
-        # --- AJOUT : Photo du joueur ---
         photo_path = ImageManager.get_player_photo(player_info['joueur'])
         if photo_path and os.path.exists(photo_path):
             image = Image.open(photo_path)
             photo_html = f'<img src="data:image/jpeg;base64,{Utils.image_to_base64(image)}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; margin-right:8px;">'
         else:
-            photo_html = '<div style="width:48px; height:48px; border-radius:50%; background:#eee; color:#bbb; display:inline-flex; align-items:center; justify-content:center; font-size:2em; margin-right:8px;">👤</div>'
-        # --- FIN AJOUT ---
+            photo_html = '<div style="width:48px; height:48px; border-radius:50%; background: var(--gray-200); color: var(--text-muted); display:inline-flex; align-items:center; justify-content:center; font-size:1.5em; margin-right:8px;">👤</div>'
 
         st.markdown(f"""
-        <div class='similar-player-card animated-card'>
+        <div class='similar-player-card fade-in'>
             <div class='similarity-score' style='background: {score_color};'>
                 #{rank} • {similarity_score:.1f}% similaire
             </div>
-            <div class='player-header-with-logo' style="display:flex; align-items:center; gap:10px;">
+            <div class='player-header-with-logo'>
                 {photo_html}
                 {logo_html}
-                <h3 style='color: var(--text-primary); margin: 0; font-size: 1.4em; font-weight: 700; flex: 1;'>
+                <h3 style='color: var(--text-primary); margin: 0; font-size: 1.25rem; font-weight: 600; flex: 1;'>
                     {player_info['joueur']}
                 </h3>
             </div>
-            <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;'>
-                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
-                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['equipe']}</div>
-                    <div class='metric-label-enhanced'>Équipe</div>
+            <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;'>
+                <div class='metric-card'>
+                    <div class='metric-value' style='font-size: 1rem;'>{player_info['equipe']}</div>
+                    <div class='metric-label'>Équipe</div>
                 </div>
-                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
-                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['position']}</div>
-                    <div class='metric-label-enhanced'>Position</div>
+                <div class='metric-card'>
+                    <div class='metric-value' style='font-size: 1rem;'>{player_info['position']}</div>
+                    <div class='metric-label'>Position</div>
                 </div>
-                <div class='metric-card-enhanced' style='min-height: 70px; padding: 12px;'>
-                    <div class='metric-value-enhanced' style='font-size: 1.1em;'>{player_info['age']}</div>
-                    <div class='metric-label-enhanced'>Âge</div>
+                <div class='metric-card'>
+                    <div class='metric-value' style='font-size: 1rem;'>{player_info['age']}</div>
+                    <div class='metric-label'>Âge</div>
                 </div>
             </div>
-            <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;'>
-                <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
-                    <div class='metric-value-enhanced' style='font-size: 1em; color: var(--accent-color);'>{valeur_marchande}</div>
-                    <div class='metric-label-enhanced'>Valeur Marchande</div>
+            <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;'>
+                <div class='metric-card'>
+                    <div class='metric-value' style='font-size: 0.9rem; color: var(--accent);'>{valeur_marchande}</div>
+                    <div class='metric-label'>Valeur Marchande</div>
                 </div>
-                <div class='metric-card-enhanced' style='min-height: 60px; padding: 10px;'>
-                    <div class='metric-value-enhanced' style='font-size: 1em;'>{player_info['competition']}</div>
-                    <div class='metric-label-enhanced'>Compétition</div>
+                <div class='metric-card'>
+                    <div class='metric-value' style='font-size: 0.9rem;'>{player_info['competition']}</div>
+                    <div class='metric-label'>Compétition</div>
                 </div>
             </div>
         </div>
@@ -1838,18 +1868,18 @@ class UIComponents:
     
     @staticmethod
     def _render_player_photo(player_name: str):
-        """Affiche la photo du joueur"""
+        """Affiche la photo du joueur avec style sobre"""
         photo_path = ImageManager.get_player_photo(player_name)
         
         if photo_path:
             try:
                 image = Image.open(photo_path)
                 st.markdown(f"""
-                <div class='image-container animated-card'>
+                <div class='image-container fade-in'>
                     <img src="data:image/jpeg;base64,{Utils.image_to_base64(image)}" 
-                         style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius-md);">
+                         style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
                 </div>
-                <p style='text-align: center; color: var(--primary-color); font-weight: 600; margin-top: var(--spacing-md); font-size: 0.9em;'>
+                <p style='text-align: center; color: var(--primary); font-weight: 500; margin-top: 1rem; font-size: 0.875rem;'>
                     📸 {player_name}
                 </p>
                 """, unsafe_allow_html=True)
@@ -1860,18 +1890,18 @@ class UIComponents:
     
     @staticmethod
     def _render_club_logo(team_name: str, competition: str):
-        """Affiche le logo du club"""
+        """Affiche le logo du club avec style sobre"""
         logo_path = ImageManager.get_club_logo(competition, team_name)
         
         if logo_path:
             try:
                 image = Image.open(logo_path)
                 st.markdown(f"""
-                <div class='club-logo-container animated-card'>
+                <div class='club-logo-container fade-in'>
                     <img src="data:image/jpeg;base64,{Utils.image_to_base64(image)}" 
                          style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
-                <p style='text-align: center; color: var(--primary-color); font-weight: 600; margin-top: var(--spacing-md); font-size: 0.9em;'>
+                <p style='text-align: center; color: var(--primary); font-weight: 500; margin-top: 1rem; font-size: 0.875rem;'>
                     🏟️ {team_name}
                 </p>
                 """, unsafe_allow_html=True)
@@ -1882,103 +1912,97 @@ class UIComponents:
     
     @staticmethod
     def _render_photo_placeholder(player_name: str):
-        """Affiche un placeholder pour la photo"""
+        """Placeholder sobre pour photo"""
         st.markdown(f"""
-        <div class='image-container animated-card'>
-            <div style='text-align: center; color: var(--text-secondary);'>
-                <div style='font-size: 4em; margin-bottom: var(--spacing-md); opacity: 0.5;'>👤</div>
-                <p style='margin: 0; font-size: 0.9em;'>Photo non disponible</p>
-                <p style='font-size: 0.8em; margin-top: var(--spacing-sm); color: var(--primary-color);'>{player_name}</p>
+        <div class='image-container fade-in'>
+            <div style='text-align: center; color: var(--text-muted);'>
+                <div style='font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;'>👤</div>
+                <p style='margin: 0; font-size: 0.875rem;'>Photo non disponible</p>
+                <p style='font-size: 0.75rem; margin-top: 0.5rem; color: var(--primary);'>{player_name}</p>
             </div>
         </div>
         """, unsafe_allow_html=True)
     
     @staticmethod
     def _render_logo_placeholder(team_name: str):
-        """Affiche un placeholder pour le logo"""
+        """Placeholder sobre pour logo"""
         st.markdown(f"""
-        <div class='club-logo-container animated-card'>
-            <div style='text-align: center; color: var(--text-secondary);'>
-                <div style='font-size: 3em; margin-bottom: var(--spacing-md); opacity: 0.5;'>🏟️</div>
-                <p style='margin: 0; font-size: 0.8em;'>Logo non disponible</p>
-                <p style='font-size: 0.75em; margin-top: var(--spacing-xs); color: var(--primary-color);'>{team_name}</p>
+        <div class='club-logo-container fade-in'>
+            <div style='text-align: center; color: var(--text-muted);'>
+                <div style='font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;'>🏟️</div>
+                <p style='margin: 0; font-size: 0.75rem;'>Logo non disponible</p>
+                <p style='font-size: 0.7rem; margin-top: 0.25rem; color: var(--primary);'>{team_name}</p>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    @staticmethod
-    def render_breadcrumbs(competition: str, team: str, player: str):
-        """Affiche un fil d'Ariane"""
-        st.markdown(f"""
-        <div class='breadcrumbs'>
-            <span style='color: var(--text-secondary); font-size: 0.9em;'>
-                🏆 {competition} › ⚽ {team} › 👤 {player}
-            </span>
         </div>
         """, unsafe_allow_html=True)
     
     @staticmethod
     def render_footer():
-        """Affiche le footer"""
+        """Footer sobre et professionnel"""
         st.markdown("""
-        <div class='dashboard-footer animated-card'>
-            <h3 style='color: var(--primary-color); margin: 0 0 16px 0; font-weight: 700; font-size: 1.25em;'>
-                Dashboard Football Professionnel
-            </h3>
-            <p style='color: var(--text-primary); margin: 0; font-size: 1.1em; font-weight: 500;'>
-                Analyse avancée des performances footballistiques
-            </p>
-            <p style='color: var(--text-secondary); margin: 12px 0 0 0; font-size: 0.9em;'>
-                Données: FBRef | Design: Dashboard Pro | Saison 2024-25
+        <div class='custom-footer fade-in'>
+            <h3>Football Analytics Pro</h3>
+            <p>Analyse avancée des performances footballistiques</p>
+            <p style='margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted);'>
+                Données: FBRef • Design: Professional Dashboard • Saison 2024-25
             </p>
         </div>
         """, unsafe_allow_html=True)
 
 # ================================================================================================
-# GESTIONNAIRE DE SIDEBAR
+# GESTIONNAIRE DE SIDEBAR SOBRE
 # ================================================================================================
 
 class SidebarManager:
-    """Gestionnaire pour la sidebar"""
+    """Gestionnaire sobre pour la sélection de joueurs"""
     
     @staticmethod
-    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
-        """Rendu complet de la sidebar"""
-        with st.sidebar:
-            # En-tête
-            st.markdown("""
-            <div class='sidebar-header'>
-                <h2 style='color: white; margin: 0; font-weight: 700;'>⚙️ Configuration</h2>
-                <p style='color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 0.9em;'>
-                    Sélectionnez votre joueur
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Sélection de la compétition
+    def render_player_selector(df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
+        """Rendu du sélecteur de joueurs intégré dans le contenu principal"""
+        
+        st.markdown("""
+        <div class='player-selector fade-in'>
+            <h3>🎯 Sélection du Joueur</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns([2, 2, 1])
+        
+        with col1:
             competitions = DataManager.get_competitions(df)
             selected_competition = st.selectbox(
-                "🏆 Choisir une compétition :",
+                "Compétition",
                 competitions,
                 index=0,
                 help="Sélectionnez la compétition pour filtrer les joueurs"
             )
-            
-            # Filtrage par compétition
+        
+        with col2:
             df_filtered = DataManager.filter_by_competition(df, selected_competition)
+            joueurs = DataManager.get_players(df_filtered)
             
-            st.markdown("---")
-            
-            # Filtre par minutes jouées
-            min_minutes_filter = 0
-            if not df_filtered['Minutes jouées'].empty:
+            if joueurs:
+                selected_player = st.selectbox(
+                    "Joueur",
+                    joueurs,
+                    index=0,
+                    help="Sélectionnez le joueur à analyser"
+                )
+            else:
+                selected_player = None
+                st.error("Aucun joueur disponible")
+        
+        with col3:
+            st.info(f"**{len(df_filtered)}** joueurs disponibles")
+        
+        # Filtre par minutes (optionnel)
+        if not df_filtered.empty:
+            with st.expander("⚙️ Filtres avancés", expanded=False):
                 min_minutes = int(df_filtered['Minutes jouées'].min())
                 max_minutes = int(df_filtered['Minutes jouées'].max())
                 
-                st.markdown("**⏱️ Filtrer par minutes jouées :**")
-                
                 min_minutes_filter = st.slider(
-                    "Minutes minimum jouées :",
+                    "Minutes minimum jouées",
                     min_value=min_minutes,
                     max_value=max_minutes,
                     value=min_minutes,
@@ -1986,92 +2010,95 @@ class SidebarManager:
                     help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
                 )
                 
-                # Progress bar
-                if max_minutes > min_minutes:
-                    percentage_filtered = (min_minutes_filter - min_minutes) / (max_minutes - min_minutes) * 100
-                    st.progress(percentage_filtered / 100)
-            
-            # Application du filtre minutes
-            df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
-            
-            # Informations sur le filtrage
-            nb_joueurs = len(df_filtered_minutes)
-            
-            if nb_joueurs > 0:
-                st.success(f"✅ **{nb_joueurs} joueurs** correspondent aux critères")
+                df_filtered = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
                 
-                # Statistiques additionnelles
-                with st.expander("📊 Statistiques du filtrage", expanded=False):
-                    avg_minutes = df_filtered_minutes['Minutes jouées'].mean()
-                    st.write(f"• Moyenne minutes: {avg_minutes:.0f}")
-                    st.write(f"• Équipes représentées: {df_filtered_minutes['Équipe'].nunique()}")
-                    st.write(f"• Positions: {df_filtered_minutes['Position'].nunique()}")
-            else:
-                st.warning("⚠️ Aucun joueur ne correspond aux critères")
-            
-            st.markdown("---")
-            
-            # Sélection du joueur
-            selected_player = None
-            if not df_filtered_minutes.empty:
-                joueurs = DataManager.get_players(df_filtered_minutes)
-                if joueurs:
-                    # Option de recherche
-                    search_term = st.text_input("🔍 Rechercher un joueur :", placeholder="Tapez le nom du joueur...")
-                    
-                    if search_term:
-                        joueurs_filtered = [j for j in joueurs if search_term.lower() in j.lower()]
-                        if joueurs_filtered:
-                            selected_player = st.selectbox(
-                                "👤 Joueurs trouvés :",
-                                joueurs_filtered,
-                                help="Sélectionnez le joueur à analyser"
-                            )
-                        else:
-                            st.warning(f"Aucun joueur trouvé pour '{search_term}'")
-                            selected_player = st.selectbox(
-                                "👤 Tous les joueurs :",
-                                joueurs,
-                                help="Sélectionnez le joueur à analyser"
-                            )
-                    else:
-                        selected_player = st.selectbox(
-                            "👤 Choisir un joueur :",
-                            joueurs,
-                            index=0,
-                            help="Sélectionnez le joueur à analyser"
-                        )
-                else:
-                    st.error("❌ Aucun joueur disponible avec ces critères.")
-            else:
-                st.error("❌ Aucun joueur disponible avec ces critères.")
-            
-            # Footer sidebar
-            st.markdown("---")
-            st.markdown("""
-            <div style='text-align: center; padding: 16px; background: var(--background-surface); border-radius: 12px; border: 1px solid var(--border-color);'>
-                <p style='color: var(--text-primary); margin: 0; font-size: 0.9em; font-weight: 600;'>
-                    📊 Dashboard Pro
-                </p>
-                <p style='color: var(--text-secondary); margin: 8px 0 0 0; font-size: 0.8em;'>
-                    Analyse Football Avancée
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            return selected_competition, selected_player, df_filtered_minutes
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Joueurs filtrés", len(df_filtered))
+                with col2:
+                    avg_minutes = df_filtered['Minutes jouées'].mean()
+                    st.metric("Moyenne minutes", f"{avg_minutes:.0f}")
+                with col3:
+                    st.metric("Équipes", df_filtered['Équipe'].nunique())
+        
+        return selected_competition, selected_player, df_filtered
 
 # ================================================================================================
-# GESTIONNAIRE DE TABS
+# GESTIONNAIRE DE NAVIGATION PERSONNALISÉE
+# ================================================================================================
+
+class NavigationManager:
+    """Gestionnaire de navigation personnalisée"""
+    
+    @staticmethod
+    def render_navigation() -> str:
+        """Rendu de la navigation personnalisée"""
+        tabs = [
+            ("🎯 Performance Offensive", "offensive"),
+            ("🛡️ Performance Défensive", "defensive"), 
+            ("🎨 Performance Technique", "technical"),
+            ("👥 Profils Similaires", "similar"),
+            ("🔄 Comparaison", "comparison")
+        ]
+        
+        # Initialiser la session state pour l'onglet actif
+        if 'active_tab' not in st.session_state:
+            st.session_state.active_tab = "offensive"
+        
+        # Créer la navigation
+        nav_html = '<div class="custom-navigation">'
+        
+        for tab_name, tab_key in tabs:
+            active_class = "active" if st.session_state.active_tab == tab_key else ""
+            nav_html += f'<button class="nav-item {active_class}" onclick="selectTab(\'{tab_key}\')">{tab_name}</button>'
+        
+        nav_html += '</div>'
+        
+        # JavaScript pour gérer les onglets
+        nav_html += """
+        <script>
+        function selectTab(tabKey) {
+            // Cette fonction sera gérée par Streamlit
+            console.log('Tab selected:', tabKey);
+        }
+        </script>
+        """
+        
+        st.markdown(nav_html, unsafe_allow_html=True)
+        
+        # Interface Streamlit pour la sélection d'onglets
+        col1, col2, col3, col4, col5 = st.columns(5)
+        
+        with col1:
+            if st.button("🎯 Performance Offensive", key="btn_offensive", use_container_width=True):
+                st.session_state.active_tab = "offensive"
+        with col2:
+            if st.button("🛡️ Performance Défensive", key="btn_defensive", use_container_width=True):
+                st.session_state.active_tab = "defensive"
+        with col3:
+            if st.button("🎨 Performance Technique", key="btn_technical", use_container_width=True):
+                st.session_state.active_tab = "technical"
+        with col4:
+            if st.button("👥 Profils Similaires", key="btn_similar", use_container_width=True):
+                st.session_state.active_tab = "similar"
+        with col5:
+            if st.button("🔄 Comparaison", key="btn_comparison", use_container_width=True):
+                st.session_state.active_tab = "comparison"
+        
+        return st.session_state.active_tab
+
+# ================================================================================================
+# GESTIONNAIRE DE TABS - VERSION SOBRE
 # ================================================================================================
 
 class TabManager:
-    """Gestionnaire pour les différents onglets"""
+    """Gestionnaire pour les différents onglets - Version sobre"""
     
     @staticmethod
     def render_offensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str):
-        """Rendu de l'onglet performance offensive"""
-        st.markdown("<h2 class='section-title-enhanced'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
+        """Rendu de l'onglet performance offensive avec style sobre"""
+        st.markdown('<div class="content-area">', unsafe_allow_html=True)
+        st.markdown("<h2 class='section-title'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
         
         analysis = PerformanceAnalyzer.analyze_offensive_performance(player_data, df_comparison)
         
@@ -2094,7 +2121,7 @@ class TabManager:
             st.plotly_chart(fig_bar, use_container_width=True)
             
             # Métriques avec st.metric
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Clés</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title'>📊 Métriques Clés</h3>", unsafe_allow_html=True)
             
             metric_col1, metric_col2 = st.columns(2)
             with metric_col1:
@@ -2126,7 +2153,7 @@ class TabManager:
                 )
         
         with col2:
-            # Métriques offensives simples et claires
+            # Métriques offensives en jauges
             efficiency_data = {
                 'Tirs cadrés': player_data.get('Pourcentage de tirs cadrés', 0),
                 'Dribbles réussis': player_data.get('Pourcentage de dribbles réussis', 0),
@@ -2136,22 +2163,8 @@ class TabManager:
             fig_gauge = ChartManager.create_gauge_chart(efficiency_data, "Efficacité Offensive (%)")
             st.plotly_chart(fig_gauge, use_container_width=True)
             
-            # Radar avec titre unifié et légende
-            st.markdown("<h3 class='subsection-title-enhanced'>🎯 Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--primary-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # Radar
+            st.markdown("<h3 class='subsection-title'>🎯 Analyse Radar</h3>", unsafe_allow_html=True)
             
             fig_radar = ChartManager.create_radar_chart(
                 analysis['metrics'],
@@ -2165,7 +2178,7 @@ class TabManager:
         
         # Comparaison détaillée
         st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='subsection-title'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
         
         comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
         avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
@@ -2177,11 +2190,14 @@ class TabManager:
             "Performance par 90min vs Moyenne des Autres Ligues"
         )
         st.plotly_chart(fig_comp, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     @staticmethod
     def render_defensive_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str):
-        """Rendu de l'onglet performance défensive"""
-        st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
+        """Rendu de l'onglet performance défensive avec style sobre"""
+        st.markdown('<div class="content-area">', unsafe_allow_html=True)
+        st.markdown("<h2 class='section-title'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
         
         analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison)
         
@@ -2204,7 +2220,7 @@ class TabManager:
             st.plotly_chart(fig_bar, use_container_width=True)
             
             # Métriques défensives
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Défensives</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title'>📊 Métriques Défensives</h3>", unsafe_allow_html=True)
             
             metric_col1, metric_col2 = st.columns(2)
             with metric_col1:
@@ -2236,7 +2252,7 @@ class TabManager:
                 )
         
         with col2:
-            # Pourcentages défensifs spécialisés
+            # Pourcentages défensifs
             success_data = {
                 'Duels défensifs': player_data.get('Pourcentage de duels gagnés', 0),
                 'Duels aériens': player_data.get('Pourcentage de duels aériens gagnés', 0),
@@ -2247,21 +2263,7 @@ class TabManager:
             st.plotly_chart(fig_gauge, use_container_width=True)
             
             # Radar défensif
-            st.markdown("<h3 class='subsection-title-enhanced'>🛡️ Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--accent-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title'>🛡️ Analyse Radar</h3>", unsafe_allow_html=True)
             
             fig_radar = ChartManager.create_radar_chart(
                 analysis['metrics'],
@@ -2275,7 +2277,7 @@ class TabManager:
         
         # Comparaison détaillée
         st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='subsection-title'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
         
         comparison_metrics = {k: v for k, v in list(analysis['metrics'].items())[:4]}
         avg_comparison = {k: v for k, v in list(analysis['avg_metrics'].items())[:4]}
@@ -2287,11 +2289,14 @@ class TabManager:
             "Performance par 90min vs Moyenne des Autres Ligues"
         )
         st.plotly_chart(fig_comp, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     @staticmethod
     def render_technical_tab(player_data: pd.Series, df_comparison: pd.DataFrame, selected_player: str, player_competition: str):
-        """Rendu de l'onglet performance technique"""
-        st.markdown("<h2 class='section-title-enhanced'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
+        """Rendu de l'onglet performance technique avec style sobre"""
+        st.markdown('<div class="content-area">', unsafe_allow_html=True)
+        st.markdown("<h2 class='section-title'>🎨 Performance Technique</h2>", unsafe_allow_html=True)
         
         analysis = PerformanceAnalyzer.analyze_technical_performance(player_data, df_comparison)
         
@@ -2314,7 +2319,7 @@ class TabManager:
             st.plotly_chart(fig_bar, use_container_width=True)
             
             # Métriques techniques
-            st.markdown("<h3 class='subsection-title-enhanced'>📊 Métriques Techniques</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title'>📊 Métriques Techniques</h3>", unsafe_allow_html=True)
             
             metric_col1, metric_col2 = st.columns(2)
             with metric_col1:
@@ -2346,7 +2351,7 @@ class TabManager:
                 )
         
         with col2:
-            # Pourcentages techniques spécialisés
+            # Pourcentages techniques
             technical_success = {
                 'Passes prog.': player_data.get('Pourcentage de passes progressives réussies', player_data.get('Pourcentage de passes réussies', 0)),
                 'Courses prog.': min(100, (player_data.get('Courses progressives', player_data.get('Dribbles réussis', 0)) / max(player_data.get('Minutes jouées', 90), 1) * 90 * 10)) if player_data.get('Courses progressives', player_data.get('Dribbles réussis', 0)) > 0 else 0,
@@ -2357,21 +2362,7 @@ class TabManager:
             st.plotly_chart(fig_gauge, use_container_width=True)
             
             # Radar technique
-            st.markdown("<h3 class='subsection-title-enhanced'>🎨 Analyse Radar</h3>", unsafe_allow_html=True)
-            
-            # Légende explicite
-            st.markdown(f"""
-            <div class='chart-legend'>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: var(--secondary-color);'></div>
-                    <span>{selected_player}</span>
-                </div>
-                <div class='legend-item'>
-                    <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title'>🎨 Analyse Radar</h3>", unsafe_allow_html=True)
             
             fig_radar = ChartManager.create_radar_chart(
                 analysis['metrics'],
@@ -2385,7 +2376,7 @@ class TabManager:
         
         # Comparaison détaillée
         st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='subsection-title'>📈 Comparaison Détaillée</h3>", unsafe_allow_html=True)
         
         selected_metrics = ['Passes tentées/90', 'Passes prog./90', 'Dribbles/90', 'Passes clés/90']
         comparison_metrics = {k: analysis['metrics'][k] for k in selected_metrics if k in analysis['metrics']}
@@ -2398,22 +2389,25 @@ class TabManager:
             "Performance par 90min vs Moyenne des Autres Ligues"
         )
         st.plotly_chart(fig_comp, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     @staticmethod
     def render_similar_players_tab(selected_player: str, df: pd.DataFrame):
-        """Rendu de l'onglet joueurs similaires avec histogrammes de comparaison"""
-        st.markdown("<h2 class='section-title-enhanced'>👥 Profils Similaires</h2>", unsafe_allow_html=True)
+        """Rendu de l'onglet joueurs similaires avec style sobre"""
+        st.markdown('<div class="content-area">', unsafe_allow_html=True)
+        st.markdown("<h2 class='section-title'>👥 Profils Similaires</h2>", unsafe_allow_html=True)
         
         # Configuration
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns([3, 1])
         
         with col1:
-            st.markdown("<h3 class='subsection-title-enhanced'>⚙️ Configuration de l'Analyse</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 class='subsection-title'>⚙️ Configuration de l'Analyse</h3>", unsafe_allow_html=True)
             st.info("🎯 **Analyse enrichie** : Utilise 21 métriques couvrant le volume, l'efficacité, la progression, l'aspect physique et la finition pour une similarité plus précise.")
         
         with col2:
             num_similar = st.slider(
-                "Nombre de joueurs similaires à afficher :",
+                "Nombre de joueurs similaires :",
                 min_value=1,
                 max_value=10,
                 value=5,
@@ -2446,11 +2440,11 @@ class TabManager:
         
         if not similar_players:
             st.warning("⚠️ Aucun joueur similaire trouvé. Vérifiez que le joueur sélectionné existe dans les données.")
+            st.markdown('</div>', unsafe_allow_html=True)
             return
         
         # Affichage des résultats
-        st.markdown(f"<h3 class='subsection-title-enhanced'>🎯 Top {len(similar_players)} joueurs les plus similaires à {selected_player}</h3>", unsafe_allow_html=True)
-        st.caption("*Basé sur 21 métriques couvrant toutes les dimensions du jeu (volume, efficacité, progression, physique, finition)*")
+        st.markdown(f"<h3 class='subsection-title'>🎯 Top {len(similar_players)} joueurs les plus similaires à {selected_player}</h3>", unsafe_allow_html=True)
         
         # Métriques de résumé
         metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
@@ -2476,7 +2470,6 @@ class TabManager:
             st.metric("Similarité Élevée (≥80%)", f"{high_similarity_count}/{len(similar_players)}", 
                      help="Nombre de joueurs avec une similarité très élevée")
         
-        
         # Cartes des joueurs similaires
         st.markdown("---")
         
@@ -2491,11 +2484,9 @@ class TabManager:
         
         # Section pour les histogrammes de comparaison
         st.markdown("---")
-        st.markdown("<h3 class='subsection-title-enhanced'>📊 Histogrammes de Comparaison</h3>", unsafe_allow_html=True)
-        st.caption("*Comparez n'importe quelle métrique entre le joueur sélectionné et ses profils similaires*")
+        st.markdown("<h3 class='subsection-title'>📊 Histogrammes de Comparaison</h3>", unsafe_allow_html=True)
         
         # Obtenir TOUTES les métriques numériques disponibles
-        # Exclure les colonnes non-numériques
         excluded_columns = [
             'Joueur', 'Équipe', 'Compétition', 'Position', 'Nationalité', 
             'Âge', 'Valeur marchande', 'Nom', 'Club', 'League', 'Team',
@@ -2504,20 +2495,16 @@ class TabManager:
         
         available_histogram_metrics = []
         for col in df.columns:
-            # Vérifier si c'est une colonne numérique et pas exclue
             if col not in excluded_columns:
-                # Vérifier si la colonne contient des données numériques
                 try:
                     pd.to_numeric(df[col].dropna().iloc[:5], errors='raise')
                     available_histogram_metrics.append(col)
                 except (ValueError, TypeError, IndexError):
                     continue
         
-        # Trier les métriques par ordre alphabétique pour une meilleure navigation
         available_histogram_metrics = sorted(available_histogram_metrics)
         
         if available_histogram_metrics:
-            # Interface pour choisir la métrique
             metric_col1, metric_col2, metric_col3 = st.columns([2, 1, 1])
             
             with metric_col1:
@@ -2532,7 +2519,6 @@ class TabManager:
                 st.info(f"🎯 **{selected_metric}**")
             
             with metric_col3:
-                # Afficher quelques stats sur la métrique sélectionnée
                 if selected_metric in df.columns:
                     non_null_count = df[selected_metric].count()
                     total_count = len(df)
@@ -2540,7 +2526,7 @@ class TabManager:
                     st.metric("Couverture données", f"{coverage:.0f}%", 
                              help=f"{non_null_count}/{total_count} joueurs ont des données pour cette métrique")
             
-            # Créer et afficher l'histogramme haute qualité
+            # Créer et afficher l'histogramme
             if selected_metric:
                 fig_histogram = ChartManager.create_histogram_comparison(
                     selected_player, similar_players, df, selected_metric
@@ -2550,16 +2536,13 @@ class TabManager:
                 # Informations supplémentaires sur l'histogramme
                 target_data = df[df['Joueur'] == selected_player]
                 if not target_data.empty:
-                    # Trouver le nom exact de la colonne (même logique que dans create_histogram_comparison)
                     def find_column_name_quick(metric_name: str, df_columns: List[str]) -> Optional[str]:
-                        # Recherche directe
                         if metric_name in df_columns:
                             return metric_name
-                        # Recherche approximative
                         for col in df_columns:
                             if metric_name.lower() in col.lower() or col.lower() in metric_name.lower():
                                 return col
-                        return metric_name  # Fallback
+                        return metric_name
                     
                     actual_column = find_column_name_quick(selected_metric, df.columns.tolist())
                     target_value = target_data[actual_column].iloc[0]
@@ -2568,7 +2551,6 @@ class TabManager:
                         similar_values = []
                         valid_players = []
                         
-                        # Collecter les valeurs des joueurs similaires
                         for player_info in similar_players:
                             player_name = player_info['joueur']
                             player_data_from_df = df[df['Joueur'] == player_name]
@@ -2584,7 +2566,6 @@ class TabManager:
                             max_similar = np.max(similar_values)
                             min_similar = np.min(similar_values)
                             
-                            # Trouver les joueurs avec max/min
                             max_player = valid_players[similar_values.index(max_similar)]
                             min_player = valid_players[similar_values.index(min_similar)]
                             
@@ -2613,54 +2594,14 @@ class TabManager:
                                          help="Valeur minimale parmi les joueurs similaires")
         else:
             st.warning("⚠️ Aucune métrique numérique disponible pour les histogrammes de comparaison")
-            
-        # Afficher des informations sur les métriques disponibles
-        if available_histogram_metrics:
-            with st.expander(f"📋 Voir toutes les {len(available_histogram_metrics)} métriques disponibles", expanded=False):
-                # Organiser les métriques par catégories approximatives
-                offensive_metrics = [m for m in available_histogram_metrics if any(keyword in m.lower() for keyword in ['but', 'tir', 'pass', 'assist', 'xg', 'xa', 'action'])]
-                defensive_metrics = [m for m in available_histogram_metrics if any(keyword in m.lower() for keyword in ['tacl', 'intercept', 'duel', 'récup', 'dégage', 'bloc'])]
-                technical_metrics = [m for m in available_histogram_metrics if any(keyword in m.lower() for keyword in ['dribbl', 'touch', 'course', 'progress', 'centr', 'pourc'])]
-                other_metrics = [m for m in available_histogram_metrics if m not in offensive_metrics + defensive_metrics + technical_metrics]
-                
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    if offensive_metrics:
-                        st.markdown("**🎯 Offensives**")
-                        for metric in offensive_metrics[:8]:  # Limiter l'affichage
-                            st.markdown(f"• {metric}")
-                        if len(offensive_metrics) > 8:
-                            st.markdown(f"• ... et {len(offensive_metrics) - 8} autres")
-                
-                with col2:
-                    if defensive_metrics:
-                        st.markdown("**🛡️ Défensives**")
-                        for metric in defensive_metrics[:8]:
-                            st.markdown(f"• {metric}")
-                        if len(defensive_metrics) > 8:
-                            st.markdown(f"• ... et {len(defensive_metrics) - 8} autres")
-                
-                with col3:
-                    if technical_metrics:
-                        st.markdown("**🎨 Techniques**")
-                        for metric in technical_metrics[:8]:
-                            st.markdown(f"• {metric}")
-                        if len(technical_metrics) > 8:
-                            st.markdown(f"• ... et {len(technical_metrics) - 8} autres")
-                
-                with col4:
-                    if other_metrics:
-                        st.markdown("**📊 Autres**")
-                        for metric in other_metrics[:8]:
-                            st.markdown(f"• {metric}")
-                        if len(other_metrics) > 8:
-                            st.markdown(f"• ... et {len(other_metrics) - 8} autres")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     @staticmethod
     def render_comparison_tab(df: pd.DataFrame, selected_player: str):
-        """Rendu de l'onglet comparaison"""
-        st.markdown("<h2 class='section-title-enhanced'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)
+        """Rendu de l'onglet comparaison avec style sobre"""
+        st.markdown('<div class="content-area">', unsafe_allow_html=True)
+        st.markdown("<h2 class='section-title'>🔄 Comparaison Pizza Chart</h2>", unsafe_allow_html=True)
         
         # Mode de visualisation
         mode = st.radio(
@@ -2676,11 +2617,13 @@ class TabManager:
             TabManager._render_individual_radar(df, selected_player, competitions)
         else:
             TabManager._render_comparative_radar(df, competitions)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     @staticmethod
     def _render_individual_radar(df: pd.DataFrame, selected_player: str, competitions: List[str]):
-        """Rendu du radar individuel"""
-        st.markdown(f"<h3 class='subsection-title-enhanced'>🎯 Radar individuel : {selected_player}</h3>", unsafe_allow_html=True)
+        """Rendu du radar individuel avec style sobre"""
+        st.markdown(f"<h3 class='subsection-title'>🎯 Radar individuel : {selected_player}</h3>", unsafe_allow_html=True)
         
         try:
             col1, col2 = st.columns([2, 1])
@@ -2705,10 +2648,10 @@ class TabManager:
             
             baker = PyPizza(
                 params=list(Config.RADAR_METRICS.keys()),
-                background_color="#0e1117",
-                straight_line_color="#FFFFFF",
+                background_color="#ffffff",
+                straight_line_color="#475569",
                 straight_line_lw=1,
-                last_circle_color="#FFFFFF",
+                last_circle_color="#475569",
                 last_circle_lw=1,
                 other_circle_lw=0,
                 inner_circle_size=11
@@ -2722,14 +2665,14 @@ class TabManager:
                 slice_colors=[Config.COLORS['primary']] * len(values),
                 value_colors=["#ffffff"] * len(values),
                 value_bck_colors=[Config.COLORS['primary']] * len(values),
-                kwargs_slices=dict(edgecolor="#FFFFFF", zorder=2, linewidth=2),
-                kwargs_params=dict(color="#ffffff", fontsize=13, fontproperties=font_bold.prop),
+                kwargs_slices=dict(edgecolor="#475569", zorder=2, linewidth=2),
+                kwargs_params=dict(color="#0f172a", fontsize=13, fontproperties=font_bold.prop),
                 kwargs_values=dict(
                     color="#ffffff", 
                     fontsize=11, 
                     fontproperties=font_normal.prop,
                     bbox=dict(
-                        edgecolor="#FFFFFF", 
+                        edgecolor="#475569", 
                         facecolor=Config.COLORS['primary'], 
                         boxstyle="round,pad=0.3", 
                         lw=1.5
@@ -2739,12 +2682,12 @@ class TabManager:
             
             # Titre unifié
             fig.text(0.515, 0.97, selected_player, size=28, ha="center", 
-                    fontproperties=font_bold.prop, color="#ffffff", weight='bold')
+                    fontproperties=font_bold.prop, color="#0f172a", weight='bold')
             fig.text(0.515, 0.94, f"Analyse Radar Individuelle | Percentiles vs {competition} | Saison 2024-25", 
-                    size=14, ha="center", fontproperties=font_bold.prop, color="#a6a6a6")
+                    size=14, ha="center", fontproperties=font_bold.prop, color="#64748b")
             
-            fig.text(0.99, 0.01, "Dashboard Football Pro | Données: FBRef", 
-                    size=9, ha="right", fontproperties=font_italic.prop, color="#a6a6a6")
+            fig.text(0.99, 0.01, "Football Analytics Pro | Données: FBRef", 
+                    size=9, ha="right", fontproperties=font_italic.prop, color="#64748b")
             
             st.pyplot(fig, use_container_width=True)
             
@@ -2764,10 +2707,8 @@ class TabManager:
                 st.metric("Point Fort", f"{max_param.replace('\\n', ' ')}", f"{max_stat}%")
             
             with stats_col3:
-                # Métriques où une valeur faible est positive (à exclure des axes d'amélioration)
                 negative_metrics = ["Cartons\njaunes", "Cartons\nrouges", "Ballons perdus\nsous pression", "Ballons perdus\nen conduite"]
                 
-                # Filtrer les métriques pour l'axe d'amélioration
                 filtered_values = []
                 filtered_params = []
                 
@@ -2789,8 +2730,8 @@ class TabManager:
     
     @staticmethod
     def _render_comparative_radar(df: pd.DataFrame, competitions: List[str]):
-        """Rendu du radar comparatif"""
-        st.markdown("<h3 class='subsection-title-enhanced'>⚙️ Configuration de la Comparaison</h3>", unsafe_allow_html=True)
+        """Rendu du radar comparatif avec style sobre"""
+        st.markdown("<h3 class='subsection-title'>⚙️ Configuration de la Comparaison</h3>", unsafe_allow_html=True)
         
         col1, col2 = st.columns(2, gap="large")
         
@@ -2807,7 +2748,7 @@ class TabManager:
             joueur2 = st.selectbox("Joueur", df_j2['Joueur'].sort_values(), key="joueur2_comp")
         
         if joueur1 and joueur2:
-            st.markdown(f"<h3 class='subsection-title-enhanced'>⚔️ {joueur1} vs {joueur2}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 class='subsection-title'>⚔️ {joueur1} vs {joueur2}</h3>", unsafe_allow_html=True)
             
             info_col1, info_col2 = st.columns(2)
             
@@ -2829,10 +2770,10 @@ class TabManager:
                 
                 baker = PyPizza(
                     params=list(Config.RADAR_METRICS.keys()),
-                    background_color="#0e1117",
-                    straight_line_color="#FFFFFF",
+                    background_color="#ffffff",
+                    straight_line_color="#475569",
                     straight_line_lw=1,
-                    last_circle_color="#FFFFFF",
+                    last_circle_color="#475569",
                     last_circle_lw=1,
                     other_circle_ls="-.",
                     other_circle_lw=1
@@ -2844,18 +2785,18 @@ class TabManager:
                     figsize=(14, 14),
                     kwargs_slices=dict(
                         facecolor=Config.COLORS['primary'], 
-                        edgecolor="#FFFFFF", 
+                        edgecolor="#475569", 
                         linewidth=2, 
                         zorder=2
                     ),
                     kwargs_compare=dict(
                         facecolor=Config.COLORS['secondary'], 
-                        edgecolor="#FFFFFF", 
+                        edgecolor="#475569", 
                         linewidth=2, 
                         zorder=2
                     ),
                     kwargs_params=dict(
-                        color="#ffffff", 
+                        color="#0f172a", 
                         fontsize=13, 
                         fontproperties=font_bold.prop
                     ),
@@ -2865,7 +2806,7 @@ class TabManager:
                         fontproperties=font_normal.prop, 
                         zorder=3,
                         bbox=dict(
-                            edgecolor="#FFFFFF", 
+                            edgecolor="#475569", 
                             facecolor=Config.COLORS['primary'], 
                             boxstyle="round,pad=0.3", 
                             lw=1.5
@@ -2877,7 +2818,7 @@ class TabManager:
                         fontproperties=font_normal.prop, 
                         zorder=3,
                         bbox=dict(
-                            edgecolor="#FFFFFF", 
+                            edgecolor="#475569", 
                             facecolor=Config.COLORS['secondary'], 
                             boxstyle="round,pad=0.3", 
                             lw=1.5
@@ -2887,23 +2828,23 @@ class TabManager:
                 
                 # Titre unifié
                 fig.text(0.515, 0.97, "Analyse Radar Comparative | Percentiles | Saison 2024-25",
-                         size=16, ha="center", fontproperties=font_bold.prop, color="#ffffff")
+                         size=16, ha="center", fontproperties=font_bold.prop, color="#0f172a")
                 
                 # Légende
                 legend_p1 = mpatches.Patch(color=Config.COLORS['primary'], label=joueur1)
                 legend_p2 = mpatches.Patch(color=Config.COLORS['secondary'], label=joueur2)
                 ax.legend(handles=[legend_p1, legend_p2], loc="upper right", bbox_to_anchor=(1.3, 1.0),
-                         frameon=False, labelcolor='white')
+                         frameon=False, labelcolor='#0f172a')
                 
                 # Footer
-                fig.text(0.99, 0.01, "Dashboard Football Pro | Source: FBRef",
-                         size=9, ha="right", fontproperties=font_italic.prop, color="#a6a6a6")
+                fig.text(0.99, 0.01, "Football Analytics Pro | Source: FBRef",
+                         size=9, ha="right", fontproperties=font_italic.prop, color="#64748b")
                 
                 st.pyplot(fig, use_container_width=True)
                 
                 # Comparaison statistique
                 st.markdown("---")
-                st.markdown("<h3 class='subsection-title-enhanced'>📊 Comparaison Statistique</h3>", unsafe_allow_html=True)
+                st.markdown("<h3 class='subsection-title'>📊 Comparaison Statistique</h3>", unsafe_allow_html=True)
                 
                 comp_col1, comp_col2, comp_col3 = st.columns(3)
                 
@@ -2925,11 +2866,11 @@ class TabManager:
                 st.error(f"Erreur lors de la création du radar comparatif : {str(e)}")
 
 # ================================================================================================
-# APPLICATION PRINCIPALE
+# APPLICATION PRINCIPALE - VERSION SOBRE
 # ================================================================================================
 
 class FootballDashboard:
-    """Classe principale de l'application Dashboard Football"""
+    """Classe principale de l'application Dashboard Football - Version sobre"""
     
     def __init__(self):
         """Initialisation de l'application"""
@@ -2956,6 +2897,8 @@ class FootballDashboard:
                 'players_viewed': 0,
                 'start_time': pd.Timestamp.now()
             }
+        if 'active_tab' not in st.session_state:
+            st.session_state.active_tab = "offensive"
     
     def run(self):
         """Méthode principale d'exécution de l'application"""
@@ -2967,14 +2910,11 @@ class FootballDashboard:
             self._render_error_page()
             return
         
-        # Affichage des statistiques générales
-        self._render_data_overview(df)
-        
-        # Rendu de l'en-tête
+        # Rendu de l'en-tête personnalisé
         UIComponents.render_header()
         
-        # Rendu de la sidebar et récupération des sélections
-        selected_competition, selected_player, df_filtered = SidebarManager.render_sidebar(df)
+        # Rendu du sélecteur de joueurs intégré
+        selected_competition, selected_player, df_filtered = SidebarManager.render_player_selector(df)
         
         if selected_player:
             # Mise à jour des stats de session
@@ -2994,10 +2934,11 @@ class FootballDashboard:
             # Carte joueur
             UIComponents.render_player_card(player_data, selected_competition)
             
-            st.markdown("---")
+            # Navigation personnalisée et contenu des onglets
+            active_tab = NavigationManager.render_navigation()
             
-            # Onglets principaux avec données des autres ligues et nouveau tab Profils Similaires
-            self._render_main_tabs(player_data, selected_competition, selected_player, df)
+            # Affichage du contenu selon l'onglet actif
+            self._render_tab_content(active_tab, player_data, selected_competition, selected_player, df)
         
         else:
             self._render_no_player_message()
@@ -3005,110 +2946,58 @@ class FootballDashboard:
         # Footer
         UIComponents.render_footer()
     
-    def _render_data_overview(self, df: pd.DataFrame):
-        """Aperçu des données"""
-        col1, col2, col3, col4, col5 = st.columns(5)
-        
-        with col1:
-            st.metric(
-                "👥 Joueurs Total", 
-                f"{len(df):,}",
-                help="Nombre total de joueurs dans la base de données"
-            )
-        
-        with col2:
-            st.metric(
-                "🏆 Compétitions", 
-                f"{df['Compétition'].nunique()}",
-                help="Nombre de compétitions analysées"
-            )
-        
-        with col3:
-            st.metric(
-                "⚽ Équipes", 
-                f"{df['Équipe'].nunique()}",
-                help="Nombre d'équipes représentées"
-            )
-        
-        with col4:
-            total_minutes = df['Minutes jouées'].sum()
-            st.metric(
-                "⏱️ Minutes Totales", 
-                f"{total_minutes:,.0f}",
-                help="Total des minutes jouées par tous les joueurs"
-            )
-        
-        with col5:
-            avg_age = df['Âge'].mean()
-            st.metric(
-                "📅 Âge Moyen", 
-                f"{avg_age:.1f} ans",
-                help="Âge moyen de tous les joueurs"
-            )
-    
-    def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
-                         selected_player: str, df_full: pd.DataFrame):
-        """Rendu des onglets principaux"""
+    def _render_tab_content(self, active_tab: str, player_data: pd.Series, 
+                           player_competition: str, selected_player: str, df_full: pd.DataFrame):
+        """Rendu du contenu des onglets selon l'onglet actif"""
         # Obtenir les données des autres ligues pour comparaison
         df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
         
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "🎯 Performance Offensive", 
-            "🛡️ Performance Défensive", 
-            "🎨 Performance Technique",
-            "👥 Profils Similaires", 
-            "🔄 Comparaison"
-        ])
-        
-        with tab1:
+        if active_tab == "offensive":
             TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
-        
-        with tab2:
+        elif active_tab == "defensive":
             TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
-        
-        with tab3:
+        elif active_tab == "technical":
             TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
-        
-        with tab4:
+        elif active_tab == "similar":
             TabManager.render_similar_players_tab(selected_player, df_full)
-        
-        with tab5:
+        elif active_tab == "comparison":
             TabManager.render_comparison_tab(df_full, selected_player)
     
     def _render_no_player_message(self):
-        """Affiche un message quand aucun joueur n'est sélectionné"""
+        """Affiche un message sobre quand aucun joueur n'est sélectionné"""
         st.markdown("""
-        <div style='background: var(--background-card); padding: 48px; border-radius: var(--radius-lg); 
-                    text-align: center; border: 2px solid var(--border-color); margin: 32px 0;'>
-            <h2 style='color: var(--primary-color); margin-bottom: 24px; font-size: 2em;'>⚠️ Aucun joueur sélectionné</h2>
-            <p style='color: var(--text-primary); font-size: 1.2em; margin-bottom: 32px; line-height: 1.6;'>
-                Veuillez ajuster les filtres dans la sidebar pour sélectionner un joueur à analyser.
-            </p>
-            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 32px;'>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--primary-color);'>🎯</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Offensive</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Buts, passes décisives, xG</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--accent-color);'>🛡️</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Défensive</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Tacles, interceptions, duels</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>🎨</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Technique</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Passes, dribbles, touches</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>👥</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Profils Similaires</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Joueurs au style proche</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--warning);'>🔄</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Comparaison</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Radars et benchmarks</p>
+        <div class='content-area'>
+            <div class='card' style='text-align: center; padding: 3rem;'>
+                <h2 style='color: var(--primary); margin-bottom: 1.5rem;'>⚠️ Aucun joueur sélectionné</h2>
+                <p style='color: var(--text-secondary); font-size: 1.125rem; margin-bottom: 2rem;'>
+                    Veuillez sélectionner un joueur dans le panneau ci-dessus pour commencer l'analyse.
+                </p>
+                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;'>
+                    <div class='metric-card'>
+                        <div style='font-size: 3rem; margin-bottom: 1rem; color: var(--primary);'>🎯</div>
+                        <h4 style='color: var(--text-primary); margin: 0 0 0.5rem 0;'>Analyse Offensive</h4>
+                        <p style='color: var(--text-secondary); margin: 0; font-size: 0.875rem;'>Buts, passes décisives, xG</p>
+                    </div>
+                    <div class='metric-card'>
+                        <div style='font-size: 3rem; margin-bottom: 1rem; color: var(--accent);'>🛡️</div>
+                        <h4 style='color: var(--text-primary); margin: 0 0 0.5rem 0;'>Analyse Défensive</h4>
+                        <p style='color: var(--text-secondary); margin: 0; font-size: 0.875rem;'>Tacles, interceptions, duels</p>
+                    </div>
+                    <div class='metric-card'>
+                        <div style='font-size: 3rem; margin-bottom: 1rem; color: var(--secondary);'>🎨</div>
+                        <h4 style='color: var(--text-primary); margin: 0 0 0.5rem 0;'>Analyse Technique</h4>
+                        <p style='color: var(--text-secondary); margin: 0; font-size: 0.875rem;'>Passes, dribbles, touches</p>
+                    </div>
+                    <div class='metric-card'>
+                        <div style='font-size: 3rem; margin-bottom: 1rem; color: var(--secondary);'>👥</div>
+                        <h4 style='color: var(--text-primary); margin: 0 0 0.5rem 0;'>Profils Similaires</h4>
+                        <p style='color: var(--text-secondary); margin: 0; font-size: 0.875rem;'>Joueurs au style proche</p>
+                    </div>
+                    <div class='metric-card'>
+                        <div style='font-size: 3rem; margin-bottom: 1rem; color: var(--warning);'>🔄</div>
+                        <h4 style='color: var(--text-primary); margin: 0 0 0.5rem 0;'>Comparaison</h4>
+                        <p style='color: var(--text-secondary); margin: 0; font-size: 0.875rem;'>Radars et benchmarks</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3116,7 +3005,13 @@ class FootballDashboard:
         
         # Historique des joueurs consultés
         if st.session_state.selected_player_history:
-            st.markdown("<h3 class='subsection-title-enhanced'>📚 Joueurs récemment consultés</h3>", unsafe_allow_html=True)
+            st.markdown("""
+            <div class='content-area'>
+                <div class='card'>
+                    <h3 class='subsection-title'>📚 Joueurs récemment consultés</h3>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             history_cols = st.columns(min(len(st.session_state.selected_player_history), 5))
             for i, player in enumerate(st.session_state.selected_player_history):
@@ -3125,40 +3020,37 @@ class FootballDashboard:
                         st.rerun()
     
     def _render_error_page(self):
-        """Affiche la page d'erreur"""
+        """Affiche la page d'erreur avec style sobre"""
         st.markdown("""
-        <div style='background: var(--background-card); padding: 48px; border-radius: var(--radius-lg); 
-                    text-align: center; border: 2px solid var(--danger); margin: 32px 0;'>
-            <h1 style='color: var(--danger); margin-bottom: 24px; font-size: 2.5em;'>⚠️ Erreur de Chargement</h1>
-            <p style='color: var(--text-primary); font-size: 1.2em; margin-bottom: 32px; line-height: 1.6;'>
-                Impossible de charger les données. Veuillez vérifier que le fichier 'df_BIG2025.csv' est présent.
-            </p>
-            <div style='background: var(--background-surface); max-width: 600px; margin: 32px auto 0 auto; 
-                        padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-color);'>
-                <h3 style='color: var(--secondary-color); margin-bottom: 16px; font-size: 1.3em;'>📋 Fichiers requis :</h3>
-                <div style='text-align: left; color: var(--text-primary);'>
-                    <div style='padding: 8px 0; border-bottom: 1px solid var(--border-color);'>
-                        <strong>df_BIG2025.csv</strong> - Données principales des joueurs
-                    </div>
-                    <div style='padding: 8px 0; border-bottom: 1px solid var(--border-color);'>
-                        <strong>images_joueurs/</strong> - Dossier des photos des joueurs
-                    </div>
-                    <div style='padding: 8px 0;'>
-                        <strong>*_Logos/</strong> - Dossiers des logos par compétition
+        <div class='content-area'>
+            <div class='card' style='text-align: center; padding: 3rem; border-color: var(--danger);'>
+                <h1 style='color: var(--danger); margin-bottom: 1.5rem;'>⚠️ Erreur de Chargement</h1>
+                <p style='color: var(--text-primary); font-size: 1.125rem; margin-bottom: 2rem;'>
+                    Impossible de charger les données. Veuillez vérifier que le fichier 'df_BIG2025.csv' est présent.
+                </p>
+                <div style='background: var(--bg-tertiary); max-width: 600px; margin: 2rem auto; 
+                            padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border);'>
+                    <h3 style='color: var(--secondary); margin-bottom: 1rem;'>📋 Fichiers requis :</h3>
+                    <div style='text-align: left; color: var(--text-primary);'>
+                        <div style='padding: 0.5rem 0; border-bottom: 1px solid var(--border);'>
+                            <strong>df_BIG2025.csv</strong> - Données principales des joueurs
+                        </div>
+                        <div style='padding: 0.5rem 0; border-bottom: 1px solid var(--border);'>
+                            <strong>images_joueurs/</strong> - Dossier des photos des joueurs
+                        </div>
+                        <div style='padding: 0.5rem 0;'>
+                            <strong>*_Logos/</strong> - Dossiers des logos par compétition
+                        </div>
                     </div>
                 </div>
             </div>
-            <div style='margin-top: 32px;'>
-                <button onclick='window.location.reload()' style='
-                    background: var(--primary-color); color: white; border: none; padding: 12px 24px;
-                    border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
-                ' onmouseover='this.style.background="var(--secondary-color)"' 
-                  onmouseout='this.style.background="var(--primary-color)"'>
-                    🔄 Réessayer
-                </button>
-            </div>
         </div>
         """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button("🔄 Réessayer", type="primary", use_container_width=True):
+                st.rerun()
 
 # ================================================================================================
 # POINT D'ENTRÉE DE L'APPLICATION

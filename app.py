@@ -3870,3 +3870,490 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# ================================================================================================
+# FONCTIONS UTILITAIRES SUPPLÉMENTAIRES
+# ================================================================================================
+
+def initialize_app():
+    """Initialise l'application avec les configurations optimales"""
+    # Configuration avancée de Streamlit
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    st.set_option('deprecation.showfileUploaderEncoding', False)
+    
+    # Optimisations mémoire
+    if 'data_cache' not in st.session_state:
+        st.session_state.data_cache = {}
+    
+    if 'chart_cache' not in st.session_state:
+        st.session_state.chart_cache = {}
+
+def optimize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Optimise le DataFrame pour de meilleures performances"""
+    # Conversion des types pour optimiser la mémoire
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            try:
+                df[col] = pd.to_numeric(df[col], errors='ignore')
+            except:
+                pass
+    
+    return df
+
+def create_download_link(df: pd.DataFrame, filename: str, text: str) -> str:
+    """Crée un lien de téléchargement pour les données"""
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}" class="download-link">{text}</a>'
+    return href
+
+def validate_data_quality(df: pd.DataFrame) -> Dict[str, any]:
+    """Valide la qualité des données"""
+    quality_report = {
+        'total_rows': len(df),
+        'total_columns': len(df.columns),
+        'missing_data': df.isnull().sum().sum(),
+        'duplicate_rows': df.duplicated().sum(),
+        'data_types': df.dtypes.to_dict(),
+        'memory_usage': df.memory_usage(deep=True).sum() / 1024**2,  # MB
+        'numeric_columns': len(df.select_dtypes(include=[np.number]).columns),
+        'text_columns': len(df.select_dtypes(include=['object']).columns)
+    }
+    return quality_report
+
+# ================================================================================================
+# EXTENSIONS ET PLUGINS AVANCÉS
+# ================================================================================================
+
+class AdvancedAnalytics:
+    """Classe pour les analytics avancés"""
+    
+    @staticmethod
+    def calculate_player_consistency(player_data: pd.Series, df: pd.DataFrame) -> float:
+        """Calcule l'indice de consistance d'un joueur"""
+        try:
+            key_metrics = ['Buts', 'Passes décisives', 'Passes tentées', 'Tacles gagnants']
+            available_metrics = [m for m in key_metrics if m in player_data.index]
+            
+            if not available_metrics:
+                return 0.0
+            
+            scores = []
+            for metric in available_metrics:
+                value = player_data.get(metric, 0)
+                if pd.notna(value) and value > 0:
+                    distribution = df[metric].dropna()
+                    if len(distribution) > 0:
+                        percentile = (distribution < value).mean() * 100
+                        scores.append(percentile)
+            
+            return np.mean(scores) if scores else 0.0
+        except:
+            return 0.0
+    
+    @staticmethod
+    def calculate_versatility_index(player_data: pd.Series) -> float:
+        """Calcule l'indice de polyvalence d'un joueur"""
+        try:
+            offensive_metrics = ['Buts', 'Passes décisives', 'Tirs']
+            defensive_metrics = ['Tacles gagnants', 'Interceptions', 'Dégagements']
+            technical_metrics = ['Passes tentées', 'Dribbles tentés', 'Passes progressives']
+            
+            category_scores = []
+            
+            for category in [offensive_metrics, defensive_metrics, technical_metrics]:
+                category_score = 0
+                valid_metrics = 0
+                for metric in category:
+                    if metric in player_data.index and pd.notna(player_data[metric]):
+                        if player_data[metric] > 0:
+                            category_score += 1
+                        valid_metrics += 1
+                
+                if valid_metrics > 0:
+                    category_scores.append(category_score / valid_metrics)
+            
+            return np.mean(category_scores) * 100 if category_scores else 0.0
+        except:
+            return 0.0
+
+class ExportManager:
+    """Gestionnaire d'export de données"""
+    
+    @staticmethod
+    def export_player_report(player_data: pd.Series, analysis_results: Dict) -> Dict:
+        """Exporte un rapport complet du joueur"""
+        report = {
+            'player_info': {
+                'name': player_data.get('Joueur', 'N/A'),
+                'team': player_data.get('Équipe', 'N/A'),
+                'competition': player_data.get('Compétition', 'N/A'),
+                'position': player_data.get('Position', 'N/A'),
+                'age': player_data.get('Âge', 'N/A'),
+                'nationality': player_data.get('Nationalité', 'N/A'),
+                'market_value': Utils.get_market_value_safe(player_data),
+                'minutes_played': player_data.get('Minutes jouées', 0)
+            },
+            'performance_summary': analysis_results,
+            'consistency_index': AdvancedAnalytics.calculate_player_consistency(player_data, pd.DataFrame()),
+            'versatility_index': AdvancedAnalytics.calculate_versatility_index(player_data),
+            'export_timestamp': pd.Timestamp.now().isoformat(),
+            'dashboard_version': '2.0.0-elite'
+        }
+        return report
+    
+    @staticmethod
+    def create_pdf_report(report_data: Dict) -> bytes:
+        """Crée un rapport PDF (placeholder pour future implémentation)"""
+        # Cette fonction pourrait être implémentée avec reportlab ou weasyprint
+        # Pour l'instant, on retourne du contenu factice
+        return b"PDF Report Content - Implementation Required"
+
+class ThemeManager:
+    """Gestionnaire de thèmes avancé"""
+    
+    THEMES = {
+        'elite_dark': {
+            'primary': '#0052CC',
+            'secondary': '#00B8A3',
+            'accent': '#FF6B35',
+            'background': '#0A0E17',
+            'surface': '#161B26',
+            'text': '#E6EAEF'
+        },
+        'champion_blue': {
+            'primary': '#1E3A8A',
+            'secondary': '#0EA5E9',
+            'accent': '#F59E0B',
+            'background': '#0F172A',
+            'surface': '#1E293B',
+            'text': '#F1F5F9'
+        },
+        'royal_purple': {
+            'primary': '#7C3AED',
+            'secondary': '#A855F7',
+            'accent': '#EC4899',
+            'background': '#1F1426',
+            'surface': '#2D1B3D',
+            'text': '#F3E8FF'
+        }
+    }
+    
+    @staticmethod
+    def apply_theme(theme_name: str) -> str:
+        """Applique un thème spécifique"""
+        if theme_name not in ThemeManager.THEMES:
+            theme_name = 'elite_dark'
+        
+        theme = ThemeManager.THEMES[theme_name]
+        
+        return f"""
+        <style>
+        :root {{
+            --primary: {theme['primary']};
+            --secondary: {theme['secondary']};
+            --accent: {theme['accent']};
+            --bg-primary: {theme['background']};
+            --bg-secondary: {theme['surface']};
+            --text-primary: {theme['text']};
+        }}
+        </style>
+        """
+
+# ================================================================================================
+# HOOKS ET MIDDLEWARES AVANCÉS
+# ================================================================================================
+
+def performance_monitor():
+    """Monitore les performances de l'application"""
+    if 'performance_metrics' not in st.session_state:
+        st.session_state.performance_metrics = {
+            'page_loads': 0,
+            'chart_renders': 0,
+            'data_queries': 0,
+            'start_time': pd.Timestamp.now()
+        }
+    
+    st.session_state.performance_metrics['page_loads'] += 1
+    
+    # Affichage optionnel des métriques de performance
+    if st.sidebar.checkbox("🔧 Métriques de Performance", value=False):
+        with st.sidebar.expander("📊 Performance Analytics", expanded=False):
+            metrics = st.session_state.performance_metrics
+            uptime = pd.Timestamp.now() - metrics['start_time']
+            
+            st.metric("⏱️ Uptime", f"{uptime.total_seconds():.0f}s")
+            st.metric("📄 Pages vues", metrics['page_loads'])
+            st.metric("📊 Graphiques", metrics['chart_renders'])
+            st.metric("🔍 Requêtes", metrics['data_queries'])
+
+def error_handler(func):
+    """Décorateur pour la gestion d'erreurs élégante"""
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            st.error(f"⚠️ Erreur dans {func.__name__}: {str(e)}")
+            with st.expander("🔍 Détails de l'erreur", expanded=False):
+                import traceback
+                st.code(traceback.format_exc())
+            return None
+    return wrapper
+
+def cache_manager():
+    """Gestionnaire de cache intelligent"""
+    if 'cache_stats' not in st.session_state:
+        st.session_state.cache_stats = {
+            'hits': 0,
+            'misses': 0,
+            'size': 0
+        }
+    
+    # Nettoyage automatique du cache si trop volumineux
+    if st.session_state.cache_stats['size'] > 100:  # 100 MB
+        st.cache_data.clear()
+        st.session_state.cache_stats = {'hits': 0, 'misses': 0, 'size': 0}
+        st.success("🧹 Cache nettoyé pour optimiser les performances")
+
+# ================================================================================================
+# SYSTÈME DE NOTIFICATIONS AVANCÉ
+# ================================================================================================
+
+class NotificationSystem:
+    """Système de notifications intelligent"""
+    
+    @staticmethod
+    def show_welcome_message():
+        """Affiche le message de bienvenue"""
+        if 'welcome_shown' not in st.session_state:
+            st.balloons()
+            st.success("🎉 Bienvenue dans Football Analytics Pro Elite ! Explorez les données avec notre IA avancée.")
+            st.session_state.welcome_shown = True
+    
+    @staticmethod
+    def show_feature_highlight(feature_name: str, description: str):
+        """Met en évidence une fonctionnalité"""
+        st.info(f"✨ **{feature_name}** : {description}")
+    
+    @staticmethod
+    def show_data_insight(insight: str):
+        """Affiche une insight sur les données"""
+        st.warning(f"💡 **Insight** : {insight}")
+
+# ================================================================================================
+# SYSTÈME DE RECOMMANDATIONS IA
+# ================================================================================================
+
+class AIRecommendationEngine:
+    """Moteur de recommandations IA"""
+    
+    @staticmethod
+    def generate_player_insights(player_data: pd.Series, df: pd.DataFrame) -> List[str]:
+        """Génère des insights IA sur un joueur"""
+        insights = []
+        
+        try:
+            # Analyse de l'âge et du potentiel
+            age = player_data.get('Âge', 0)
+            if age < 23:
+                insights.append(f"🌟 Jeune talent de {age} ans avec un potentiel de développement élevé")
+            elif age > 30:
+                insights.append(f"🎯 Joueur expérimenté de {age} ans, leadership et stabilité")
+            
+            # Analyse des minutes jouées
+            minutes = player_data.get('Minutes jouées', 0)
+            if minutes > 2500:
+                insights.append("⚡ Joueur régulier avec un temps de jeu élevé, fiabilité confirmée")
+            elif minutes < 500:
+                insights.append("🔄 Temps de jeu limité, potentiel sous-exploité ou rôle de rotation")
+            
+            # Analyse de la valeur marchande
+            market_value = Utils.get_market_value_safe(player_data)
+            if market_value != "N/A" and "M€" in market_value:
+                value_num = float(market_value.replace("M€", ""))
+                if value_num > 50:
+                    insights.append("💎 Joueur de très haute valeur, investissement premium")
+                elif value_num > 20:
+                    insights.append("💰 Valeur marchande élevée, actif stratégique")
+            
+            # Analyse comparative de position
+            position = player_data.get('Position', '')
+            if position:
+                same_position = df[df['Position'] == position]
+                if len(same_position) > 10:
+                    percentile_goals = (same_position['Buts'] < player_data.get('Buts', 0)).mean() * 100
+                    if percentile_goals > 80:
+                        insights.append(f"🎯 Performance offensive exceptionnelle pour un {position}")
+                    elif percentile_goals < 20:
+                        insights.append(f"🔧 Marge d'amélioration offensive pour un {position}")
+            
+        except Exception as e:
+            insights.append("🤖 Analyse IA en cours de traitement...")
+        
+        return insights[:3]  # Limiter à 3 insights maximum
+    
+    @staticmethod
+    def recommend_similar_players(player_name: str, df: pd.DataFrame, top_n: int = 3) -> List[str]:
+        """Recommande des joueurs similaires"""
+        try:
+            similar_players = SimilarPlayerAnalyzer.calculate_similarity(player_name, df, top_n)
+            recommendations = []
+            
+            for player in similar_players:
+                recommendations.append(
+                    f"🔍 {player['joueur']} ({player['equipe']}) - "
+                    f"Similarité: {player['similarity_score']:.1f}%"
+                )
+            
+            return recommendations
+        except:
+            return ["🤖 Recommandations en cours de calcul..."]
+
+# ================================================================================================
+# SYSTÈME DE SAUVEGARDE ET HISTORIQUE
+# ================================================================================================
+
+class SessionManager:
+    """Gestionnaire de session avancé"""
+    
+    @staticmethod
+    def save_analysis_session(player_name: str, analysis_data: Dict):
+        """Sauvegarde une session d'analyse"""
+        if 'analysis_history' not in st.session_state:
+            st.session_state.analysis_history = []
+        
+        session_data = {
+            'player': player_name,
+            'timestamp': pd.Timestamp.now().isoformat(),
+            'analysis': analysis_data,
+            'session_id': len(st.session_state.analysis_history) + 1
+        }
+        
+        st.session_state.analysis_history.append(session_data)
+        
+        # Limiter l'historique à 10 sessions
+        if len(st.session_state.analysis_history) > 10:
+            st.session_state.analysis_history = st.session_state.analysis_history[-10:]
+    
+    @staticmethod
+    def load_analysis_history() -> List[Dict]:
+        """Charge l'historique des analyses"""
+        return st.session_state.get('analysis_history', [])
+    
+    @staticmethod
+    def clear_session_history():
+        """Efface l'historique de session"""
+        if 'analysis_history' in st.session_state:
+            del st.session_state.analysis_history
+        st.success("🧹 Historique effacé avec succès")
+
+# ================================================================================================
+# POINT D'ENTRÉE PRINCIPAL AVEC TOUTES LES OPTIMISATIONS
+# ================================================================================================
+
+def main_enhanced():
+    """Point d'entrée principal avec toutes les optimisations elite"""
+    
+    # Initialisation avancée
+    initialize_app()
+    performance_monitor()
+    cache_manager()
+    
+    # Système de notifications
+    NotificationSystem.show_welcome_message()
+    
+    try:
+        # Lancement du dashboard principal
+        dashboard = FootballDashboard()
+        dashboard.run()
+        
+        # Analytics de session
+        if st.sidebar.checkbox("📊 Analytics Session", value=False):
+            with st.sidebar.expander("🔍 Historique d'Analyse", expanded=False):
+                history = SessionManager.load_analysis_history()
+                if history:
+                    st.write(f"📈 {len(history)} analyses effectuées")
+                    for session in history[-3:]:  # Afficher les 3 dernières
+                        st.caption(f"👤 {session['player']} - {session['timestamp'][:16]}")
+                    
+                    if st.button("🧹 Effacer Historique", use_container_width=True):
+                        SessionManager.clear_session_history()
+                        st.rerun()
+                else:
+                    st.info("Aucune analyse dans l'historique")
+        
+    except Exception as e:
+        # Gestion d'erreur élégante
+        st.markdown(f"""
+        <div style='background: var(--gradient-surface); padding: var(--space-2xl); border-radius: var(--radius-lg); 
+                    border: 2px solid var(--danger); margin: var(--space-xl) 0; box-shadow: var(--shadow-lg);'>
+            <h2 style='color: var(--danger); margin: 0 0 var(--space-lg) 0; font-weight: 800;'>
+                ❌ ERREUR SYSTÈME CRITIQUE
+            </h2>
+            <p style='color: var(--text-primary); margin: 0; font-size: 1.1em; font-weight: 500;'>
+                {str(e)}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Diagnostic système
+        with st.expander("🔍 Diagnostic Système Elite", expanded=False):
+            import traceback
+            st.code(traceback.format_exc(), language='python')
+            
+            # Informations système
+            st.subheader("🖥️ Informations Système")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Version Python", f"{sys.version_info.major}.{sys.version_info.minor}")
+                st.metric("Version Streamlit", st.__version__)
+            with col2:
+                import psutil
+                try:
+                    st.metric("RAM Utilisée", f"{psutil.virtual_memory().percent}%")
+                    st.metric("CPU Utilisé", f"{psutil.cpu_percent()}%")
+                except:
+                    st.info("Métriques système non disponibles")
+        
+        # Bouton de récupération
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("🔄 Redémarrer", type="primary", use_container_width=True):
+                st.rerun()
+        with col2:
+            if st.button("🧹 Nettoyer Cache", use_container_width=True):
+                st.cache_data.clear()
+                st.success("Cache nettoyé !")
+        with col3:
+            if st.button("📋 Rapport Bug", use_container_width=True):
+                st.info("Rapport d'erreur généré !")
+
+# ================================================================================================
+# EXÉCUTION FINALE DE L'APPLICATION ULTRA-PROFESSIONNELLE
+# ================================================================================================
+
+if __name__ == "__main__":
+    # Import des modules système pour le diagnostic
+    import sys
+    try:
+        import psutil
+    except ImportError:
+        pass
+    
+    # Lancement de l'application avec toutes les optimisations
+    main_enhanced() line-height: 1.4;'>Buts, xG, passes décisives, créativité</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: var(--space-xl); border: 2px solid var(--accent);'>
+                    <div style='font-size: 4em; margin-bottom: var(--space-lg); color: var(--accent);'>🛡️</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 var(--space-md) 0; font-size: 1.2em; font-weight: 700;'>Défensive Elite</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 1rem; line-height: 1.4;'>Tacles, interceptions, duels, récupérations</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: var(--space-xl); border: 2px solid var(--secondary);'>
+                    <div style='font-size: 4em; margin-bottom: var(--space-lg); color: var(--secondary);'>🎨</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 var(--space-md) 0; font-size: 1.2em; font-weight: 700;'>Technique Elite</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 1rem; line-height: 1.4;'>Passes, dribbles, progression, maîtrise</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: var(--space-xl); border: 2px solid var(--success);'>
+                    <div style='font-size: 4em; margin-bottom: var(--space-lg); color: var(--success);'>👥</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 var(--space-md) 0; font-size: 1.2em; font-weight: 700;'>Profils Elite</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 1rem;

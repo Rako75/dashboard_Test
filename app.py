@@ -4341,19 +4341,4 @@ if __name__ == "__main__":
         pass
     
     # Lancement de l'application avec toutes les optimisations
-    main_enhanced() line-height: 1.4;'>Buts, xG, passes décisives, créativité</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: var(--space-xl); border: 2px solid var(--accent);'>
-                    <div style='font-size: 4em; margin-bottom: var(--space-lg); color: var(--accent);'>🛡️</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 var(--space-md) 0; font-size: 1.2em; font-weight: 700;'>Défensive Elite</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 1rem; line-height: 1.4;'>Tacles, interceptions, duels, récupérations</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: var(--space-xl); border: 2px solid var(--secondary);'>
-                    <div style='font-size: 4em; margin-bottom: var(--space-lg); color: var(--secondary);'>🎨</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 var(--space-md) 0; font-size: 1.2em; font-weight: 700;'>Technique Elite</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 1rem; line-height: 1.4;'>Passes, dribbles, progression, maîtrise</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: var(--space-xl); border: 2px solid var(--success);'>
-                    <div style='font-size: 4em; margin-bottom: var(--space-lg); color: var(--success);'>👥</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 var(--space-md) 0; font-size: 1.2em; font-weight: 700;'>Profils Elite</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 1rem;
+    main_enhanced() 

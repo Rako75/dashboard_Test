@@ -1928,7 +1928,6 @@ class UIComponents:
     @staticmethod
     def render_footer():
         """Affiche le footer"""
-        opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta', width=200, height=200)
         st.markdown(f"""
         <div class='dashboard-footer animated-card' style='display: flex; justify-content: space-between; align-items: center;'>
             <div style='flex: 1;'>
@@ -1941,9 +1940,6 @@ class UIComponents:
             <p style='color: var(--text-secondary); margin: 12px 0 0 0; font-size: 0.9em;'>
                 Données: Opta via FBref | Saison 2024-25 | @Alex Rakotomalala
             </p>
-        </div>
-        <div style='flex: 2; text-align: right; margin-left: 32px;'>
-            {opta_logo_html}
         </div>
     </div>
         """, unsafe_allow_html=True)

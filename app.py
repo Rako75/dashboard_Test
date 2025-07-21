@@ -1684,8 +1684,7 @@ class UIComponents:
     
     @staticmethod
     def render_header():
-    big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)
-
+        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)
     st.markdown(f"""
     <style>
         .fade-in {{

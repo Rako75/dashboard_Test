@@ -1684,35 +1684,17 @@ class UIComponents:
     
     @staticmethod
     def render_header():
-        """Affiche l'en-tête principal avec les logos"""
-    # Chargement et encodage des logos
-    rkts_logo_html = UIComponents._get_logo_html('Logo_RKSTS.png', 'RKTS Logo', width=80, height=80)
-    big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=60)
-    opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)
-    
-    st.markdown(f"""
-    <div class='player-header-card animated-card'>
-        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;'>
-            <div style='flex: 1; display: flex; justify-content: flex-start; align-items: center;'>
-                {rkts_logo_html}
-            </div>
-            <div style='flex: 2; text-align: center;'>
-                <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
-                    RakoStats
-                </h1>
-            </div>
-            <div style='flex: 1; display: flex; justify-content: flex-end; align-items: center;'>
-                {opta_logo_html}
-            </div>
+        """Affiche l'en-tête principal"""
+        st.markdown("""
+        <div class='player-header-card animated-card'>
+            <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
+                RakoStats
+            </h1>
+            <p style='color: rgba(255,255,255,0.9); margin: 16px 0 0 0; font-size: 1.25em; font-weight: 500;'>
+                Analyse avancée des performances - Saison 2024-25
+            </p>
         </div>
-        <div style='text-align: center; margin-bottom: 16px;'>
-            {big5_logo_html}
-        </div>
-        <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>
-            Analyse avancée des performances - Saison 2024-25
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
     @staticmethod
     def render_breadcrumbs(competition, team, player):
@@ -1952,22 +1934,6 @@ class UIComponents:
             </p>
         </div>
         """, unsafe_allow_html=True)
-
-        @staticmethod
-        def _get_logo_html(logo_path: str, alt_text: str, width: int = 80, height: int = 60) -> str:
-            """Récupère le HTML pour afficher un logo"""
-    if os.path.exists(logo_path):
-        try:
-            image = Image.open(logo_path)
-            # Redimensionner si nécessaire
-            if image.size != (width, height):
-                image = image.resize((width, height), Image.Resampling.LANCZOS)
-            logo_base64 = Utils.image_to_base64(image)
-            return f'<img src="data:image/png;base64,{logo_base64}" alt="{alt_text}" style="width:{width}px; height:{height}px; object-fit:contain;">'
-        except Exception:
-            return f'<div style="width:{width}px; height:{height}px; background:rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:0.8em;">Logo</div>'
-    else:
-        return f'<div style="width:{width}px; height:{height}px; background:rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:0.8em;">{alt_text}</div>'
 
 # ================================================================================================
 # GESTIONNAIRE DE SIDEBAR

@@ -1683,7 +1683,7 @@ class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
     
     @staticmethod
-def render_header():
+    def render_header():
     rkts_logo_html = UIComponents._get_logo_html('Logo_RKSTS.png', 'RKTS Logo', width=80, height=80)
     big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)
     opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)

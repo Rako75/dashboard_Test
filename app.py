@@ -1686,7 +1686,7 @@ class UIComponents:
     def render_header():
         """Affiche l'en-tête principal avec les logos"""
         # Chargement et encodage des logos
-        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        
+        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=800, height=200)        
         st.markdown(f"""
         <div class='player-header-card animated-card' style='display: flex; align-items: center; justify-content: space-between;'
                 <div style='flex: 1; text-align: left;'>

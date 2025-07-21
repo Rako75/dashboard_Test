@@ -1697,7 +1697,7 @@ class UIComponents:
                     Analyse avancée des performances - Saison 2024-2025
                     </p>
                 <div>
-            <div style='flex: 0; text-align: right; margin-left: 32px;'>
+            <div style='flex: 0; text-align: right; margin-left: 40px;'>
                 {big5_logo_html}
             </div>
         </div>

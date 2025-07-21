@@ -1686,18 +1686,13 @@ class UIComponents:
     def render_header():
         """Affiche l'en-tête principal avec les logos"""
         # Chargement et encodage des logos
-        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)
-        opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)
-        
+        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        
         st.markdown(f"""
         <div class='player-header-card animated-card'>
                 <div style='flex: 2; text-align: left;'>
                     <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
                         RakoStats
                     </h1>
-                </div>
-                <div style='flex: 1; display: flex; justify-content: flex-end; align-items: center;'>
-                    {opta_logo_html}
                 </div>
             </div>
             <div style='text-align: right; margin-bottom: 16px;'>

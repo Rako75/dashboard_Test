@@ -3057,7 +3057,7 @@ class FootballDashboard:
         with col4:
             st.metric(
                 "🌐 Nations", 
-                f"{df['Nation'].nunique()}",
+                f"{df['Nationalité'].nunique()}",
                 help="Nombre de nationalités représentées"
             )
         

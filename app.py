@@ -1687,7 +1687,7 @@ class UIComponents:
         st.markdown("""
         <div class='player-header-card animated-card'>
             <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
-                Dashboard Football Professionnel
+                RakoStats
             </h1>
             <p style='color: rgba(255,255,255,0.9); margin: 16px 0 0 0; font-size: 1.25em; font-weight: 500;'>
                 Analyse avancée des performances - Saison 2024-25

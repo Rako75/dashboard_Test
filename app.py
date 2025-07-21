@@ -1932,9 +1932,9 @@ class UIComponents:
         st.markdown(f"""
         <div class='dashboard-footer animated-card' style='display: flex; justify-content: space-between; align-items: center;'>
             <div style='flex: 1;'>
-                <h3 style='color: var(--primary-color); margin: 0 0 16px 0; font-weight: 700; font-size: 1.25em;'>
+                <h1 style='color: var(--primary-color); margin: 0 0 16px 0; font-weight: 700; font-size: 1.25em;'>
                     RakoStats
-            <h3>            
+            <h1>            
             <p style='color: var(--text-primary); margin: 0; font-size: 1.1em; font-weight: 500;'>
                 Analyse avancée des performances
             </p>

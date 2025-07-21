@@ -349,7 +349,7 @@ class StyleManager:
         
         /* Cartes joueur */
         .player-header-card {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, var(--background-dark) 0%, #1a1d23 100%);
             padding: var(--spacing-xl);
             border-radius: var(--radius-lg);
             text-align: center;

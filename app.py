@@ -355,6 +355,7 @@ class StyleManager:
             text-align: center;
             margin-bottom: var(--spacing-xl);
             box-shadow: var(--shadow-lg);
+            border: 2px solid #fff;
         }
         
         .player-info-card {

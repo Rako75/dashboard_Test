@@ -1688,19 +1688,18 @@ class UIComponents:
         # Chargement et encodage des logos
         big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        
         st.markdown(f"""
-        <div class='player-header-card animated-card'>
-                <div style='flex: 2; text-align: left;'>
+        <div class='player-header-card animated-card' style='display: flex; align-items: center; justify-content: space-between;'
+                <div style='flex: 1; text-align: left;'>
                     <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
                         RakoStats
                     </h1>
-                </div>
-            </div>
-            <div style='text-align: right; margin: 32px;'>
+                    <p style='color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 1.25em; font-weight: 500;'>
+                    Analyse avancée des performances - Saison 2024-2025
+                    </p>
+                <div>
+            <div style='flex: 0; text-align: right; margin-left: 32px;'>
                 {big5_logo_html}
             </div>
-            <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>
-                Analyse avancée des performances - Saison 2024-25
-            </p>
         </div>
         """, unsafe_allow_html=True)
 

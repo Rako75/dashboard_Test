@@ -1955,7 +1955,7 @@ class UIComponents:
 
         @staticmethod
         def _get_logo_html(logo_path: str, alt_text: str, width: int = 80, height: int = 60) -> str:
-        """Récupère le HTML pour afficher un logo"""
+            """Récupère le HTML pour afficher un logo"""
     if os.path.exists(logo_path):
         try:
             image = Image.open(logo_path)

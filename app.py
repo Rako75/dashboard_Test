@@ -1687,7 +1687,7 @@ class UIComponents:
         """Affiche l'en-tête principal avec les logos"""
         # Chargement et encodage des logos
         rkts_logo_html = UIComponents._get_logo_html('Logo_RKSTS.png', 'RKTS Logo', width=80, height=80)
-        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=60)
+        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=100)
         opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)
         
         st.markdown(f"""
@@ -1705,7 +1705,7 @@ class UIComponents:
                     {opta_logo_html}
                 </div>
             </div>
-            <div style='text-align: right; margin-bottom: 39px;'>
+            <div style='text-align: right; margin-bottom: 16px;'>
                 {big5_logo_html}
             </div>
             <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>

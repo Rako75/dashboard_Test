@@ -1695,7 +1695,7 @@ class UIComponents:
                     </h1>
                 </div>
             </div>
-            <div style='text-align: right; margin: 0;'>
+            <div style='text-align: bottom-right; margin: 0;'>
                 {big5_logo_html}
             </div>
             <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>

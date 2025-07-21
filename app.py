@@ -1695,7 +1695,7 @@ class UIComponents:
                     </h1>
                 </div>
             </div>
-            <div style='text-align: center; class:'fade-in'>
+            <div style='text-align: top; class:'fade-in'>
                 {big5_logo_html}
             </div>
             <p style='color: rgba(255,255,255,0.8); margin-top: 12px; font-size: 1.25em; font-weight: 500; text-align: center;'>

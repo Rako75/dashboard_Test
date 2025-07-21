@@ -1683,7 +1683,7 @@ class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
     
     @staticmethod
-      def render_header():
+    def render_header():
     """Affiche l'en-tête principal avec l'image des ligues"""
     # Chargement du logo collectif des ligues
     big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)

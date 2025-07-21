@@ -3035,7 +3035,7 @@ class FootballDashboard:
         
         with col1:
             st.metric(
-                "👥 Joueurs Total", 
+                "👥 Joueurs", 
                 f"{len(df):,}",
                 help="Nombre total de joueurs dans la base de données"
             )
@@ -3055,11 +3055,10 @@ class FootballDashboard:
             )
         
         with col4:
-            total_minutes = df['Minutes jouées'].sum()
             st.metric(
-                "⏱️ Minutes Totales", 
-                f"{total_minutes:,.0f}",
-                help="Total des minutes jouées par tous les joueurs"
+                "🌐 Nations", 
+                f"{df['Nation'].nunique()}",
+                help="Nombre de nationalités représentées"
             )
         
         with col5:

@@ -1692,9 +1692,6 @@ class UIComponents:
         
         st.markdown(f"""
         <div class='player-header-card animated-card'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;'>
-                <div style='flex: 1; display: flex; justify-content: flex-start; align-items: center;'>
-                    {rkts_logo_html}
                 </div>
                 <div style='flex: 2; text-align: center;'>
                     <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>

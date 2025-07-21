@@ -1942,7 +1942,7 @@ class UIComponents:
                 Données: Opta via FBref | Saison 2024-25 | @Alex Rakotomalala
             </p>
         </div>
-        <div style='flex: 1; text-align: right; margin-left: 32px;'>
+        <div style='flex: 0; text-align: center; margin-left: 32px;'>
             {opta_logo_html}
         </div>
     </div>

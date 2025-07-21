@@ -1682,8 +1682,8 @@ class PerformanceAnalyzer:
 class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
     
-@staticmethod
-def render_header():
+    @staticmethod
+    def render_header():
         """Affiche l'en-tête principal avec les logos"""
         # Chargement et encodage des logos
         rkts_logo_html = UIComponents._get_logo_html('Logo_RKSTS.png', 'RKTS Logo', width=80, height=80)

@@ -1683,7 +1683,7 @@ class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
     
     @staticmethod
-        def render_header():
+    def render_header():
             """Affiche l'en-tête principal avec les logos"""
         # Chargement et encodage des logos
         big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        

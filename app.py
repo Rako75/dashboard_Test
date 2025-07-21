@@ -1686,7 +1686,6 @@ class UIComponents:
     def render_header():
         """Affiche l'en-tête principal avec les logos"""
         # Chargement et encodage des logos
-        rkts_logo_html = UIComponents._get_logo_html('Logo_RKSTS.png', 'RKTS Logo', width=80, height=80)
         big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)
         opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)
         
@@ -1694,7 +1693,6 @@ class UIComponents:
         <div class='player-header-card animated-card'>
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;'>
                 <div style='flex: 1; display: flex; justify-content: flex-start; align-items: center;'>
-                    {rkts_logo_html}
                 </div>
                 <div style='flex: 2; text-align: center;'>
                     <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>

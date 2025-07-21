@@ -1688,15 +1688,6 @@ class UIComponents:
         # Chargement et encodage des logos
         big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        
         st.markdown(f"""
-        <style>
-            .fade-in {{
-                animation: fadeIn 1s ease-in-out;
-            }}
-            @keyframes fadeIn {{
-                from {{ opacity: 0; transform: translateY(-10px); }}
-                to {{ opacity: 1; transform: translateY(0); }}
-            }}
-        <style>
         <div class='player-header-card animated-card'>
                 <div style='text-align: center; margin-bottom: 16px;'>
                     <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>

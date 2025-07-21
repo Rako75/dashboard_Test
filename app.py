@@ -1686,7 +1686,7 @@ class UIComponents:
     def render_header():
         """Affiche l'en-tête principal avec les logos"""
         # Chargement et encodage des logos
-        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=300, height=300)        
+        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=500, height=200)        
         st.markdown(f"""
         <div class='player-header-card animated-card' style='display: flex; align-items: center; justify-content: space-between;'
                 <div style='flex: 1; text-align: left;'>
@@ -1697,7 +1697,7 @@ class UIComponents:
                     Analyse avancée des performances - Saison 2024-2025
                     </p>
                 <div>
-            <div style='flex: 0; text-align: right; margin-left: 40px;'>
+            <div style='flex: 0; text-align: right; margin-left: 36px;'>
                 {big5_logo_html}
             </div>
         </div>

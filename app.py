@@ -1681,12 +1681,12 @@ class PerformanceAnalyzer:
 
 class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
-    
+    big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=80, height=80)
+
     @staticmethod
     def render_header():
         """Affiche l'en-tête principal avec les logos alignés à côté du titre et le texte descriptif en dessous"""
     # Chargement et encodage des logos
-        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=80, height=80)
     st.markdown(f"""
     <div class='player-header-card animated-card' style='display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap;'>
         <div style='display: flex; align-items: center; gap: 20px;'>

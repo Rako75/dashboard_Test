@@ -1681,23 +1681,33 @@ class PerformanceAnalyzer:
 
 class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
-    big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=80, height=80)
-
+    
     @staticmethod
     def render_header():
-        """Affiche l'en-tête principal avec les logos alignés à côté du titre et le texte descriptif en dessous"""
-    # Chargement et encodage des logos
+        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)
+        opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)
+
     st.markdown(f"""
-    <div class='player-header-card animated-card' style='display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap;'>
-        <div style='display: flex; align-items: center; gap: 20px;'>
-            <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
-                RakoStats
-            </h1>
+    <style>
+        .fade-in {{
+            animation: fadeIn 1s ease-in-out;
+        }}
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(-10px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+    </style>
+
+    <div class='player-header-card animated-card'>
+        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;'>
+                <h1 style='color: white; font-size: 3.5em; font-weight: 800;'>RakoStats</h1>
+            </div>
+            <div style='flex: 1; display: flex; justify-content: flex-end;'>{opta_logo_html}</div>
+        </div>
+        <div style='text-align: center;' class='fade-in'>
             {big5_logo_html}
         </div>
-    </div>
-    <div style='text-align: left; margin-top: 8px; margin-left: 8px;'>
-        <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500;'>
+        <p style='color: rgba(255,255,255,0.8); font-size: 1.25em; font-weight: 500; text-align: center; margin-top: 8px;'>
             Analyse avancée des performances - Saison 2024-25
         </p>
     </div>

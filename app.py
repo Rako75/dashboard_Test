@@ -1684,6 +1684,7 @@ class UIComponents:
     
     @staticmethod
     def render_header():
+        rkts_logo_html = UIComponents._get_logo_html('Logo_RKSTS.png', 'RKTS Logo', width=80, height=80)
         big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)
         opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)
 
@@ -1700,6 +1701,8 @@ class UIComponents:
 
     <div class='player-header-card animated-card'>
         <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;'>
+            <div style='flex: 1; display: flex; justify-content: flex-start;'>{rkts_logo_html}</div>
+            <div style='flex: 2; text-align: center;'>
                 <h1 style='color: white; font-size: 3.5em; font-weight: 800;'>RakoStats</h1>
             </div>
             <div style='flex: 1; display: flex; justify-content: flex-end;'>{opta_logo_html}</div>

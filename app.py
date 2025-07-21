@@ -1705,7 +1705,7 @@ class UIComponents:
                     {opta_logo_html}
                 </div>
             </div>
-            <div style='text-align: center; margin-bottom: 16px;'>
+            <div style='text-align: right; margin-bottom: 16px;'>
                 {big5_logo_html}
             </div>
             <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>

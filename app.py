@@ -1683,26 +1683,25 @@ class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
     
     @staticmethod
-    def render_header():
-        """Affiche l'en-tête principal avec les logos"""
-        # Chargement et encodage des logos
-        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        
-        st.markdown(f"""
-        <div class='player-header-card animated-card'>
-                <div style='flex: 2; text-align: left;'>
-                    <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
-                        RakoStats
-                    </h1>
-                </div>
-            </div>
-            <div style='text-align: right; margin-bottom: 16px;'>
-                {big5_logo_html}
-            </div>
-            <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>
-                Analyse avancée des performances - Saison 2024-25
-            </p>
+def render_header():
+    """Affiche l'en-tête principal avec les logos alignés à côté du titre et le texte descriptif en dessous"""
+    # Chargement et encodage des logos
+    big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=80, height=80)
+    st.markdown(f"""
+    <div class='player-header-card animated-card' style='display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap;'>
+        <div style='display: flex; align-items: center; gap: 20px;'>
+            <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
+                RakoStats
+            </h1>
+            {big5_logo_html}
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    <div style='text-align: left; margin-top: 8px; margin-left: 8px;'>
+        <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500;'>
+            Analyse avancée des performances - Saison 2024-25
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     @staticmethod
     def render_breadcrumbs(competition, team, player):

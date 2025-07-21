@@ -1689,16 +1689,16 @@ class UIComponents:
         big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        
         st.markdown(f"""
         <div class='player-header-card animated-card'>
-                <div style='text-align: center; margin-bottom: 16px;'>
+                <div style='flex: 2; text-align: left;'>
                     <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
                         RakoStats
                     </h1>
                 </div>
             </div>
-            <div style='text-align: top; class:'fade-in'>
+            <div style='text-align: right; margin-bottom: 16px;'>
                 {big5_logo_html}
             </div>
-            <p style='color: rgba(255,255,255,0.8); margin-top: 12px; font-size: 1.25em; font-weight: 500; text-align: center;'>
+            <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>
                 Analyse avancée des performances - Saison 2024-25
             </p>
         </div>

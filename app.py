@@ -1953,8 +1953,8 @@ class UIComponents:
         </div>
         """, unsafe_allow_html=True)
 
-     @staticmethod
-     def _get_logo_html(logo_path: str, alt_text: str, width: int = 80, height: int = 60) -> str:
+    @staticmethod
+    def _get_logo_html(logo_path: str, alt_text: str, width: int = 80, height: int = 60) -> str:
         """Récupère le HTML pour afficher un logo"""
         if os.path.exists(logo_path):
             try:

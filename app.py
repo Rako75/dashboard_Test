@@ -1685,6 +1685,8 @@ class UIComponents:
     @staticmethod
     def render_header():
         big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)
+        opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta Data', width=120, height=40)
+
     st.markdown(f"""
     <style>
         .fade-in {{
@@ -1697,8 +1699,10 @@ class UIComponents:
     </style>
 
     <div class='player-header-card animated-card'>
-        <div style='text-align: center; margin-bottom: 12px;'>
-            <h1 style='color: white; font-size: 3.5em; font-weight: 800;'>RakoStats</h1>
+        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;'>
+                <h1 style='color: white; font-size: 3.5em; font-weight: 800;'>RakoStats</h1>
+            </div>
+            <div style='flex: 1; display: flex; justify-content: flex-end;'>{opta_logo_html}</div>
         </div>
         <div style='text-align: center;' class='fade-in'>
             {big5_logo_html}

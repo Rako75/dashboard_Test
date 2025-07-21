@@ -1681,36 +1681,28 @@ class PerformanceAnalyzer:
 
 class UIComponents:
     """Composants d'interface utilisateur réutilisables"""
+    
     @staticmethod
-    def render_header():
-        """Affiche l'en-tête principal avec l'image des ligues"""
-    # Chargement du logo collectif des ligues
-    big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=250, height=50)
-    st.markdown(f"""
-    <style>
-        .fade-in {{
-            animation: fadeIn 1s ease-in-out;
-        }}
-        @keyframes fadeIn {{
-            from {{ opacity: 0; transform: translateY(-10px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
-        }}
-    </style>
-
-    <div class='player-header-card animated-card'>
-        <div style='text-align: center; margin-bottom: 16px;'>
-            <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
-                RakoStats
-            </h1>
+        def render_header():
+            """Affiche l'en-tête principal avec les logos"""
+        # Chargement et encodage des logos
+        big5_logo_html = UIComponents._get_logo_html('Big5_logos.png', 'Big 5 Championships', width=200, height=200)        
+        st.markdown(f"""
+        <div class='player-header-card animated-card'>
+                <div style='flex: 2; text-align: left;'>
+                    <h1 style='color: white; margin: 0; font-size: 3.5em; font-weight: 800; letter-spacing: -0.02em;'>
+                        RakoStats
+                    </h1>
+                </div>
+            </div>
+            <div style='text-align: right; margin-bottom: 16px;'>
+                {big5_logo_html}
+            </div>
+            <p style='color: rgba(255,255,255,0.8); margin: 0; font-size: 1.25em; font-weight: 500; text-align: center;'>
+                Analyse avancée des performances - Saison 2024-25
+            </p>
         </div>
-        <div style='text-align: center;' class='fade-in'>
-            {big5_logo_html}
-        </div>
-        <p style='color: rgba(255,255,255,0.8); margin-top: 12px; font-size: 1.25em; font-weight: 500; text-align: center;'>
-            Analyse avancée des performances - Saison 2024-25
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
     @staticmethod
     def render_breadcrumbs(competition, team, player):

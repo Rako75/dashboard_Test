@@ -1928,16 +1928,20 @@ class UIComponents:
     @staticmethod
     def render_footer():
         """Affiche le footer"""
-        st.markdown("""
-        <div class='dashboard-footer animated-card'>
+        opta_logo_html = UIComponents._get_logo_html('Opta_Logo.png', 'Opta', width=100, height=100)
+        st.markdown(f"""
+        <div class='dashboard-footer animated-card' style='position: relative;'>
+            <div style='float: right; margin-left: 16px;'>
+                {opta_logo_html}
+            </div>
             <h3 style='color: var(--primary-color); margin: 0 0 16px 0; font-weight: 700; font-size: 1.25em;'>
-                Dashboard Football Professionnel
+                RakoStats
             </h3>
             <p style='color: var(--text-primary); margin: 0; font-size: 1.1em; font-weight: 500;'>
-                Analyse avancée des performances footballistiques
+                Analyse avancée des performances
             </p>
             <p style='color: var(--text-secondary); margin: 12px 0 0 0; font-size: 0.9em;'>
-                Données: FBRef | Design: Dashboard Pro | Saison 2024-25
+                Données: Opta via FBref | Saison 2024-25 | @Alex Rakotomalala
             </p>
         </div>
         """, unsafe_allow_html=True)

@@ -1968,7 +1968,18 @@ class SidebarManager:
     """Gestionnaire pour la sidebar"""
     
     @staticmethod
-    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
+    def get_position_display_name(position: str) -> str:
+        """Convertit les codes de position en noms affichables"""
+        position_mapping = {
+            'GK': 'Gardien',
+            'DF': 'Défenseur', 
+            'MF': 'Milieu',
+            'FW': 'Attaquant'
+        }
+        return position_mapping.get(position, position)
+    
+    @staticmethod
+    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, str, str, pd.DataFrame]:
         """Rendu complet de la sidebar"""
         with st.sidebar:
             # En-tête
@@ -1995,6 +2006,45 @@ class SidebarManager:
             
             st.markdown("---")
             
+            # Sélection du club
+            clubs = ["Tous les clubs"] + sorted(df_filtered['Équipe'].unique().tolist())
+            selected_club = st.selectbox(
+                "🏟️ Choisir un club :",
+                clubs,
+                index=0,
+                help="Sélectionnez un club pour filtrer les joueurs"
+            )
+            
+            # Filtrage par club
+            if selected_club != "Tous les clubs":
+                df_filtered = df_filtered[df_filtered['Équipe'] == selected_club]
+            
+            # Sélection du poste
+            positions_raw = df_filtered['Position'].unique()
+            positions_display = ["Tous les postes"] + [SidebarManager.get_position_display_name(pos) for pos in sorted(positions_raw)]
+            
+            selected_position_display = st.selectbox(
+                "⚽ Choisir un poste :",
+                positions_display,
+                index=0,
+                help="Sélectionnez un poste pour filtrer les joueurs"
+            )
+            
+            # Conversion du nom d'affichage vers le code original
+            selected_position = None
+            if selected_position_display != "Tous les postes":
+                # Trouver le code original correspondant au nom d'affichage
+                position_reverse_mapping = {
+                    'Gardien': 'GK',
+                    'Défenseur': 'DF', 
+                    'Milieu': 'MF',
+                    'Attaquant': 'FW'
+                }
+                selected_position = position_reverse_mapping.get(selected_position_display, selected_position_display)
+                df_filtered = df_filtered[df_filtered['Position'] == selected_position]
+            
+            st.markdown("---")
+            
             # Filtre par minutes jouées
             min_minutes_filter = 0
             if not df_filtered['Minutes jouées'].empty:
@@ -2012,7 +2062,6 @@ class SidebarManager:
                     help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
                 )
                 
-            
             # Application du filtre minutes
             df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
             
@@ -2027,7 +2076,11 @@ class SidebarManager:
                     avg_minutes = df_filtered_minutes['Minutes jouées'].mean()
                     st.write(f"• Moyenne minutes: {avg_minutes:.0f}")
                     st.write(f"• Équipes représentées: {df_filtered_minutes['Équipe'].nunique()}")
-                    st.write(f"• Positions: {df_filtered_minutes['Position'].nunique()}")
+                    
+                    # Affichage des positions avec noms convertis
+                    positions_in_filter = df_filtered_minutes['Position'].unique()
+                    positions_display_names = [SidebarManager.get_position_display_name(pos) for pos in positions_in_filter]
+                    st.write(f"• Positions: {', '.join(positions_display_names)}")
             else:
                 st.warning("⚠️ Aucun joueur ne correspond aux critères")
             
@@ -2068,7 +2121,7 @@ class SidebarManager:
             else:
                 st.error("❌ Aucun joueur disponible avec ces critères.")
             
-            return selected_competition, selected_player, df_filtered_minutes
+            return selected_competition, selected_club, selected_position_display, selected_player, df_filtered_minutes
 
 # ================================================================================================
 # GESTIONNAIRE DE TABS

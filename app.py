@@ -1964,99 +1964,164 @@ class UIComponents:
 # GESTIONNAIRE DE SIDEBAR
 # ================================================================================================
 
-@staticmethod
-def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, str, str, pd.DataFrame]:
-    with st.sidebar:
-        st.markdown("""
-        <div class='sidebar-header'>
-            <h2 style='color: white; margin: 0; font-weight: 700;'>⚙️ Configuration</h2>
-            <p style='color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 0.9em;'>
-                Sélectionnez votre joueur
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        competitions = DataManager.get_competitions(df)
-        selected_competition = st.selectbox(
-            "🏆 Choisir une compétition :",
-            competitions,
-            index=0,
-            help="Sélectionnez la compétition pour filtrer les joueurs"
-        )
-
-        df_filtered = DataManager.filter_by_competition(df, selected_competition)
-
-        st.markdown("---")
-
-        clubs = ["Tous les clubs"] + sorted(df_filtered['Équipe'].unique().tolist())
-        selected_club = st.selectbox(
-            "🏟️ Choisir un club :",
-            clubs,
-            index=0,
-            help="Sélectionnez un club pour filtrer les joueurs"
-        )
-
-        if selected_club != "Tous les clubs":
-            df_filtered = df_filtered[df_filtered['Équipe'] == selected_club]
-
-        positions_raw = df_filtered['Position'].unique()
-        positions_display = ["Tous les postes"] + [SidebarManager.get_position_display_name(pos) for pos in sorted(positions_raw)]
-
-        selected_position_display = st.selectbox(
-            "⚽ Choisir un poste :",
-            positions_display,
-            index=0,
-            help="Sélectionnez un poste pour filtrer les joueurs"
-        )
-
-        selected_position = None
-        if selected_position_display != "Tous les postes":
-            position_reverse_mapping = {
-                'Gardien': 'GK',
-                'Défenseur': 'DF',
-                'Milieu': 'MF',
-                'Attaquant': 'FW'
-            }
-            selected_position = position_reverse_mapping.get(selected_position_display, selected_position_display)
-            df_filtered = df_filtered[df_filtered['Position'] == selected_position]
-
-        st.markdown("---")
-
-        selected_player = None
-        if not df_filtered.empty:
-            joueurs = DataManager.get_players(df_filtered)
-            if joueurs:
-                search_term = st.text_input("🔍 Rechercher un joueur :", placeholder="Tapez le nom du joueur...")
-
-                if search_term:
-                    joueurs_filtered = [j for j in joueurs if search_term.lower() in j.lower()]
-                    if joueurs_filtered:
-                        selected_player = st.selectbox(
-                            "👤 Joueurs trouvés :",
-                            joueurs_filtered,
-                            help="Sélectionnez le joueur à analyser"
-                        )
+class SidebarManager:
+    """Gestionnaire pour la sidebar"""
+    
+    @staticmethod
+    def get_position_display_name(position: str) -> str:
+        """Convertit les codes de position en noms affichables"""
+        position_mapping = {
+            'GK': 'Gardien',
+            'DF': 'Défenseur', 
+            'MF': 'Milieu',
+            'FW': 'Attaquant'
+        }
+        return position_mapping.get(position, position)
+    
+    @staticmethod
+    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, str, str, pd.DataFrame]:
+        """Rendu complet de la sidebar"""
+        with st.sidebar:
+            # En-tête
+            st.markdown("""
+            <div class='sidebar-header'>
+                <h2 style='color: white; margin: 0; font-weight: 700;'>⚙️ Configuration</h2>
+                <p style='color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 0.9em;'>
+                    Sélectionnez votre joueur
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Sélection de la compétition
+            competitions = DataManager.get_competitions(df)
+            selected_competition = st.selectbox(
+                "🏆 Choisir une compétition :",
+                competitions,
+                index=0,
+                help="Sélectionnez la compétition pour filtrer les joueurs"
+            )
+            
+            # Filtrage par compétition
+            df_filtered = DataManager.filter_by_competition(df, selected_competition)
+            
+            st.markdown("---")
+            
+            # Sélection du club
+            clubs = ["Tous les clubs"] + sorted(df_filtered['Équipe'].unique().tolist())
+            selected_club = st.selectbox(
+                "🏟️ Choisir un club :",
+                clubs,
+                index=0,
+                help="Sélectionnez un club pour filtrer les joueurs"
+            )
+            
+            # Filtrage par club
+            if selected_club != "Tous les clubs":
+                df_filtered = df_filtered[df_filtered['Équipe'] == selected_club]
+            
+            # Sélection du poste
+            positions_raw = df_filtered['Position'].unique()
+            positions_display = ["Tous les postes"] + [SidebarManager.get_position_display_name(pos) for pos in sorted(positions_raw)]
+            
+            selected_position_display = st.selectbox(
+                "⚽ Choisir un poste :",
+                positions_display,
+                index=0,
+                help="Sélectionnez un poste pour filtrer les joueurs"
+            )
+            
+            # Conversion du nom d'affichage vers le code original
+            selected_position = None
+            if selected_position_display != "Tous les postes":
+                # Trouver le code original correspondant au nom d'affichage
+                position_reverse_mapping = {
+                    'Gardien': 'GK',
+                    'Défenseur': 'DF', 
+                    'Milieu': 'MF',
+                    'Attaquant': 'FW'
+                }
+                selected_position = position_reverse_mapping.get(selected_position_display, selected_position_display)
+                df_filtered = df_filtered[df_filtered['Position'] == selected_position]
+            
+            st.markdown("---")
+            
+            # Filtre par minutes jouées
+            min_minutes_filter = 0
+            if not df_filtered['Minutes jouées'].empty:
+                min_minutes = int(df_filtered['Minutes jouées'].min())
+                max_minutes = int(df_filtered['Minutes jouées'].max())
+                
+                st.markdown("**⏱️ Filtrer par minutes jouées :**")
+                
+                min_minutes_filter = st.slider(
+                    "Minutes minimum jouées :",
+                    min_value=min_minutes,
+                    max_value=max_minutes,
+                    value=min_minutes,
+                    step=90,
+                    help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
+                )
+                
+            # Application du filtre minutes
+            df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
+            
+            # Informations sur le filtrage
+            nb_joueurs = len(df_filtered_minutes)
+            
+            if nb_joueurs > 0:
+                st.success(f"✅ **{nb_joueurs} joueurs** correspondent aux critères")
+                
+                # Statistiques additionnelles
+                with st.expander("📊 Statistiques du filtrage", expanded=False):
+                    avg_minutes = df_filtered_minutes['Minutes jouées'].mean()
+                    st.write(f"• Moyenne minutes: {avg_minutes:.0f}")
+                    st.write(f"• Équipes représentées: {df_filtered_minutes['Équipe'].nunique()}")
+                    
+                    # Affichage des positions avec noms convertis
+                    positions_in_filter = df_filtered_minutes['Position'].unique()
+                    positions_display_names = [SidebarManager.get_position_display_name(pos) for pos in positions_in_filter]
+                    st.write(f"• Positions: {', '.join(positions_display_names)}")
+            else:
+                st.warning("⚠️ Aucun joueur ne correspond aux critères")
+            
+            st.markdown("---")
+            
+            # Sélection du joueur
+            selected_player = None
+            if not df_filtered_minutes.empty:
+                joueurs = DataManager.get_players(df_filtered_minutes)
+                if joueurs:
+                    # Option de recherche
+                    search_term = st.text_input("🔍 Rechercher un joueur :", placeholder="Tapez le nom du joueur...")
+                    
+                    if search_term:
+                        joueurs_filtered = [j for j in joueurs if search_term.lower() in j.lower()]
+                        if joueurs_filtered:
+                            selected_player = st.selectbox(
+                                "👤 Joueurs trouvés :",
+                                joueurs_filtered,
+                                help="Sélectionnez le joueur à analyser"
+                            )
+                        else:
+                            st.warning(f"Aucun joueur trouvé pour '{search_term}'")
+                            selected_player = st.selectbox(
+                                "👤 Tous les joueurs :",
+                                joueurs,
+                                help="Sélectionnez le joueur à analyser"
+                            )
                     else:
-                        st.warning(f"Aucun joueur trouvé pour '{search_term}'")
                         selected_player = st.selectbox(
-                            "👤 Tous les joueurs :",
+                            "👤 Choisir un joueur :",
                             joueurs,
+                            index=0,
                             help="Sélectionnez le joueur à analyser"
                         )
                 else:
-                    selected_player = st.selectbox(
-                        "👤 Choisir un joueur :",
-                        joueurs,
-                        index=0,
-                        help="Sélectionnez le joueur à analyser"
-                    )
+                    st.error("❌ Aucun joueur disponible avec ces critères.")
             else:
                 st.error("❌ Aucun joueur disponible avec ces critères.")
-        else:
-            st.error("❌ Aucun joueur disponible avec ces critères.")
-
-        return selected_competition, selected_club, selected_position_display, selected_player, df_filtered
-
+            
+            return selected_competition, selected_club, selected_position_display, selected_player, df_filtered_minutes
 # ================================================================================================
 # GESTIONNAIRE DE TABS
 # ================================================================================================

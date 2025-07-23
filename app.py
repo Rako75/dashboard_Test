@@ -3036,7 +3036,7 @@ class FootballDashboard:
         UIComponents.render_header()
         
         # Rendu de la sidebar et récupération des sélections
-        selected_competition, selected_player, df_filtered = SidebarManager.render_sidebar(df)
+        selected_competition, selected_club, selected_position, selected_player, df_filtered = SidebarManager.render_sidebar(df)
         
         if selected_player:
             # Mise à jour des stats de session

@@ -2045,6 +2045,22 @@ class SidebarManager:
             
             st.markdown("---")
             
+            # Filtre par minutes jouées
+            min_minutes_filter = 0
+            if not df_filtered['Minutes jouées'].empty:
+                min_minutes = int(df_filtered['Minutes jouées'].min())
+                max_minutes = int(df_filtered['Minutes jouées'].max())
+                
+                st.markdown("**⏱️ Filtrer par minutes jouées :**")
+                
+                min_minutes_filter = st.slider(
+                    "Minutes minimum jouées :",
+                    min_value=min_minutes,
+                    max_value=max_minutes,
+                    value=min_minutes,
+                    step=90,
+                    help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
+                )
                 
             # Application du filtre minutes
             df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
@@ -2106,7 +2122,6 @@ class SidebarManager:
                 st.error("❌ Aucun joueur disponible avec ces critères.")
             
             return selected_competition, selected_club, selected_position_display, selected_player, df_filtered_minutes
-
 # ================================================================================================
 # GESTIONNAIRE DE TABS
 # ================================================================================================

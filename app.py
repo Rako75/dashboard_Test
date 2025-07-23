@@ -1968,7 +1968,18 @@ class SidebarManager:
     """Gestionnaire pour la sidebar"""
     
     @staticmethod
-    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, pd.DataFrame]:
+    def get_position_display_name(position: str) -> str:
+        """Convertit les codes de position en noms affichables"""
+        position_mapping = {
+            'GK': 'Gardien',
+            'DF': 'Défenseur', 
+            'MF': 'Milieu',
+            'FW': 'Attaquant'
+        }
+        return position_mapping.get(position, position)
+    
+    @staticmethod
+    def render_sidebar(df: pd.DataFrame) -> Tuple[str, str, str, str, pd.DataFrame]:
         """Rendu complet de la sidebar"""
         with st.sidebar:
             # En-tête
@@ -1995,47 +2006,46 @@ class SidebarManager:
             
             st.markdown("---")
             
-            # Filtre par minutes jouées
-            min_minutes_filter = 0
-            if not df_filtered['Minutes jouées'].empty:
-                min_minutes = int(df_filtered['Minutes jouées'].min())
-                max_minutes = int(df_filtered['Minutes jouées'].max())
-                
-                st.markdown("**⏱️ Filtrer par minutes jouées :**")
-                
-                min_minutes_filter = st.slider(
-                    "Minutes minimum jouées :",
-                    min_value=min_minutes,
-                    max_value=max_minutes,
-                    value=min_minutes,
-                    step=90,
-                    help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
-                )
-                
-                # Progress bar
-                if max_minutes > min_minutes:
-                    percentage_filtered = (min_minutes_filter - min_minutes) / (max_minutes - min_minutes) * 100
-                    st.progress(percentage_filtered / 100)
+            # Sélection du club
+            clubs = ["Tous les clubs"] + sorted(df_filtered['Équipe'].unique().tolist())
+            selected_club = st.selectbox(
+                "🏟️ Choisir un club :",
+                clubs,
+                index=0,
+                help="Sélectionnez un club pour filtrer les joueurs"
+            )
             
-            # Application du filtre minutes
-            df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
+            # Filtrage par club
+            if selected_club != "Tous les clubs":
+                df_filtered = df_filtered[df_filtered['Équipe'] == selected_club]
             
-            # Informations sur le filtrage
-            nb_joueurs = len(df_filtered_minutes)
+            # Sélection du poste
+            positions_raw = df_filtered['Position'].unique()
+            positions_display = ["Tous les postes"] + [SidebarManager.get_position_display_name(pos) for pos in sorted(positions_raw)]
             
-            if nb_joueurs > 0:
-                st.success(f"✅ **{nb_joueurs} joueurs** correspondent aux critères")
-                
-                # Statistiques additionnelles
-                with st.expander("📊 Statistiques du filtrage", expanded=False):
-                    avg_minutes = df_filtered_minutes['Minutes jouées'].mean()
-                    st.write(f"• Moyenne minutes: {avg_minutes:.0f}")
-                    st.write(f"• Équipes représentées: {df_filtered_minutes['Équipe'].nunique()}")
-                    st.write(f"• Positions: {df_filtered_minutes['Position'].nunique()}")
-            else:
-                st.warning("⚠️ Aucun joueur ne correspond aux critères")
+            selected_position_display = st.selectbox(
+                "⚽ Choisir un poste :",
+                positions_display,
+                index=0,
+                help="Sélectionnez un poste pour filtrer les joueurs"
+            )
+            
+            # Conversion du nom d'affichage vers le code original
+            selected_position = None
+            if selected_position_display != "Tous les postes":
+                position_reverse_mapping = {
+                    'Gardien': 'GK',
+                    'Défenseur': 'DF', 
+                    'Milieu': 'MF',
+                    'Attaquant': 'FW'
+                }
+                selected_position = position_reverse_mapping.get(selected_position_display, selected_position_display)
+                df_filtered = df_filtered[df_filtered['Position'] == selected_position]
             
             st.markdown("---")
+            
+            # Suppression du filtre minutes jouées et des statistiques
+            df_filtered_minutes = df_filtered  # Utilise tel quel
             
             # Sélection du joueur
             selected_player = None
@@ -2072,20 +2082,7 @@ class SidebarManager:
             else:
                 st.error("❌ Aucun joueur disponible avec ces critères.")
             
-            # Footer sidebar
-            st.markdown("---")
-            st.markdown("""
-            <div style='text-align: center; padding: 16px; background: var(--background-surface); border-radius: 12px; border: 1px solid var(--border-color);'>
-                <p style='color: var(--text-primary); margin: 0; font-size: 0.9em; font-weight: 600;'>
-                    📊 Dashboard Pro
-                </p>
-                <p style='color: var(--text-secondary); margin: 8px 0 0 0; font-size: 0.8em;'>
-                    Analyse Football Avancée
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            return selected_competition, selected_player, df_filtered_minutes
+            return selected_competition, selected_club, selected_position_display, selected_player, df_filtered_minutes
 
 # ================================================================================================
 # GESTIONNAIRE DE TABS
@@ -3000,7 +2997,7 @@ class FootballDashboard:
         UIComponents.render_header()
         
         # Rendu de la sidebar et récupération des sélections
-        selected_competition, selected_player, df_filtered = SidebarManager.render_sidebar(df)
+        selected_competition, selected_club, selected_position, selected_player, df_filtered = SidebarManager.render_sidebar(df)
         
         if selected_player:
             # Mise à jour des stats de session

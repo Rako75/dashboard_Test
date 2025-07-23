@@ -2012,10 +2012,6 @@ class SidebarManager:
                     help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
                 )
                 
-                # Progress bar
-                if max_minutes > min_minutes:
-                    percentage_filtered = (min_minutes_filter - min_minutes) / (max_minutes - min_minutes) * 100
-                    st.progress(percentage_filtered / 100)
             
             # Application du filtre minutes
             df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)

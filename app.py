@@ -2068,19 +2068,6 @@ class SidebarManager:
             else:
                 st.error("❌ Aucun joueur disponible avec ces critères.")
             
-            # Footer sidebar
-            st.markdown("---")
-            st.markdown("""
-            <div style='text-align: center; padding: 16px; background: var(--background-surface); border-radius: 12px; border: 1px solid var(--border-color);'>
-                <p style='color: var(--text-primary); margin: 0; font-size: 0.9em; font-weight: 600;'>
-                    📊 Dashboard Pro
-                </p>
-                <p style='color: var(--text-secondary); margin: 8px 0 0 0; font-size: 0.8em;'>
-                    Analyse Football Avancée
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            
             return selected_competition, selected_player, df_filtered_minutes
 
 # ================================================================================================

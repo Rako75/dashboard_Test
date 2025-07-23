@@ -2181,7 +2181,7 @@ class SimilarPlayerAnalyzer:
             return SimilarPlayerAnalyzer.calculate_similarity_simple(target_player, df, num_similar)
         
 
-        @staticmethod
+    @staticmethod
     def _render_comparative_radar(df: pd.DataFrame, competitions: List[str]):
         """Rendu du radar comparatif"""
         st.markdown("<h3 class='subsection-title-enhanced'>⚙️ Configuration de la Comparaison</h3>", unsafe_allow_html=True)

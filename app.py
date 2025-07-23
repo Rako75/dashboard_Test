@@ -2033,7 +2033,6 @@ class SidebarManager:
             # Conversion du nom d'affichage vers le code original
             selected_position = None
             if selected_position_display != "Tous les postes":
-                # Trouver le code original correspondant au nom d'affichage
                 position_reverse_mapping = {
                     'Gardien': 'GK',
                     'Défenseur': 'DF', 
@@ -2045,46 +2044,8 @@ class SidebarManager:
             
             st.markdown("---")
             
-            # Filtre par minutes jouées
-            min_minutes_filter = 0
-            if not df_filtered['Minutes jouées'].empty:
-                min_minutes = int(df_filtered['Minutes jouées'].min())
-                max_minutes = int(df_filtered['Minutes jouées'].max())
-                
-                st.markdown("**⏱️ Filtrer par minutes jouées :**")
-                
-                min_minutes_filter = st.slider(
-                    "Minutes minimum jouées :",
-                    min_value=min_minutes,
-                    max_value=max_minutes,
-                    value=min_minutes,
-                    step=90,
-                    help="Filtrer les joueurs ayant joué au minimum ce nombre de minutes"
-                )
-                
-            # Application du filtre minutes
-            df_filtered_minutes = DataManager.filter_by_minutes(df_filtered, min_minutes_filter)
-            
-            # Informations sur le filtrage
-            nb_joueurs = len(df_filtered_minutes)
-            
-            if nb_joueurs > 0:
-                st.success(f"✅ **{nb_joueurs} joueurs** correspondent aux critères")
-                
-                # Statistiques additionnelles
-                with st.expander("📊 Statistiques du filtrage", expanded=False):
-                    avg_minutes = df_filtered_minutes['Minutes jouées'].mean()
-                    st.write(f"• Moyenne minutes: {avg_minutes:.0f}")
-                    st.write(f"• Équipes représentées: {df_filtered_minutes['Équipe'].nunique()}")
-                    
-                    # Affichage des positions avec noms convertis
-                    positions_in_filter = df_filtered_minutes['Position'].unique()
-                    positions_display_names = [SidebarManager.get_position_display_name(pos) for pos in positions_in_filter]
-                    st.write(f"• Positions: {', '.join(positions_display_names)}")
-            else:
-                st.warning("⚠️ Aucun joueur ne correspond aux critères")
-            
-            st.markdown("---")
+            # Suppression du filtre minutes jouées et des statistiques
+            df_filtered_minutes = df_filtered  # Utilise tel quel
             
             # Sélection du joueur
             selected_player = None
@@ -2122,6 +2083,7 @@ class SidebarManager:
                 st.error("❌ Aucun joueur disponible avec ces critères.")
             
             return selected_competition, selected_club, selected_position_display, selected_player, df_filtered_minutes
+
 # ================================================================================================
 # GESTIONNAIRE DE TABS
 # ================================================================================================

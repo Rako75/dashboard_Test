@@ -3424,7 +3424,7 @@ class FootballDashboard:
                 help="Âge moyen de tous les joueurs"
             )
     
-def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
+    def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
                      selected_player: str, df_full: pd.DataFrame):
     """Rendu des onglets principaux - VERSION ÉTENDUE"""
     # Obtenir les données des autres ligues pour comparaison

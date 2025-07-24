@@ -1964,6 +1964,403 @@ class ZoneAnalyzer:
         else:
             return "🎨 Profil Mixte"
 
+
+class TeamImpactAnalyzer:
+    """Analyseur d'impact du joueur sur l'équipe"""
+    
+    @staticmethod
+    def analyze_team_performance_with_player(player_data: pd.Series) -> dict:
+        """Analyse complète de la performance équipe avec le joueur"""
+        try:
+            # Données d'impact équipe (colonnes uniques de votre dataset)
+            buts_pour = player_data.get('Buts marqués par l\'équipe lorsque le joueur est sur le terrain', 0)
+            buts_contre = player_data.get('Buts encaissés par l\'équipe lorsque le joueur est sur le terrain', 0)
+            diff_buts = player_data.get('Différence de buts lorsque le joueur est sur le terrain', 0)
+            diff_buts_90 = player_data.get('Différence de buts par 90 minutes', 0)
+            
+            xg_pour = player_data.get('xG de l\'équipe lorsque le joueur est sur le terrain', 0)
+            xg_contre = player_data.get('xG concédés par l\'équipe lorsque le joueur est sur le terrain', 0)
+            diff_xg = player_data.get('Différence xG lorsque le joueur est sur le terrain', 0)
+            diff_xg_90 = player_data.get('Différence xG par 90 minutes', 0)
+            
+            ppm = player_data.get('Points par match (PPM)', 0)
+            
+            # Impact global
+            impact_buts_global = player_data.get('Impact du joueur sur la différence de buts par rapport au temps passé sur le terrain', 0)
+            impact_xg_global = player_data.get('Impact du joueur sur la différence xG lorsqu\'il est sur le terrain ou non', 0)
+            
+            # Gestion des valeurs manquantes
+            def safe_float(value):
+                return 0.0 if pd.isna(value) else float(value)
+            
+            return {
+                'buts_pour': safe_float(buts_pour),
+                'buts_contre': safe_float(buts_contre), 
+                'diff_buts': safe_float(diff_buts),
+                'diff_buts_90': safe_float(diff_buts_90),
+                'xg_pour': safe_float(xg_pour),
+                'xg_contre': safe_float(xg_contre),
+                'diff_xg': safe_float(diff_xg),
+                'diff_xg_90': safe_float(diff_xg_90),
+                'ppm': safe_float(ppm),
+                'impact_buts_global': safe_float(impact_buts_global),
+                'impact_xg_global': safe_float(impact_xg_global),
+                'matchs_joues': safe_float(player_data.get('Matchs joués', 1)),
+                'minutes_jouees': safe_float(player_data.get('Minutes jouées', 90))
+            }
+        except Exception as e:
+            st.error(f"Erreur dans l'analyse d'impact : {e}")
+            return {}
+    
+    @staticmethod
+    def get_impact_category(impact_data: dict) -> str:
+        """Catégorise l'impact du joueur"""
+        try:
+            ppm = impact_data.get('ppm', 0)
+            diff_buts_90 = impact_data.get('diff_buts_90', 0)
+            
+            # Score d'impact basé sur PPM et différence de buts
+            if ppm >= 2.5 and diff_buts_90 > 0.5:
+                return "🌟 Impact Majeur"
+            elif ppm >= 2.0 and diff_buts_90 > 0.2:
+                return "🔥 Impact Élevé" 
+            elif ppm >= 1.5 and diff_buts_90 >= 0:
+                return "✅ Impact Positif"
+            elif ppm >= 1.0:
+                return "⚖️ Impact Neutre"
+            else:
+                return "⚠️ Impact Négatif"
+        except:
+            return "⚖️ Impact Neutre"
+    
+    @staticmethod
+    def calculate_efficiency_vs_xg(impact_data: dict) -> dict:
+        """Calcule l'efficacité réelle vs Expected Goals"""
+        try:
+            buts_pour = impact_data.get('buts_pour', 0)
+            xg_pour = impact_data.get('xg_pour', 1)
+            buts_contre = impact_data.get('buts_contre', 0)
+            xg_contre = impact_data.get('xg_contre', 1)
+            
+            # Efficacité offensive (buts réels vs xG)
+            efficiency_off = (buts_pour / max(xg_pour, 0.1)) * 100 if xg_pour > 0 else 100
+            
+            # Efficacité défensive (buts concédés vs xG concédés)
+            efficiency_def = (buts_contre / max(xg_contre, 0.1)) * 100 if xg_contre > 0 else 100
+            
+            return {
+                'efficiency_offensive': min(efficiency_off, 200),  # Cap à 200%
+                'efficiency_defensive': min(efficiency_def, 200),
+                'efficiency_globale': (efficiency_off + (200 - efficiency_def)) / 2
+            }
+        except:
+            return {'efficiency_offensive': 100, 'efficiency_defensive': 100, 'efficiency_globale': 100}
+    
+    @staticmethod
+    def generate_tactical_recommendations(impact_data: dict, player_data: pd.Series) -> list:
+        """Génère des recommandations tactiques basées sur l'impact"""
+        recommendations = []
+        
+        try:
+            ppm = impact_data.get('ppm', 0)
+            diff_buts_90 = impact_data.get('diff_buts_90', 0)
+            diff_xg_90 = impact_data.get('diff_xg_90', 0)
+            position = player_data.get('Position', '')
+            minutes_par_match = impact_data.get('minutes_jouees', 90) / max(impact_data.get('matchs_joues', 1), 1)
+            
+            # Recommandations basées sur les points par match
+            if ppm >= 2.5:
+                recommendations.append("🌟 **Joueur Indispensable** : Priorité absolue à la titularisation")
+            elif ppm >= 2.0:
+                recommendations.append("🔥 **Starter Confirmé** : Très utile à l'équipe, titulaire régulier")
+            elif ppm >= 1.5:
+                recommendations.append("✅ **Contributeur Fiable** : Bon impact, rotation intelligente")
+            elif ppm < 1.0:
+                recommendations.append("⚠️ **Revoir l'Utilisation** : Impact limité, ajustements tactiques nécessaires")
+            
+            # Recommandations basées sur la différence de buts
+            if diff_buts_90 > 0.5:
+                recommendations.append("⚽ **Machine à Victoires** : L'équipe gagne nettement plus avec lui")
+            elif diff_buts_90 > 0.2:
+                recommendations.append("📈 **Plus-Value Offensive** : Apporte un avantage au score")
+            elif diff_buts_90 < -0.2:
+                recommendations.append("🔧 **Revoir le Rôle** : L'équipe encaisse plus en sa présence")
+            
+            # Recommandations basées sur les xG
+            if diff_xg_90 > diff_buts_90 + 0.3:
+                recommendations.append("🎯 **Créateur de Chances** : Génère plus d'occasions que la moyenne")
+            elif diff_xg_90 < diff_buts_90 - 0.3:
+                recommendations.append("🍀 **Finisseur Clinique** : Concrétise mieux que prévu")
+            
+            # Recommandations par position
+            if position == 'FW' and diff_buts_90 > 0:
+                recommendations.append("🎯 **Attaquant Décisif** : Impact offensif confirmé")
+            elif position == 'DF' and impact_data.get('buts_contre', 0) < impact_data.get('buts_pour', 1):
+                recommendations.append("🛡️ **Défenseur Fiable** : Solidité défensive avérée")
+            elif position == 'MF' and abs(diff_xg_90) > 0.2:
+                recommendations.append("⚖️ **Milieu Influent** : Impact significatif sur le jeu")
+            
+            # Recommandations sur le temps de jeu
+            if minutes_par_match < 60 and ppm > 1.8:
+                recommendations.append("⏰ **Augmenter le Temps de Jeu** : Efficacité élevée en peu de temps")
+            elif minutes_par_match > 80 and ppm < 1.2:
+                recommendations.append("🔄 **Gestion du Temps** : Envisager une rotation")
+            
+            return recommendations[:6]  # Limiter à 6 recommandations max
+            
+        except Exception as e:
+            return ["⚠️ Données insuffisantes pour des recommandations précises"]
+
+# ================================================================================================
+# COMPOSANTS UI POUR L'IMPACT ÉQUIPE
+# ================================================================================================
+
+def render_team_impact_header(impact_data: dict, selected_player: str):
+    """Affiche l'en-tête de l'onglet impact équipe"""
+    
+    impact_category = TeamImpactAnalyzer.get_impact_category(impact_data)
+    ppm = impact_data.get('ppm', 0)
+    
+    # Couleur selon l'impact
+    if "Majeur" in impact_category:
+        color = "var(--success)"
+    elif "Élevé" in impact_category:
+        color = "var(--primary-color)"
+    elif "Positif" in impact_category:
+        color = "var(--secondary-color)"
+    elif "Neutre" in impact_category:
+        color = "var(--warning)"
+    else:
+        color = "var(--danger)"
+    
+    st.markdown(f"""
+    <div style='background: linear-gradient(135deg, var(--background-dark) 0%, #1a1d23 100%); 
+                padding: 32px; border-radius: 16px; text-align: center; margin-bottom: 24px; 
+                border: 2px solid {color}; box-shadow: 0 8px 32px rgba(0,0,0,0.3);'>
+        <h2 style='color: {color}; margin-bottom: 16px; font-size: 2.2em; font-weight: 800;'>
+            {impact_category}
+        </h2>
+        <div style='display: flex; justify-content: center; align-items: center; gap: 40px; margin-top: 20px;'>
+            <div style='text-align: center;'>
+                <div style='font-size: 2.5em; font-weight: 900; color: var(--accent-color); margin-bottom: 8px;'>
+                    {ppm:.2f}
+                </div>
+                <div style='color: var(--text-secondary); font-size: 1em; font-weight: 500;'>
+                    Points par Match
+                </div>
+            </div>
+            <div style='text-align: center;'>
+                <div style='font-size: 2.5em; font-weight: 900; color: var(--primary-color); margin-bottom: 8px;'>
+                    {impact_data.get('diff_buts_90', 0):+.2f}
+                </div>
+                <div style='color: var(--text-secondary); font-size: 1em; font-weight: 500;'>
+                    Différence Buts/90min
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_team_performance_metrics(impact_data: dict):
+    """Affiche les métriques de performance équipe"""
+    
+    st.markdown("### 📊 Performance de l'Équipe avec le Joueur")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "🎯 Buts Marqués",
+            f"{impact_data.get('buts_pour', 0):.0f}",
+            help="Buts marqués par l'équipe quand le joueur est sur le terrain"
+        )
+    
+    with col2:
+        st.metric(
+            "🛡️ Buts Encaissés",
+            f"{impact_data.get('buts_contre', 0):.0f}",
+            help="Buts encaissés par l'équipe quand le joueur est sur le terrain"
+        )
+    
+    with col3:
+        st.metric(
+            "⚖️ Différence",
+            f"{impact_data.get('diff_buts', 0):+.0f}",
+            delta=f"{impact_data.get('diff_buts_90', 0):+.2f}/90min",
+            help="Différence de buts totale et par 90 minutes"
+        )
+    
+    with col4:
+        matchs = impact_data.get('matchs_joues', 1)
+        minutes = impact_data.get('minutes_jouees', 90)
+        st.metric(
+            "⏱️ Temps de Jeu",
+            f"{minutes/matchs:.0f} min/match",
+            delta=f"{matchs:.0f} matchs",
+            help="Minutes moyennes par match et nombre de matchs joués"
+        )
+
+def render_xg_analysis(impact_data: dict):
+    """Affiche l'analyse des Expected Goals"""
+    
+    st.markdown("### 🎯 Analyse Expected Goals (xG)")
+    
+    efficiency = TeamImpactAnalyzer.calculate_efficiency_vs_xg(impact_data)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**📈 Métriques xG**")
+        
+        xg_col1, xg_col2 = st.columns(2)
+        
+        with xg_col1:
+            st.metric(
+                "xG Pour",
+                f"{impact_data.get('xg_pour', 0):.1f}",
+                help="Expected Goals pour l'équipe avec le joueur"
+            )
+            st.metric(
+                "xG Contre", 
+                f"{impact_data.get('xg_contre', 0):.1f}",
+                help="Expected Goals contre l'équipe avec le joueur"
+            )
+        
+        with xg_col2:
+            st.metric(
+                "Différence xG",
+                f"{impact_data.get('diff_xg', 0):+.1f}",
+                delta=f"{impact_data.get('diff_xg_90', 0):+.2f}/90min",
+                help="Différence d'Expected Goals totale et par 90 minutes"
+            )
+            st.metric(
+                "Efficacité Globale",
+                f"{efficiency['efficiency_globale']:.0f}%",
+                help="Efficacité globale réelle vs attendue"
+            )
+    
+    with col2:
+        st.markdown("**🎯 Efficacité vs Attendu**")
+        
+        # Graphique d'efficacité
+        efficiency_data = {
+            'Offensive': efficiency['efficiency_offensive'],
+            'Défensive': 200 - efficiency['efficiency_defensive'],  # Inverser pour que plus haut = mieux
+            'Globale': efficiency['efficiency_globale']
+        }
+        
+        fig_efficiency = ChartManager.create_gauge_chart(
+            {k: min(v, 150) for k, v in efficiency_data.items()},  # Cap à 150 pour l'affichage
+            "Efficacité vs Expected (%)"
+        )
+        st.plotly_chart(fig_efficiency, use_container_width=True)
+
+def render_impact_comparison(impact_data: dict, selected_player: str):
+    """Affiche la comparaison avec/sans joueur"""
+    
+    st.markdown("### 📊 Impact Comparatif")
+    
+    # Simulation de l'équipe sans le joueur (approximation)
+    buts_avec = impact_data.get('buts_pour', 0) / max(impact_data.get('matchs_joues', 1), 1)
+    buts_contre_avec = impact_data.get('buts_contre', 0) / max(impact_data.get('matchs_joues', 1), 1)
+    
+    # Estimation sans le joueur (basée sur la différence)
+    diff_buts_match = impact_data.get('diff_buts', 0) / max(impact_data.get('matchs_joues', 1), 1)
+    buts_sans = max(buts_avec - diff_buts_match, 0)
+    buts_contre_sans = buts_contre_avec  # Supposer que la défense reste similaire
+    
+    comparison_data = {
+        f'Avec {selected_player}': {
+            'Buts Pour/Match': buts_avec,
+            'Buts Contre/Match': buts_contre_avec,
+            'Différence/Match': diff_buts_match,
+            'Points/Match': impact_data.get('ppm', 0)
+        },
+        'Estimation Sans': {
+            'Buts Pour/Match': buts_sans,
+            'Buts Contre/Match': buts_contre_sans,
+            'Différence/Match': buts_sans - buts_contre_sans,
+            'Points/Match': max(impact_data.get('ppm', 0) - 0.5, 0)  # Estimation conservative
+        }
+    }
+    
+    # Graphique de comparaison
+    metrics_to_plot = ['Buts Pour/Match', 'Différence/Match', 'Points/Match']
+    avec_values = [comparison_data[f'Avec {selected_player}'][m] for m in metrics_to_plot]
+    sans_values = [comparison_data['Estimation Sans'][m] for m in metrics_to_plot]
+    
+    fig_comparison = ChartManager.create_comparison_chart(
+        dict(zip(metrics_to_plot, avec_values)),
+        dict(zip(metrics_to_plot, sans_values)),
+        f"Avec {selected_player}",
+        "Impact Réel vs Estimation Sans le Joueur"
+    )
+    st.plotly_chart(fig_comparison, use_container_width=True)
+
+def render_tactical_recommendations(impact_data: dict, player_data: pd.Series):
+    """Affiche les recommandations tactiques"""
+    
+    st.markdown("### 💡 Recommandations Tactiques")
+    
+    recommendations = TeamImpactAnalyzer.generate_tactical_recommendations(impact_data, player_data)
+    
+    if recommendations:
+        for i, rec in enumerate(recommendations, 1):
+            st.markdown(f"**{i}.** {rec}")
+        
+        # Résumé tactique
+        ppm = impact_data.get('ppm', 0)
+        if ppm >= 2.0:
+            summary = "Ce joueur apporte une plus-value significative à l'équipe. Sa présence améliore considérablement les performances collectives."
+        elif ppm >= 1.5:
+            summary = "Ce joueur contribue positivement aux résultats de l'équipe avec un impact mesurable sur les performances."
+        else:
+            summary = "L'impact de ce joueur nécessite une analyse plus approfondie. Considérer des ajustements tactiques."
+        
+        st.info(f"**💭 Résumé Tactique :** {summary}")
+    else:
+        st.warning("Données insuffisantes pour générer des recommandations précises.")
+
+# ================================================================================================
+# FONCTION PRINCIPALE POUR L'ONGLET IMPACT ÉQUIPE
+# ================================================================================================
+
+def render_team_impact_tab(player_data: pd.Series, selected_player: str):
+    """Rendu complet de l'onglet Impact Équipe"""
+    
+    st.markdown("## ⭐ Impact sur l'Équipe")
+    st.caption("*Analyse de l'influence réelle du joueur sur les résultats collectifs*")
+    
+    # Analyse des données d'impact
+    impact_data = TeamImpactAnalyzer.analyze_team_performance_with_player(player_data)
+    
+    if not impact_data or impact_data.get('matchs_joues', 0) == 0:
+        st.warning("⚠️ Données d'impact équipe insuffisantes pour ce joueur.")
+        return
+    
+    # En-tête avec impact global
+    render_team_impact_header(impact_data, selected_player)
+    
+    # Métriques de performance équipe
+    render_team_performance_metrics(impact_data)
+    
+    st.markdown("---")
+    
+    # Analyse xG en deux colonnes
+    col1, col2 = st.columns([1, 1], gap="large")
+    
+    with col1:
+        render_xg_analysis(impact_data)
+    
+    with col2:
+        # Comparaison avec/sans joueur
+        render_impact_comparison(impact_data, selected_player)
+    
+    st.markdown("---")
+    
+    # Recommandations tactiques
+    render_tactical_recommendations(impact_data, player_data)
+
 # ================================================================================================
 # COMPOSANTS UI
 # ================================================================================================
@@ -3591,69 +3988,74 @@ class FootballDashboard:
             )
     
     def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
-                         selected_player: str, df_full: pd.DataFrame):
-        """Rendu des onglets principaux avec métriques avancées"""
+                     selected_player: str, df_full: pd.DataFrame):
+     """Rendu des onglets principaux avec métriques avancées et impact équipe"""
+    
+    # Obtenir les données des autres ligues pour comparaison
+    df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
+    
+    # ONGLETS AVEC NOUVEAUX TABS
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "🎯 Performance Offensive", 
+        "🛡️ Performance Défensive", 
+        "🎨 Performance Technique",
+        "🧠 Métriques Avancées",
+        "⭐ Impact Équipe",  # NOUVEAU
+        "👥 Profils Similaires", 
+        "🔄 Comparaison"
+    ])
+    
+    with tab1:
+        TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+    
+    with tab2:
+        TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+    
+    with tab3:
+        TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
+    
+    with tab4:
+        # ONGLET MÉTRIQUES AVANCÉES (existant)
+        st.markdown("## 🧠 Analyse Avancée")
         
-        # Obtenir les données des autres ligues pour comparaison
-        df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
+        # Métriques principales
+        render_advanced_metrics_card(player_data)
         
-        # ONGLETS AVEC NOUVEAU TAB MÉTRIQUES AVANCÉES
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-            "🎯 Performance Offensive", 
-            "🛡️ Performance Défensive", 
-            "🎨 Performance Technique",
-            "🧠 Métriques Avancées",  # NOUVEAU
-            "👥 Profils Similaires", 
-            "🔄 Comparaison"
-        ])
+        st.markdown("---")
         
-        with tab1:
-            TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+        # Analyse par zones et progression en colonnes
+        col1, col2 = st.columns([1, 1], gap="large")
         
-        with tab2:
-            TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
-        
-        with tab3:
-            TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
-        
-        with tab4:
-            # NOUVEAU ONGLET MÉTRIQUES AVANCÉES
-            st.markdown("## 🧠 Analyse Avancée")
+        with col1:
+            render_zone_analysis(player_data)
             
-            # Métriques principales
-            render_advanced_metrics_card(player_data)
-            
-            st.markdown("---")
-            
-            # Analyse par zones et progression en colonnes
-            col1, col2 = st.columns([1, 1], gap="large")
-            
-            with col1:
-                render_zone_analysis(player_data)
-                
-                # Graphique des zones
-                zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
-                zone_data = zone_analysis['zone_dominance']
-                fig_zones = ChartManager.create_bar_chart(
-                    zone_data,
-                    "Répartition par Zones du Terrain",
-                    [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
-                )
-                st.plotly_chart(fig_zones, use_container_width=True)
-            
-            with col2:
-                render_strengths_analysis(player_data)
-            
-            st.markdown("---")
-            
-            # Progression et conservation
-            render_progression_analysis(player_data)
+            # Graphique des zones
+            zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
+            zone_data = zone_analysis['zone_dominance']
+            fig_zones = ChartManager.create_bar_chart(
+                zone_data,
+                "Répartition par Zones du Terrain",
+                [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
+            )
+            st.plotly_chart(fig_zones, use_container_width=True)
         
-        with tab5:
-            TabManager.render_similar_players_tab(selected_player, df_full)
+        with col2:
+            render_strengths_analysis(player_data)
         
-        with tab6:
-            TabManager.render_comparison_tab(df_full, selected_player)
+        st.markdown("---")
+        
+        # Progression et conservation
+        render_progression_analysis(player_data)
+    
+    with tab5:
+        # NOUVEAU ONGLET IMPACT ÉQUIPE
+        render_team_impact_tab(player_data, selected_player)
+    
+    with tab6:
+        TabManager.render_similar_players_tab(selected_player, df_full)
+    
+    with tab7:
+        TabManager.render_comparison_tab(df_full, selected_player)
     
     def _render_no_player_message(self):
         """Affiche un message quand aucun joueur n'est sélectionné"""

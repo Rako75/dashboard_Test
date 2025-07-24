@@ -3426,7 +3426,7 @@ class FootballDashboard:
     
     def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
                      selected_player: str, df_full: pd.DataFrame):
-    """Rendu des onglets principaux - VERSION ÉTENDUE"""
+        """Rendu des onglets principaux - VERSION ÉTENDUE"""
     # Obtenir les données des autres ligues pour comparaison
     df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
     

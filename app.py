@@ -680,9 +680,15 @@ class DataManager:
         return sorted(df['Joueur'].dropna().unique())
     
     @staticmethod
-    def get_other_leagues_data(df: pd.DataFrame, player_competition: str) -> pd.DataFrame:
-        """Récupère les données de toutes les autres ligues (sauf celle du joueur)"""
-        return df[df['Compétition'] != player_competition]
+    def get_other_leagues_data(df: pd.DataFrame, player_competition: str, player_position: str = None) -> pd.DataFrame:
+        """Récupère les données de toutes les autres ligues (sauf celle du joueur), filtrées par poste si spécifié"""
+        df_filtered = df[df['Compétition'] != player_competition]
+        
+        # Filtrer par poste si spécifié
+        if player_position:
+            df_filtered = df_filtered[df_filtered['Position'] == player_position]
+        
+        return df_filtered
 
 # ================================================================================================
 # GESTIONNAIRE D'IMAGES

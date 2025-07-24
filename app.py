@@ -1546,23 +1546,28 @@ class PerformanceAnalyzer:
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
-        for metric_key in metrics.keys():
-            if metric_key.endswith('/90'):
-                base_metric = metric_key.replace('/90', '')
-                column_name = base_metric
-                if base_metric == 'Tacles':
-                    column_name = 'Tacles gagnants'
-                elif base_metric == 'Duels aériens':
-                    column_name = 'Duels aériens gagnés'
-                elif base_metric == 'Tirs bloqués':
-                    column_name = 'Tirs bloqués'
-                elif base_metric == 'Ballons récupérés':
-                    column_name = 'Ballons récupérés'
-                
-                avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
-            else:
-                column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés')
-            avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
+       for metric_key in metrics.keys():
+    if metric_key.endswith('/90'):
+        base_metric = metric_key.replace('/90', '')
+        column_name = base_metric
+        if base_metric == 'Passes prog.':
+            column_name = 'Passes progressives'
+        elif base_metric == 'Dribbles':
+            column_name = 'Dribbles tentés'
+        elif base_metric == 'Passes tentées':
+            column_name = 'Passes tentées'
+        elif base_metric == 'Passes clés':
+            column_name = 'Passes clés'
+        avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
+    else:
+        column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
+        col_values = df_comparison.get(column_name, pd.Series([np.nan]*len(df_comparison)))
+        col_values = pd.to_numeric(col_values, errors='coerce')
+        col_values = col_values.replace([np.inf, -np.inf], np.nan).dropna()
+        if not col_values.empty:
+            avg_metrics[metric_key] = col_values.mean()
+        else:
+            avg_metrics[metric_key] = np.nan
         
         # Calcul des percentiles
         percentiles = []

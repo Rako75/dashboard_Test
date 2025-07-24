@@ -2172,7 +2172,7 @@ class TabManager:
                 </div>
                 <div class='legend-item'>
                     <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
+                    <span>Moyenne {player_position}s autres ligues</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -2182,7 +2182,7 @@ class TabManager:
                 analysis['percentiles'],
                 analysis['avg_percentiles'],
                 selected_player,
-                "autres ligues",
+                f"{player_position}s des autres ligues",
                 Config.COLORS['primary']
             )
             st.plotly_chart(fig_radar, use_container_width=True)
@@ -2283,7 +2283,7 @@ class TabManager:
                 </div>
                 <div class='legend-item'>
                     <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
+                    <span>Moyenne {player_position}s autres ligues</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -2293,7 +2293,7 @@ class TabManager:
                 analysis['percentiles'],
                 analysis['avg_percentiles'],
                 selected_player,
-                "autres ligues",
+                f"{player_position}s des autres ligues",
                 Config.COLORS['accent']
             )
             st.plotly_chart(fig_radar, use_container_width=True)
@@ -2395,7 +2395,7 @@ class TabManager:
                 </div>
                 <div class='legend-item'>
                     <div class='legend-color' style='background: rgba(255,255,255,0.6);'></div>
-                    <span>Moyenne autres ligues</span>
+                    <span>Moyenne {player_position}s autres ligues</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -2405,7 +2405,7 @@ class TabManager:
                 analysis['percentiles'],
                 analysis['avg_percentiles'],
                 selected_player,
-                "autres ligues",
+                f"{player_position}s des autres ligues",
                 Config.COLORS['secondary']
             )
             st.plotly_chart(fig_radar, use_container_width=True)

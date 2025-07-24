@@ -3501,7 +3501,7 @@ def render_zone_analysis(player_data: pd.Series) -> None:
             help="Pourcentage de touches dans le tiers offensif"
         )
     
-    st.markdown("---")
+    #st.markdown("---")
     
     # Surfaces avec st.columns
     st.markdown("**Activité dans les Surfaces**")

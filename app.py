@@ -1548,8 +1548,8 @@ class PerformanceAnalyzer:
         
     for metric_key in metrics.keys():
         if metric_key.endswith('/90'):
-        base_metric = metric_key.replace('/90', '')
-        column_name = base_metric
+            base_metric = metric_key.replace('/90', '')
+            column_name = base_metric
         if base_metric == 'Passes prog.':
             column_name = 'Passes progressives'
         elif base_metric == 'Dribbles':

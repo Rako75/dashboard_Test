@@ -3591,7 +3591,7 @@ class FootballDashboard:
             )
     
     # AJOUTER CETTE MÉTHODE AVEC LA BONNE INDENTATION (4 espaces)
-def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
+    def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
                      selected_player: str, df_full: pd.DataFrame):
     """Rendu des onglets principaux avec métriques avancées"""
     
@@ -3608,53 +3608,53 @@ def _render_main_tabs(self, player_data: pd.Series, player_competition: str,
         "🔄 Comparaison"
     ])
     
-    with tab1:
-        TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+        with tab1:
+            TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
     
-    with tab2:
-        TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+        with tab2:
+            TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
     
-    with tab3:
-        TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
+        with tab3:
+            TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
     
-    with tab4:
+        with tab4:
         # NOUVEAU ONGLET MÉTRIQUES AVANCÉES
-        st.markdown("## 🧠 Analyse Avancée")
+            st.markdown("## 🧠 Analyse Avancée")
         
         # Métriques principales
-        render_advanced_metrics_card(player_data)
+            render_advanced_metrics_card(player_data)
         
-        st.markdown("---")
+            st.markdown("---")
         
         # Analyse par zones et progression en colonnes
-        col1, col2 = st.columns([1, 1], gap="large")
+            col1, col2 = st.columns([1, 1], gap="large")
         
         with col1:
             render_zone_analysis(player_data)
             
             # Graphique des zones
-            zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
-            zone_data = zone_analysis['zone_dominance']
-            fig_zones = ChartManager.create_bar_chart(
+        zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
+        zone_data = zone_analysis['zone_dominance']
+        fig_zones = ChartManager.create_bar_chart(
                 zone_data,
                 "Répartition par Zones du Terrain",
                 [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
             )
-            st.plotly_chart(fig_zones, use_container_width=True)
+        st.plotly_chart(fig_zones, use_container_width=True)
         
         with col2:
             render_strengths_analysis(player_data)
         
-        st.markdown("---")
+            st.markdown("---")
         
         # Progression et conservation
-        render_progression_analysis(player_data)
+            render_progression_analysis(player_data)
     
-    with tab5:
-        TabManager.render_similar_players_tab(selected_player, df_full)
+        with tab5:
+            TabManager.render_similar_players_tab(selected_player, df_full)
     
-    with tab6:
-        TabManager.render_comparison_tab(df_full, selected_player)
+        with tab6:
+            TabManager.render_comparison_tab(df_full, selected_player)
 # ================================================================================================
 # POINT D'ENTRÉE DE L'APPLICATION
 # ================================================================================================

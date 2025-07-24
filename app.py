@@ -2191,10 +2191,7 @@ def _render_main_tabs(self, player_data: pd.Series, player_competition: str,
             render_strengths_analysis(player_data)
         
         st.markdown("---")
-        
-        # Progression et conservation
-        render_progression_analysis(player_data)
-    
+            
     with tab5:
         TabManager.render_similar_players_tab(selected_player, df_full)
     

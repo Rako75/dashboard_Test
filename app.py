@@ -1552,7 +1552,7 @@ class PerformanceAnalyzer:
                 column_name = base_metric
                 if base_metric == 'Tacles':
                     column_name = 'Tacles gagnants'
-                elif base_metric == 'Duels aériens':
+                elif base_metric == 'Duels aériens gagnés':
                     column_name = 'Duels aériens gagnés'
                 elif base_metric == 'Tirs bloqués':
                     column_name = 'Tirs bloqués'
@@ -1574,7 +1574,7 @@ class PerformanceAnalyzer:
                 column_name = base_metric
                 if base_metric == 'Tacles':
                     column_name = 'Tacles gagnants'
-                elif base_metric == 'Duels aériens':
+                elif base_metric == 'Duels aériens gagnés':
                     column_name = 'Duels aériens gagnés'
                 elif base_metric == 'Tirs bloqués':
                     column_name = 'Tirs bloqués'

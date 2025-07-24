@@ -2442,7 +2442,7 @@ class TabManager:
             num_similar = st.slider(
                 "Nombre de joueurs similaires à afficher :",
                 min_value=1,
-                max_value=100,
+                max_value=30,
                 value=5,
                 help="Choisissez combien de joueurs similaires vous voulez voir"
             )

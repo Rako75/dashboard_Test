@@ -2097,7 +2097,7 @@ class TabManager:
         st.markdown("<h2 class='section-title-enhanced'>🎯 Performance Offensive</h2>", unsafe_allow_html=True)
         player_position = player_data['Position']
         df_comparison_poste = df_comparison[df_comparison['Position'] == player_position]
-        analysis = PerformanceAnalyzer.analyze_offensive_performance(player_data, df_comparison)
+        analysis = PerformanceAnalyzer.analyze_offensive_performance(player_data, df_comparison_poste)
         
         col1, col2 = st.columns([1, 1], gap="large")
         
@@ -2208,7 +2208,7 @@ class TabManager:
         st.markdown("<h2 class='section-title-enhanced'>🛡️ Performance Défensive</h2>", unsafe_allow_html=True)
         player_position = player_data['Position']
         df_comparison_poste = df_comparison[df_comparison['Position'] == player_position]
-        analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison)
+        analysis = PerformanceAnalyzer.analyze_defensive_performance(player_data, df_comparison_poste)
         
         col1, col2 = st.columns([1, 1], gap="large")
         
@@ -2320,7 +2320,7 @@ class TabManager:
         
         player_position = player_data['Position']
         df_comparison_poste = df_comparison[df_comparison['Position'] == player_position]
-        analysis = PerformanceAnalyzer.analyze_technical_performance(player_data, df_comparison)
+        analysis = PerformanceAnalyzer.analyze_technical_performance(player_data, df_comparison_poste)
         
         col1, col2 = st.columns([1, 1], gap="large")
         

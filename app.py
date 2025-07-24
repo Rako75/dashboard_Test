@@ -1539,10 +1539,10 @@ class PerformanceAnalyzer:
     
     @staticmethod
     def analyze_defensive_performance(player_data: pd.Series, df_comparison: pd.DataFrame) -> Dict:
-        """Analyse complète de la performance défensive"""
+        """Analyse complète de la performance défensive - VERSION CORRIGÉE"""
         metrics = MetricsCalculator.calculate_defensive_metrics(player_data)
         
-        # Calcul des moyennes des autres ligues
+        # Calcul des moyennes des autres ligues - CORRECTION ICI
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1561,10 +1561,57 @@ class PerformanceAnalyzer:
                 
                 avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
             else:
-                column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés')
-                avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
+                # CORRECTION PRINCIPALE : Gestion des colonnes de pourcentages
+                if metric_key == '% Duels gagnés':
+                    # Essayer plusieurs noms de colonnes possibles
+                    possible_columns = [
+                        'Pourcentage de duels gagnés',
+                        'Pourcentage de duels défensifs gagnés', 
+                        '% duels gagnés',
+                        'Duels gagnés %',
+                        'Pourcentage duels gagnés'
+                    ]
+                    column_found = False
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            avg_metrics[metric_key] = df_comparison[col_name].mean()
+                            column_found = True
+                            break
+                    
+                    # Si aucune colonne trouvée, calculer manuellement
+                    if not column_found:
+                        duels_gagnes = df_comparison.get('Duels gagnés', pd.Series([0]*len(df_comparison)))
+                        duels_tentes = df_comparison.get('Duels tentés', df_comparison.get('Duels', pd.Series([1]*len(df_comparison))))
+                        # Éviter division par zéro
+                        duels_tentes = duels_tentes.replace(0, 1)
+                        avg_metrics[metric_key] = (duels_gagnes / duels_tentes * 100).mean()
+                
+                elif metric_key == '% Duels aériens':
+                    possible_columns = [
+                        'Pourcentage de duels aériens gagnés',
+                        '% duels aériens gagnés',
+                        'Duels aériens gagnés %',
+                        'Pourcentage duels aériens gagnés'
+                    ]
+                    column_found = False
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            avg_metrics[metric_key] = df_comparison[col_name].mean()
+                            column_found = True
+                            break
+                    
+                    if not column_found:
+                        aeriens_gagnes = df_comparison.get('Duels aériens gagnés', pd.Series([0]*len(df_comparison)))
+                        aeriens_tentes = df_comparison.get('Duels aériens tentés', df_comparison.get('Duels aériens', pd.Series([1]*len(df_comparison))))
+                        aeriens_tentes = aeriens_tentes.replace(0, 1)
+                        avg_metrics[metric_key] = (aeriens_gagnes / aeriens_tentes * 100).mean()
+                
+                else:
+                    # Pour les autres métriques, utiliser l'ancienne logique
+                    column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés')
+                    avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
         
-        # Calcul des percentiles
+        # Calcul des percentiles - CORRECTION ICI AUSSI
         percentiles = []
         avg_percentiles = []
         
@@ -1583,8 +1630,47 @@ class PerformanceAnalyzer:
                 
                 distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp
             else:
-                column_name = metric.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés')
-                distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison)))
+                # Gestion des pourcentages pour les percentiles
+                if metric == '% Duels gagnés':
+                    possible_columns = [
+                        'Pourcentage de duels gagnés',
+                        'Pourcentage de duels défensifs gagnés', 
+                        '% duels gagnés',
+                        'Duels gagnés %'
+                    ]
+                    distribution = None
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            distribution = df_comparison[col_name]
+                            break
+                    
+                    if distribution is None:
+                        duels_gagnes = df_comparison.get('Duels gagnés', pd.Series([0]*len(df_comparison)))
+                        duels_tentes = df_comparison.get('Duels tentés', df_comparison.get('Duels', pd.Series([1]*len(df_comparison))))
+                        duels_tentes = duels_tentes.replace(0, 1)
+                        distribution = (duels_gagnes / duels_tentes * 100)
+                
+                elif metric == '% Duels aériens':
+                    possible_columns = [
+                        'Pourcentage de duels aériens gagnés',
+                        '% duels aériens gagnés',
+                        'Duels aériens gagnés %'
+                    ]
+                    distribution = None
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            distribution = df_comparison[col_name]
+                            break
+                    
+                    if distribution is None:
+                        aeriens_gagnes = df_comparison.get('Duels aériens gagnés', pd.Series([0]*len(df_comparison)))
+                        aeriens_tentes = df_comparison.get('Duels aériens tentés', df_comparison.get('Duels aériens', pd.Series([1]*len(df_comparison))))
+                        aeriens_tentes = aeriens_tentes.replace(0, 1)
+                        distribution = (aeriens_gagnes / aeriens_tentes * 100)
+                
+                else:
+                    column_name = metric.replace('% ', 'Pourcentage de ').replace(' gagnés', ' gagnés').replace(' aériens', ' aériens gagnés')
+                    distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison)))
             
             distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
             value = value if not np.isnan(value) and not np.isinf(value) else 0
@@ -1608,10 +1694,10 @@ class PerformanceAnalyzer:
     
     @staticmethod
     def analyze_technical_performance(player_data: pd.Series, df_comparison: pd.DataFrame) -> Dict:
-        """Analyse complète de la performance technique"""
+        """Analyse complète de la performance technique - VERSION CORRIGÉE"""
         metrics = MetricsCalculator.calculate_technical_metrics(player_data)
         
-        # Calcul des moyennes des autres ligues
+        # Calcul des moyennes des autres ligues - CORRECTION ICI
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
@@ -1630,10 +1716,52 @@ class PerformanceAnalyzer:
                 
                 avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
             else:
-                column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
-                avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
+                # CORRECTION PRINCIPALE : Gestion des colonnes de pourcentages
+                if metric_key == '% Passes réussies':
+                    possible_columns = [
+                        'Pourcentage de passes réussies',
+                        '% passes réussies',
+                        'Passes réussies %',
+                        'Précision passes'
+                    ]
+                    column_found = False
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            avg_metrics[metric_key] = df_comparison[col_name].mean()
+                            column_found = True
+                            break
+                    
+                    if not column_found:
+                        passes_reussies = df_comparison.get('Passes réussies', pd.Series([0]*len(df_comparison)))
+                        passes_tentees = df_comparison.get('Passes tentées', pd.Series([1]*len(df_comparison)))
+                        passes_tentees = passes_tentees.replace(0, 1)
+                        avg_metrics[metric_key] = (passes_reussies / passes_tentees * 100).mean()
+                
+                elif metric_key == '% Dribbles réussis':
+                    possible_columns = [
+                        'Pourcentage de dribbles réussis',
+                        '% dribbles réussis',
+                        'Dribbles réussis %',
+                        'Précision dribbles'
+                    ]
+                    column_found = False
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            avg_metrics[metric_key] = df_comparison[col_name].mean()
+                            column_found = True
+                            break
+                    
+                    if not column_found:
+                        dribbles_reussis = df_comparison.get('Dribbles réussis', pd.Series([0]*len(df_comparison)))
+                        dribbles_tentes = df_comparison.get('Dribbles tentés', pd.Series([1]*len(df_comparison)))
+                        dribbles_tentes = dribbles_tentes.replace(0, 1)
+                        avg_metrics[metric_key] = (dribbles_reussis / dribbles_tentes * 100).mean()
+                
+                else:
+                    column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
+                    avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
         
-        # Calcul des percentiles
+        # Calcul des percentiles - CORRECTION ICI AUSSI
         percentiles = []
         avg_percentiles = []
         
@@ -1652,8 +1780,46 @@ class PerformanceAnalyzer:
                 
                 distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp
             else:
-                column_name = metric.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
-                distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison)))
+                # Gestion des pourcentages pour les percentiles
+                if metric == '% Passes réussies':
+                    possible_columns = [
+                        'Pourcentage de passes réussies',
+                        '% passes réussies',
+                        'Passes réussies %'
+                    ]
+                    distribution = None
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            distribution = df_comparison[col_name]
+                            break
+                    
+                    if distribution is None:
+                        passes_reussies = df_comparison.get('Passes réussies', pd.Series([0]*len(df_comparison)))
+                        passes_tentees = df_comparison.get('Passes tentées', pd.Series([1]*len(df_comparison)))
+                        passes_tentees = passes_tentees.replace(0, 1)
+                        distribution = (passes_reussies / passes_tentees * 100)
+                
+                elif metric == '% Dribbles réussis':
+                    possible_columns = [
+                        'Pourcentage de dribbles réussis',
+                        '% dribbles réussis',
+                        'Dribbles réussis %'
+                    ]
+                    distribution = None
+                    for col_name in possible_columns:
+                        if col_name in df_comparison.columns:
+                            distribution = df_comparison[col_name]
+                            break
+                    
+                    if distribution is None:
+                        dribbles_reussis = df_comparison.get('Dribbles réussis', pd.Series([0]*len(df_comparison)))
+                        dribbles_tentes = df_comparison.get('Dribbles tentés', pd.Series([1]*len(df_comparison)))
+                        dribbles_tentes = dribbles_tentes.replace(0, 1)
+                        distribution = (dribbles_reussis / dribbles_tentes * 100)
+                
+                else:
+                    column_name = metric.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
+                    distribution = df_comparison.get(column_name, pd.Series([0]*len(df_comparison)))
             
             distribution = distribution.replace([np.inf, -np.inf], np.nan).dropna()
             value = value if not np.isnan(value) and not np.isinf(value) else 0

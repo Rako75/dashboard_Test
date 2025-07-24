@@ -3825,75 +3825,172 @@ class FootballDashboard:
                 help="Âge moyen de tous les joueurs"
             )
     
-def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
-                     selected_player: str, df_full: pd.DataFrame):
-    """Rendu des onglets principaux avec métriques avancées et impact individuel"""
-    
-    # Obtenir les données des autres ligues pour comparaison
-    df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
-    
-    # ONGLETS AVEC NOUVEAU TAB IMPACT INDIVIDUEL
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "🎯 Performance Offensive", 
-        "🛡️ Performance Défensive", 
-        "🎨 Performance Technique",
-        "🧠 Métriques Avancées",
-        "⭐ Impact Individuel",  # MODIFIÉ
-        "👥 Profils Similaires", 
-        "🔄 Comparaison"
-    ])
-    
-    with tab1:
-        TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
-    
-    with tab2:
-        TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
-    
-    with tab3:
-        TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
-    
-    with tab4:
-        # ONGLET MÉTRIQUES AVANCÉES (existant)
-        st.markdown("## 🧠 Analyse Avancée")
+    def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
+                         selected_player: str, df_full: pd.DataFrame):
+        """Rendu des onglets principaux avec métriques avancées et impact individuel"""
         
-        # Métriques principales
-        render_advanced_metrics_card(player_data)
+        # Obtenir les données des autres ligues pour comparaison
+        df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
         
-        st.markdown("---")
+        # ONGLETS AVEC NOUVEAU TAB IMPACT INDIVIDUEL
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+            "🎯 Performance Offensive", 
+            "🛡️ Performance Défensive", 
+            "🎨 Performance Technique",
+            "🧠 Métriques Avancées",
+            "⭐ Impact Individuel",
+            "👥 Profils Similaires", 
+            "🔄 Comparaison"
+        ])
         
-        # Analyse par zones et progression en colonnes
-        col1, col2 = st.columns([1, 1], gap="large")
+        with tab1:
+            TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
         
-        with col1:
-            render_zone_analysis(player_data)
+        with tab2:
+            TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+        
+        with tab3:
+            TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
+        
+        with tab4:
+            # ONGLET MÉTRIQUES AVANCÉES
+            st.markdown("## 🧠 Analyse Avancée")
             
-            # Graphique des zones
-            zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
-            zone_data = zone_analysis['zone_dominance']
-            fig_zones = ChartManager.create_bar_chart(
-                zone_data,
-                "Répartition par Zones du Terrain",
-                [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
-            )
-            st.plotly_chart(fig_zones, use_container_width=True)
+            # Métriques principales
+            render_advanced_metrics_card(player_data)
+            
+            st.markdown("---")
+            
+            # Analyse par zones et progression en colonnes
+            col1, col2 = st.columns([1, 1], gap="large")
+            
+            with col1:
+                render_zone_analysis(player_data)
+                
+                # Graphique des zones
+                zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
+                zone_data = zone_analysis['zone_dominance']
+                fig_zones = ChartManager.create_bar_chart(
+                    zone_data,
+                    "Répartition par Zones du Terrain",
+                    [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
+                )
+                st.plotly_chart(fig_zones, use_container_width=True)
+            
+            with col2:
+                render_strengths_analysis(player_data)
+            
+            st.markdown("---")
+            
+            # Progression et conservation
+            render_progression_analysis(player_data)
         
-        with col2:
-            render_strengths_analysis(player_data)
+        with tab5:
+            # ONGLET IMPACT INDIVIDUEL (sans données équipe)
+            render_individual_impact_tab(player_data, selected_player)
         
-        st.markdown("---")
+        with tab6:
+            TabManager.render_similar_players_tab(selected_player, df_full)
         
-        # Progression et conservation
-        render_progression_analysis(player_data)
+        with tab7:
+            TabManager.render_comparison_tab(df_full, selected_player)
     
-    with tab5:
-        # NOUVEAU ONGLET IMPACT INDIVIDUEL (sans données équipe)
-        render_individual_impact_tab(player_data, selected_player)
+    def _render_no_player_message(self):
+        """Affiche un message quand aucun joueur n'est sélectionné"""
+        st.markdown("""
+        <div style='background: var(--background-card); padding: 48px; border-radius: var(--radius-lg); 
+                    text-align: center; border: 2px solid var(--border-color); margin: 32px 0;'>
+            <h2 style='color: var(--primary-color); margin-bottom: 24px; font-size: 2em;'>⚠️ Aucun joueur sélectionné</h2>
+            <p style='color: var(--text-primary); font-size: 1.2em; margin-bottom: 32px; line-height: 1.6;'>
+                Veuillez ajuster les filtres dans la sidebar pour sélectionner un joueur à analyser.
+            </p>
+            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 32px;'>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--primary-color);'>🎯</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Offensive</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Buts, passes décisives, xG</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--accent-color);'>🛡️</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Défensive</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Tacles, interceptions, duels</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>🎨</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Technique</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Passes, dribbles, touches</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>🧠</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Métriques Avancées</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Impact, créativité, zones</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--accent-color);'>⭐</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Impact Individuel</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Performance personnelle</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>👥</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Profils Similaires</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Joueurs au style proche</p>
+                </div>
+                <div class='metric-card-enhanced' style='padding: 24px;'>
+                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--warning);'>🔄</div>
+                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Comparaison</h4>
+                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Radars et benchmarks</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Historique des joueurs consultés
+        if st.session_state.selected_player_history:
+            st.markdown("<h3 class='subsection-title-enhanced'>📚 Joueurs récemment consultés</h3>", unsafe_allow_html=True)
+            
+            history_cols = st.columns(min(len(st.session_state.selected_player_history), 5))
+            for i, player in enumerate(st.session_state.selected_player_history):
+                with history_cols[i]:
+                    if st.button(f"🔄 {player}", key=f"history_{i}", use_container_width=True):
+                        st.rerun()
     
-    with tab6:
-        TabManager.render_similar_players_tab(selected_player, df_full)
-    
-    with tab7:
-        TabManager.render_comparison_tab(df_full, selected_player)
+    def _render_error_page(self):
+        """Affiche la page d'erreur"""
+        st.markdown("""
+        <div style='background: var(--background-card); padding: 48px; border-radius: var(--radius-lg); 
+                    text-align: center; border: 2px solid var(--danger); margin: 32px 0;'>
+            <h1 style='color: var(--danger); margin-bottom: 24px; font-size: 2.5em;'>⚠️ Erreur de Chargement</h1>
+            <p style='color: var(--text-primary); font-size: 1.2em; margin-bottom: 32px; line-height: 1.6;'>
+                Impossible de charger les données. Veuillez vérifier que le fichier 'df_BIG2025.csv' est présent.
+            </p>
+            <div style='background: var(--background-surface); max-width: 600px; margin: 32px auto 0 auto; 
+                        padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-color);'>
+                <h3 style='color: var(--secondary-color); margin-bottom: 16px; font-size: 1.3em;'>📋 Fichiers requis :</h3>
+                <div style='text-align: left; color: var(--text-primary);'>
+                    <div style='padding: 8px 0; border-bottom: 1px solid var(--border-color);'>
+                        <strong>df_BIG2025.csv</strong> - Données principales des joueurs
+                    </div>
+                    <div style='padding: 8px 0; border-bottom: 1px solid var(--border-color);'>
+                        <strong>images_joueurs/</strong> - Dossier des photos des joueurs
+                    </div>
+                    <div style='padding: 8px 0;'>
+                        <strong>*_Logos/</strong> - Dossiers des logos par compétition
+                    </div>
+                </div>
+            </div>
+            <div style='margin-top: 32px;'>
+                <button onclick='window.location.reload()' style='
+                    background: var(--primary-color); color: white; border: none; padding: 12px 24px;
+                    border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+                ' onmouseover='this.style.background="var(--secondary-color)"' 
+                  onmouseout='this.style.background="var(--primary-color)"'>
+                    🔄 Réessayer
+                </button>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
 # ================================================================================================
 # POINT D'ENTRÉE DE L'APPLICATION
 # ================================================================================================

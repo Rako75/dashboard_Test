@@ -3988,74 +3988,74 @@ class FootballDashboard:
             )
     
     def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
-                     selected_player: str, df_full: pd.DataFrame):
-     """Rendu des onglets principaux avec métriques avancées et impact équipe"""
-    
-    # Obtenir les données des autres ligues pour comparaison
-    df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
-    
-    # ONGLETS AVEC NOUVEAUX TABS
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "🎯 Performance Offensive", 
-        "🛡️ Performance Défensive", 
-        "🎨 Performance Technique",
-        "🧠 Métriques Avancées",
-        "⭐ Impact Équipe",  # NOUVEAU
-        "👥 Profils Similaires", 
-        "🔄 Comparaison"
-    ])
-    
-    with tab1:
-        TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
-    
-    with tab2:
-        TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
-    
-    with tab3:
-        TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
-    
-    with tab4:
-        # ONGLET MÉTRIQUES AVANCÉES (existant)
-        st.markdown("## 🧠 Analyse Avancée")
+                         selected_player: str, df_full: pd.DataFrame):
+        """Rendu des onglets principaux avec métriques avancées et impact équipe"""
         
-        # Métriques principales
-        render_advanced_metrics_card(player_data)
+        # Obtenir les données des autres ligues pour comparaison
+        df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
         
-        st.markdown("---")
+        # ONGLETS AVEC NOUVEAUX TABS
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+            "🎯 Performance Offensive", 
+            "🛡️ Performance Défensive", 
+            "🎨 Performance Technique",
+            "🧠 Métriques Avancées",
+            "⭐ Impact Équipe",  # NOUVEAU
+            "👥 Profils Similaires", 
+            "🔄 Comparaison"
+        ])
         
-        # Analyse par zones et progression en colonnes
-        col1, col2 = st.columns([1, 1], gap="large")
+        with tab1:
+            TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
         
-        with col1:
-            render_zone_analysis(player_data)
+        with tab2:
+            TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+        
+        with tab3:
+            TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
+        
+        with tab4:
+            # ONGLET MÉTRIQUES AVANCÉES (existant)
+            st.markdown("## 🧠 Analyse Avancée")
             
-            # Graphique des zones
-            zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
-            zone_data = zone_analysis['zone_dominance']
-            fig_zones = ChartManager.create_bar_chart(
-                zone_data,
-                "Répartition par Zones du Terrain",
-                [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
-            )
-            st.plotly_chart(fig_zones, use_container_width=True)
+            # Métriques principales
+            render_advanced_metrics_card(player_data)
+            
+            st.markdown("---")
+            
+            # Analyse par zones et progression en colonnes
+            col1, col2 = st.columns([1, 1], gap="large")
+            
+            with col1:
+                render_zone_analysis(player_data)
+                
+                # Graphique des zones
+                zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
+                zone_data = zone_analysis['zone_dominance']
+                fig_zones = ChartManager.create_bar_chart(
+                    zone_data,
+                    "Répartition par Zones du Terrain",
+                    [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
+                )
+                st.plotly_chart(fig_zones, use_container_width=True)
+            
+            with col2:
+                render_strengths_analysis(player_data)
+            
+            st.markdown("---")
+            
+            # Progression et conservation
+            render_progression_analysis(player_data)
         
-        with col2:
-            render_strengths_analysis(player_data)
+        with tab5:
+            # NOUVEAU ONGLET IMPACT ÉQUIPE
+            render_team_impact_tab(player_data, selected_player)
         
-        st.markdown("---")
+        with tab6:
+            TabManager.render_similar_players_tab(selected_player, df_full)
         
-        # Progression et conservation
-        render_progression_analysis(player_data)
-    
-    with tab5:
-        # NOUVEAU ONGLET IMPACT ÉQUIPE
-        render_team_impact_tab(player_data, selected_player)
-    
-    with tab6:
-        TabManager.render_similar_players_tab(selected_player, df_full)
-    
-    with tab7:
-        TabManager.render_comparison_tab(df_full, selected_player)
+        with tab7:
+            TabManager.render_comparison_tab(df_full, selected_player)
     
     def _render_no_player_message(self):
         """Affiche un message quand aucun joueur n'est sélectionné"""

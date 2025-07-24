@@ -1964,470 +1964,306 @@ class ZoneAnalyzer:
         else:
             return "🎨 Profil Mixte"
 
-
-class IndividualImpactAnalyzer:
-    """Analyseur d'impact individuel du joueur (sans données équipe)"""
-    
-    @staticmethod
-    def analyze_individual_performance(player_data: pd.Series) -> dict:
-        """Analyse complète de la performance individuelle"""
-        try:
-            # Métriques de base
-            minutes_jouees = player_data.get('Minutes jouées', 0)
-            matchs_joues = player_data.get('Matchs joués', 1)
-            minutes_90 = minutes_jouees / 90 if minutes_jouees > 0 else 0
-            
-            # Métriques offensives
-            buts = player_data.get('Buts', 0)
-            passes_d = player_data.get('Passes décisives', 0)
-            xg = player_data.get('Buts attendus (xG)', 0)
-            xa = player_data.get('Passes décisives attendues (xAG)', 0)
-            
-            # Actions créatives
-            actions_tir = player_data.get('Actions menant à un tir', 0)
-            actions_but = player_data.get('Actions menant à un but', 0)
-            passes_cles = player_data.get('Passes clés', 0)
-            
-            # Métriques défensives
-            tacles = player_data.get('Tacles gagnants', 0)
-            interceptions = player_data.get('Interceptions', 0)
-            ballons_recuperes = player_data.get('Ballons récupérés', 0)
-            
-            # Métriques techniques
-            passes_reussies_pct = player_data.get('Pourcentage de passes réussies', 0)
-            dribbles_reussis_pct = player_data.get('Pourcentage de dribbles réussis', 0)
-            
-            # Gestion des valeurs manquantes
-            def safe_float(value):
-                return 0.0 if pd.isna(value) else float(value)
-            
-            return {
-                'minutes_jouees': safe_float(minutes_jouees),
-                'matchs_joues': safe_float(matchs_joues),
-                'minutes_90': safe_float(minutes_90),
-                'buts': safe_float(buts),
-                'passes_d': safe_float(passes_d),
-                'xg': safe_float(xg),
-                'xa': safe_float(xa),
-                'actions_tir': safe_float(actions_tir),
-                'actions_but': safe_float(actions_but),
-                'passes_cles': safe_float(passes_cles),
-                'tacles': safe_float(tacles),
-                'interceptions': safe_float(interceptions),
-                'ballons_recuperes': safe_float(ballons_recuperes),
-                'passes_reussies_pct': safe_float(passes_reussies_pct),
-                'dribbles_reussis_pct': safe_float(dribbles_reussis_pct),
-                'buts_par_90': safe_float(buts) / max(minutes_90, 0.1),
-                'passes_d_par_90': safe_float(passes_d) / max(minutes_90, 0.1),
-                'actions_tir_par_90': safe_float(actions_tir) / max(minutes_90, 0.1),
-                'passes_cles_par_90': safe_float(passes_cles) / max(minutes_90, 0.1)
-            }
-        except Exception as e:
-            st.error(f"Erreur dans l'analyse d'impact : {e}")
-            return {}
-    
-    @staticmethod
-    def calculate_individual_impact_score(performance_data: dict) -> float:
-        """Calcule un score d'impact individuel (0-100)"""
-        try:
-            # Pondération selon les métriques d'impact
-            buts_score = min(performance_data.get('buts_par_90', 0) * 20, 30)
-            passes_d_score = min(performance_data.get('passes_d_par_90', 0) * 15, 25)
-            actions_score = min(performance_data.get('actions_tir_par_90', 0) * 2, 20)
-            passes_cles_score = min(performance_data.get('passes_cles_par_90', 0) * 3, 15)
-            efficacite_score = (performance_data.get('passes_reussies_pct', 0) + 
-                              performance_data.get('dribbles_reussis_pct', 0)) / 20
-            
-            total_score = (buts_score + passes_d_score + actions_score + 
-                          passes_cles_score + efficacite_score)
-            
-            return min(total_score, 100)
-        except:
-            return 50
-    
-    @staticmethod
-    def get_impact_category(impact_score: float) -> str:
-        """Catégorise l'impact individuel du joueur"""
-        if impact_score >= 80:
-            return "🌟 Impact Exceptionnel"
-        elif impact_score >= 65:
-            return "🔥 Impact Élevé" 
-        elif impact_score >= 50:
-            return "✅ Impact Solide"
-        elif impact_score >= 35:
-            return "⚖️ Impact Modéré"
-        else:
-            return "⚠️ Impact Limité"
-    
-    @staticmethod
-    def calculate_efficiency_metrics(performance_data: dict) -> dict:
-        """Calcule les métriques d'efficacité"""
-        try:
-            # Efficacité de finition
-            buts = performance_data.get('buts', 0)
-            xg = performance_data.get('xg', 1)
-            efficiency_buts = (buts / max(xg, 0.1)) * 100 if xg > 0 else 100
-            
-            # Efficacité des passes décisives
-            passes_d = performance_data.get('passes_d', 0)
-            xa = performance_data.get('xa', 1)
-            efficiency_passes = (passes_d / max(xa, 0.1)) * 100 if xa > 0 else 100
-            
-            # Efficacité générale
-            efficiency_globale = (efficiency_buts + efficiency_passes) / 2
-            
-            return {
-                'efficiency_buts': min(efficiency_buts, 200),
-                'efficiency_passes': min(efficiency_passes, 200),
-                'efficiency_globale': min(efficiency_globale, 200)
-            }
-        except:
-            return {'efficiency_buts': 100, 'efficiency_passes': 100, 'efficiency_globale': 100}
-    
-    @staticmethod
-    def generate_individual_recommendations(performance_data: dict, player_data: pd.Series) -> list:
-        """Génère des recommandations basées sur la performance individuelle"""
-        recommendations = []
-        
-        try:
-            position = player_data.get('Position', '')
-            buts_par_90 = performance_data.get('buts_par_90', 0)
-            passes_d_par_90 = performance_data.get('passes_d_par_90', 0)
-            actions_tir_par_90 = performance_data.get('actions_tir_par_90', 0)
-            passes_reussies_pct = performance_data.get('passes_reussies_pct', 0)
-            
-            # Recommandations offensives
-            if buts_par_90 > 0.7:
-                recommendations.append("🎯 **Finisseur Elite** : Excellent ratio de buts, priorité aux occasions")
-            elif buts_par_90 > 0.3:
-                recommendations.append("⚽ **Finisseur Solide** : Bon ratio de buts, continuer sur cette lancée")
-            elif buts_par_90 < 0.1 and position == 'FW':
-                recommendations.append("🔧 **Améliorer la Finition** : Ratio de buts à améliorer pour un attaquant")
-            
-            # Recommandations créatives
-            if passes_d_par_90 > 0.3:
-                recommendations.append("🎨 **Créateur Confirmé** : Excellent pourvoyeur de passes décisives")
-            elif actions_tir_par_90 > 3:
-                recommendations.append("⚡ **Moteur Offensif** : Génère beaucoup d'occasions dangereuses")
-            
-            # Recommandations techniques
-            if passes_reussies_pct > 90:
-                recommendations.append("🎯 **Précision Technique** : Excellente maîtrise du ballon")
-            elif passes_reussies_pct < 80:
-                recommendations.append("🔄 **Améliorer la Précision** : Travailler la justesse des passes")
-            
-            # Recommandations par position
-            if position == 'FW':
-                if buts_par_90 > 0.5 and passes_d_par_90 > 0.2:
-                    recommendations.append("🌟 **Attaquant Complet** : Excellent équilibre buts/passes")
-            elif position == 'MF':
-                if actions_tir_par_90 > 2 and passes_reussies_pct > 85:
-                    recommendations.append("⚖️ **Milieu Polyvalent** : Bon équilibre créativité/précision")
-            elif position == 'DF':
-                ballons_rec = performance_data.get('ballons_recuperes', 0)
-                if ballons_rec > 50:
-                    recommendations.append("🛡️ **Récupérateur Efficace** : Excellente contribution défensive")
-            
-            # Recommandations sur le temps de jeu
-            minutes_par_match = performance_data.get('minutes_jouees', 90) / max(performance_data.get('matchs_joues', 1), 1)
-            if minutes_par_match < 60 and (buts_par_90 > 0.4 or passes_d_par_90 > 0.3):
-                recommendations.append("⏰ **Augmenter le Temps de Jeu** : Rendement élevé en peu de temps")
-            
-            return recommendations[:5]  # Limiter à 5 recommandations
-            
-        except Exception as e:
-            return ["⚠️ Données insuffisantes pour des recommandations précises"]
-
 # ================================================================================================
-# COMPOSANTS UI POUR L'IMPACT INDIVIDUEL
+# COMPOSANTS UI
 # ================================================================================================
 
-def render_individual_impact_header(performance_data: dict, selected_player: str):
-    """Affiche l'en-tête de l'onglet impact individuel"""
+def render_advanced_metrics_card(player_data: pd.Series) -> None:
+    """Affiche une carte avec les métriques avancées"""
     
-    impact_score = IndividualImpactAnalyzer.calculate_individual_impact_score(performance_data)
-    impact_category = IndividualImpactAnalyzer.get_impact_category(impact_score)
+    # Calcul des métriques
+    impact_score = AdvancedMetrics.calculate_team_impact_score(player_data)
+    creativity_score = AdvancedMetrics.calculate_creativity_score(player_data)
+    efficiency_index = AdvancedMetrics.calculate_efficiency_index(player_data)
+    progression_index = AdvancedMetrics.calculate_progression_index(player_data)
+    ball_security = AdvancedMetrics.calculate_ball_security(player_data)
+    value_ratio = AdvancedMetrics.calculate_value_performance_ratio(player_data)
     
-    # Couleur selon l'impact
-    if "Exceptionnel" in impact_category:
-        color = "var(--success)"
-    elif "Élevé" in impact_category:
-        color = "var(--primary-color)"
-    elif "Solide" in impact_category:
-        color = "var(--secondary-color)"
-    elif "Modéré" in impact_category:
-        color = "var(--warning)"
-    else:
-        color = "var(--danger)"
+    # Utilisation de colonnes Streamlit pour un affichage sûr
+    st.markdown("### 🧠 Métriques Avancées")
     
-    buts_par_90 = performance_data.get('buts_par_90', 0)
-    passes_d_par_90 = performance_data.get('passes_d_par_90', 0)
-    
-    st.markdown(f"""
-    <div style='background: linear-gradient(135deg, var(--background-dark) 0%, #1a1d23 100%); 
-                padding: 32px; border-radius: 16px; text-align: center; margin-bottom: 24px; 
-                border: 2px solid {color}; box-shadow: 0 8px 32px rgba(0,0,0,0.3);'>
-        <h2 style='color: {color}; margin-bottom: 16px; font-size: 2.2em; font-weight: 800;'>
-            {impact_category}
-        </h2>
-        <div style='display: flex; justify-content: center; align-items: center; gap: 40px; margin-top: 20px;'>
-            <div style='text-align: center;'>
-                <div style='font-size: 2.5em; font-weight: 900; color: var(--accent-color); margin-bottom: 8px;'>
-                    {impact_score:.0f}/100
-                </div>
-                <div style='color: var(--text-secondary); font-size: 1em; font-weight: 500;'>
-                    Score d'Impact
-                </div>
-            </div>
-            <div style='text-align: center;'>
-                <div style='font-size: 2.5em; font-weight: 900; color: var(--primary-color); margin-bottom: 8px;'>
-                    {buts_par_90:.2f}
-                </div>
-                <div style='color: var(--text-secondary); font-size: 1em; font-weight: 500;'>
-                    Buts par 90min
-                </div>
-            </div>
-            <div style='text-align: center;'>
-                <div style='font-size: 2.5em; font-weight: 900; color: var(--secondary-color); margin-bottom: 8px;'>
-                    {passes_d_par_90:.2f}
-                </div>
-                <div style='color: var(--text-secondary); font-size: 1em; font-weight: 500;'>
-                    Passes D. par 90min
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-def render_individual_performance_metrics(performance_data: dict):
-    """Affiche les métriques de performance individuelle"""
-    
-    st.markdown("### 📊 Métriques de Performance Individuelle")
-    
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.metric(
-            "⚽ Buts Totaux",
-            f"{performance_data.get('buts', 0):.0f}",
-            delta=f"{performance_data.get('buts_par_90', 0):.2f}/90min",
-            help="Nombre total de buts marqués et ratio par 90 minutes"
+            "🌟 Impact Équipe",
+            f"{impact_score:.0f}/100",
+            help="Score d'impact du joueur sur les résultats de l'équipe"
+        )
+        st.metric(
+            "🎨 Créativité",
+            f"{creativity_score:.0f}/100",
+            help="Score de créativité offensive (passes clés, actions menant à un tir, etc.)"
         )
     
     with col2:
         st.metric(
-            "🎯 Passes Décisives",
-            f"{performance_data.get('passes_d', 0):.0f}",
-            delta=f"{performance_data.get('passes_d_par_90', 0):.2f}/90min",
-            help="Nombre total de passes décisives et ratio par 90 minutes"
+            "🎯 Efficacité",
+            f"{efficiency_index:.0f}/100",
+            help="Indice d'efficacité général (% passes, dribbles, tirs, duels)"
+        )
+        st.metric(
+            "🚀 Progression",
+            f"{progression_index:.0f}/100",
+            help="Capacité à faire progresser le ballon vers l'avant"
         )
     
     with col3:
         st.metric(
-            "⚡ Actions → Tir",
-            f"{performance_data.get('actions_tir', 0):.0f}",
-            delta=f"{performance_data.get('actions_tir_par_90', 0):.1f}/90min",
-            help="Actions menant à un tir et ratio par 90 minutes"
+            "🛡️ Conservation",
+            f"{ball_security:.0f}/100",
+            help="Sécurité dans la conservation du ballon"
         )
-    
-    with col4:
         st.metric(
-            "🗝️ Passes Clés",
-            f"{performance_data.get('passes_cles', 0):.0f}",
-            delta=f"{performance_data.get('passes_cles_par_90', 0):.1f}/90min",
-            help="Passes clés totales et ratio par 90 minutes"
+            "💰 Rapport Q/P",
+            value_ratio,
+            help="Rapport qualité/prix basé sur la performance"
         )
 
-def render_efficiency_analysis(performance_data: dict):
-    """Affiche l'analyse d'efficacité"""
+def render_zone_analysis(player_data: pd.Series) -> None:
+    """Affiche l'analyse par zones avec st.columns (plus sûr)"""
     
-    st.markdown("### 🎯 Analyse d'Efficacité")
+    zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
+    zone_profile = ZoneAnalyzer.get_player_profile_by_zones(zone_analysis)
     
-    efficiency = IndividualImpactAnalyzer.calculate_efficiency_metrics(performance_data)
+    st.markdown("### 🗺️ Analyse par Zones")
     
-    col1, col2 = st.columns(2)
+    # Affichage du profil
+    st.markdown(f"""
+    <div style='text-align: center; margin-bottom: 20px; padding: 16px; background: var(--background-surface); border-radius: 8px;'>
+        <div style='font-size: 1.5em; color: var(--primary-color); font-weight: 600;'>{zone_profile}</div>
+        <div style='color: var(--text-secondary); font-size: 0.9em; margin-top: 8px;'>
+            Basé sur {player_data.get('Touches de balle', 0):,} touches de balle
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with col1:
-        st.markdown("**📈 Métriques vs Expected**")
-        
-        eff_col1, eff_col2 = st.columns(2)
-        
-        with eff_col1:
-            st.metric(
-                "xG Totaux",
-                f"{performance_data.get('xg', 0):.1f}",
-                help="Expected Goals - probabilité de marquer"
-            )
-            st.metric(
-                "xA Totaux", 
-                f"{performance_data.get('xa', 0):.1f}",
-                help="Expected Assists - probabilité d'assister"
-            )
-        
-        with eff_col2:
-            st.metric(
-                "Efficacité Buts",
-                f"{efficiency['efficiency_buts']:.0f}%",
-                help="Efficacité réelle vs Expected Goals"
-            )
-            st.metric(
-                "Efficacité Passes D.",
-                f"{efficiency['efficiency_passes']:.0f}%",
-                help="Efficacité réelle vs Expected Assists"
-            )
+    # Zones principales avec st.columns
+    st.markdown("**Répartition par Zones du Terrain**")
+    col_def, col_mil, col_att = st.columns(3)
     
-    with col2:
-        st.markdown("**🎯 Efficacité Globale**")
-        
-        # Graphique d'efficacité
-        efficiency_data = {
-            'Finition': efficiency['efficiency_buts'],
-            'Création': efficiency['efficiency_passes'],
-            'Globale': efficiency['efficiency_globale']
-        }
-        
-        fig_efficiency = ChartManager.create_gauge_chart(
-            {k: min(v, 150) for k, v in efficiency_data.items()},
-            "Efficacité vs Expected (%)"
+    with col_def:
+        st.metric(
+            "🛡️ Zone Défensive", 
+            f"{zone_analysis['zone_dominance']['Défense']:.0f}%",
+            help="Pourcentage de touches dans le tiers défensif"
         )
-        st.plotly_chart(fig_efficiency, use_container_width=True)
-
-def render_technical_skills(performance_data: dict):
-    """Affiche les compétences techniques"""
     
-    st.markdown("### 🎨 Compétences Techniques")
+    with col_mil:
+        st.metric(
+            "⚖️ Zone Médiane", 
+            f"{zone_analysis['zone_dominance']['Milieu']:.0f}%",
+            help="Pourcentage de touches dans le tiers médian"
+        )
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**Précision Technique**")
-        
-        tech_col1, tech_col2 = st.columns(2)
-        
-        with tech_col1:
-            st.metric(
-                "% Passes Réussies",
-                f"{performance_data.get('passes_reussies_pct', 0):.1f}%",
-                help="Pourcentage de passes réussies"
-            )
-        
-        with tech_col2:
-            st.metric(
-                "% Dribbles Réussis",
-                f"{performance_data.get('dribbles_reussis_pct', 0):.1f}%",
-                help="Pourcentage de dribbles réussis"
-            )
-    
-    with col2:
-        st.markdown("**Contribution Défensive**")
-        
-        def_col1, def_col2 = st.columns(2)
-        
-        with def_col1:
-            st.metric(
-                "Tacles Gagnants",
-                f"{performance_data.get('tacles', 0):.0f}",
-                help="Nombre de tacles gagnants"
-            )
-        
-        with def_col2:
-            st.metric(
-                "Ballons Récupérés",
-                f"{performance_data.get('ballons_recuperes', 0):.0f}",
-                help="Nombre de ballons récupérés"
-            )
-
-def render_performance_comparison(performance_data: dict, selected_player: str):
-    """Affiche la comparaison des performances"""
-    
-    st.markdown("### 📊 Profil de Performance")
-    
-    # Créer un radar de performance
-    performance_radar = {
-        'Buts/90': min(performance_data.get('buts_par_90', 0) * 20, 100),
-        'Passes D./90': min(performance_data.get('passes_d_par_90', 0) * 25, 100),
-        'Actions Tir/90': min(performance_data.get('actions_tir_par_90', 0) * 10, 100),
-        'Passes Clés/90': min(performance_data.get('passes_cles_par_90', 0) * 15, 100),
-        'Précision Passes': performance_data.get('passes_reussies_pct', 0),
-        'Efficacité Globale': IndividualImpactAnalyzer.calculate_efficiency_metrics(performance_data)['efficiency_globale']
-    }
-    
-    fig_radar = ChartManager.create_radar_chart(
-        performance_radar,
-        [50] * len(performance_radar),  # Ligne de référence à 50
-        [50] * len(performance_radar),
-        selected_player,
-        "Référence Moyenne",
-        Config.COLORS['primary']
-    )
-    st.plotly_chart(fig_radar, use_container_width=True)
-
-def render_individual_recommendations(performance_data: dict, player_data: pd.Series):
-    """Affiche les recommandations individuelles"""
-    
-    st.markdown("### 💡 Recommandations de Développement")
-    
-    recommendations = IndividualImpactAnalyzer.generate_individual_recommendations(performance_data, player_data)
-    
-    if recommendations:
-        for i, rec in enumerate(recommendations, 1):
-            st.markdown(f"**{i}.** {rec}")
-        
-        # Résumé
-        impact_score = IndividualImpactAnalyzer.calculate_individual_impact_score(performance_data)
-        if impact_score >= 70:
-            summary = "Joueur avec un impact individuel significatif. Excellentes performances dans plusieurs domaines clés."
-        elif impact_score >= 50:
-            summary = "Joueur avec un impact positif. Bonnes performances avec des axes d'amélioration identifiés."
-        else:
-            summary = "Joueur avec un potentiel d'amélioration. Focus sur les domaines prioritaires recommandés."
-        
-        st.info(f"**💭 Résumé :** {summary}")
-    else:
-        st.warning("Données insuffisantes pour générer des recommandations précises.")
-
-# ================================================================================================
-# FONCTION PRINCIPALE POUR L'ONGLET IMPACT INDIVIDUEL
-# ================================================================================================
-
-def render_individual_impact_tab(player_data: pd.Series, selected_player: str):
-    """Rendu complet de l'onglet Impact Individuel"""
-    
-    st.markdown("## ⭐ Impact Individuel")
-    st.caption("*Analyse complète de la performance et de l'impact individuel du joueur*")
-    
-    # Analyse des données de performance
-    performance_data = IndividualImpactAnalyzer.analyze_individual_performance(player_data)
-    
-    if not performance_data or performance_data.get('matchs_joues', 0) == 0:
-        st.warning("⚠️ Données de performance insuffisantes pour ce joueur.")
-        return
-    
-    # En-tête avec impact global
-    render_individual_impact_header(performance_data, selected_player)
-    
-    # Métriques de performance
-    render_individual_performance_metrics(performance_data)
+    with col_att:
+        st.metric(
+            "🎯 Zone Offensive", 
+            f"{zone_analysis['zone_dominance']['Attaque']:.0f}%",
+            help="Pourcentage de touches dans le tiers offensif"
+        )
     
     st.markdown("---")
     
-    # Analyse en deux colonnes
-    col1, col2 = st.columns([1, 1], gap="large")
+    # Surfaces avec st.columns
+    st.markdown("**Activité dans les Surfaces**")
+    col_surf_def, col_surf_att = st.columns(2)
+    
+    with col_surf_def:
+        st.metric(
+            "🏠 Surface Défensive", 
+            f"{zone_analysis['touches_surface_def_pct']:.1f}%",
+            help="Pourcentage de touches dans la surface défensive"
+        )
+    
+    with col_surf_att:
+        st.metric(
+            "🎯 Surface Offensive", 
+            f"{zone_analysis['touches_surface_att_pct']:.1f}%",
+            help="Pourcentage de touches dans la surface offensive"
+        )
+
+def render_progression_analysis(player_data: pd.Series) -> None:
+    """Affiche l'analyse de progression et conservation"""
+    
+    st.markdown("### 🚀 Progression & Conservation du Ballon")
+    
+    col1, col2 = st.columns(2)
     
     with col1:
-        render_efficiency_analysis(performance_data)
+        st.markdown("**Métriques de Progression**")
+        
+        minutes_90 = player_data.get('Équivalents 90 minutes joués', 1)
+        if minutes_90 > 0:
+            # Calcul des métriques de progression
+            courses_prog = player_data.get('Courses progressives', 0) / minutes_90
+            passes_prog = player_data.get('Passes progressives', 0) / minutes_90
+            portees_prog = player_data.get('Portées de balle progressives', 0) / minutes_90
+            distance_prog = player_data.get('Distance progressive parcourue avec le ballon', 0) / minutes_90
+            
+            # Gestion NaN
+            courses_prog = 0 if pd.isna(courses_prog) else courses_prog
+            passes_prog = 0 if pd.isna(passes_prog) else passes_prog
+            portees_prog = 0 if pd.isna(portees_prog) else portees_prog
+            distance_prog = 0 if pd.isna(distance_prog) else distance_prog
+            
+            progression_metrics = {
+                'Courses Prog./90': courses_prog,
+                'Passes Prog./90': passes_prog,
+                'Portées Prog./90': portees_prog,
+                'Distance Prog./90': distance_prog
+            }
+            
+            fig_progression = ChartManager.create_bar_chart(
+                progression_metrics,
+                "Métriques de Progression par 90min",
+                Config.COLORS['gradient']
+            )
+            st.plotly_chart(fig_progression, use_container_width=True)
+    
+    with col2:
+        st.markdown("**Conservation du Ballon**")
+        
+        # Calcul de la conservation
+        touches_totales = player_data.get('Touches de balle', 1)
+        ballons_perdus_conduite = player_data.get('Ballons perdus en conduite', 0)
+        ballons_perdus_pression = player_data.get('Ballons perdus sous la pression d\'un adversaire', 0)
+        
+        # Gestion NaN
+        touches_totales = 1 if pd.isna(touches_totales) or touches_totales == 0 else touches_totales
+        ballons_perdus_conduite = 0 if pd.isna(ballons_perdus_conduite) else ballons_perdus_conduite
+        ballons_perdus_pression = 0 if pd.isna(ballons_perdus_pression) else ballons_perdus_pression
+        
+        conservation_metrics = {
+            'Ballons Conservés': ((touches_totales - ballons_perdus_conduite - ballons_perdus_pression) / touches_totales) * 100,
+            'Perdus en Conduite': (ballons_perdus_conduite / touches_totales) * 100,
+            'Perdus sous Pression': (ballons_perdus_pression / touches_totales) * 100
+        }
+        
+        fig_conservation = ChartManager.create_bar_chart(
+            conservation_metrics,
+            "Conservation du Ballon (%)",
+            [Config.COLORS['success'], Config.COLORS['warning'], Config.COLORS['danger']]
+        )
+        st.plotly_chart(fig_conservation, use_container_width=True)
+
+def render_strengths_analysis(player_data: pd.Series) -> None:
+    """Affiche l'analyse des forces et faiblesses"""
+    
+    st.markdown("### 🎯 Analyse des Forces")
+    
+    # Calcul de tous les scores
+    impact_score = AdvancedMetrics.calculate_team_impact_score(player_data)
+    creativity_score = AdvancedMetrics.calculate_creativity_score(player_data)
+    efficiency_index = AdvancedMetrics.calculate_efficiency_index(player_data)
+    progression_index = AdvancedMetrics.calculate_progression_index(player_data)
+    ball_security = AdvancedMetrics.calculate_ball_security(player_data)
+    
+    scores_dict = {
+        'Impact Équipe': impact_score,
+        'Créativité': creativity_score, 
+        'Efficacité': efficiency_index,
+        'Progression': progression_index,
+        'Conservation': ball_security
+    }
+    
+    # Tri des scores
+    sorted_scores = sorted(scores_dict.items(), key=lambda x: x[1], reverse=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**🌟 Points Forts**")
+        for i in range(min(3, len(sorted_scores))):
+            name, score = sorted_scores[i]
+            st.success(f"{i+1}. {name}: {score:.0f}/100")
+    
+    with col2:
+        st.markdown("**⚠️ Axes d'Amélioration**")
+        for i in range(max(0, len(sorted_scores)-2), len(sorted_scores)):
+            name, score = sorted_scores[i]
+            st.warning(f"{len(sorted_scores)-i}. {name}: {score:.0f}/100")
+    
+    # Jauges des scores avancés
+    advanced_scores = {
+        'Impact': impact_score,
+        'Créativité': creativity_score,
+        'Efficacité': efficiency_index
+    }
+    
+    fig_gauge = ChartManager.create_gauge_chart(advanced_scores, "Scores Avancés")
+    st.plotly_chart(fig_gauge, use_container_width=True)
+
+# ================================================================================================
+# MODIFICATION POUR VOTRE CLASSE FootballDashboard
+# ================================================================================================
+
+# AJOUTEZ CETTE MÉTHODE À VOTRE CLASSE FootballDashboard :
+
+def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
+                     selected_player: str, df_full: pd.DataFrame):
+    """Rendu des onglets principaux avec métriques avancées"""
+    
+    # Obtenir les données des autres ligues pour comparaison
+    df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
+    
+    # ONGLETS AVEC NOUVEAU TAB MÉTRIQUES AVANCÉES
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "🎯 Performance Offensive", 
+        "🛡️ Performance Défensive", 
+        "🎨 Performance Technique",
+        "🧠 Métriques Avancées",  # NOUVEAU
+        "👥 Profils Similaires", 
+        "🔄 Comparaison"
+    ])
+    
+    with tab1:
+        TabManager.render_offensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+    
+    with tab2:
+        TabManager.render_defensive_tab(player_data, df_other_leagues, selected_player, player_competition)
+    
+    with tab3:
+        TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
+    
+    with tab4:
+        # NOUVEAU ONGLET MÉTRIQUES AVANCÉES
+        st.markdown("## 🧠 Analyse Avancée")
+        
+        # Métriques principales
+        render_advanced_metrics_card(player_data)
         
         st.markdown("---")
         
-        render_technical_skills(performance_data)
+        # Analyse par zones et progression en colonnes
+        col1, col2 = st.columns([1, 1], gap="large")
+        
+        with col1:
+            render_zone_analysis(player_data)
+            
+            # Graphique des zones
+            zone_analysis = ZoneAnalyzer.analyze_zone_activity(player_data)
+            zone_data = zone_analysis['zone_dominance']
+            fig_zones = ChartManager.create_bar_chart(
+                zone_data,
+                "Répartition par Zones du Terrain",
+                [Config.COLORS['danger'], Config.COLORS['warning'], Config.COLORS['success']]
+            )
+            st.plotly_chart(fig_zones, use_container_width=True)
+        
+        with col2:
+            render_strengths_analysis(player_data)
+        
+        st.markdown("---")
+        
+        # Progression et conservation
+        render_progression_analysis(player_data)
     
-    with col2:
-        render_performance_comparison(performance_data, selected_player)
+    with tab5:
+        TabManager.render_similar_players_tab(selected_player, df_full)
     
-    st.markdown("---")
-    
-    # Recommandations
-    render_individual_recommendations(performance_data, player_data)
+    with tab6:
+        TabManager.render_comparison_tab(df_full, selected_player)
 # ================================================================================================
 # COMPOSANTS UI
 # ================================================================================================
@@ -4336,18 +4172,17 @@ class FootballDashboard:
     
     def _render_main_tabs(self, player_data: pd.Series, player_competition: str, 
                          selected_player: str, df_full: pd.DataFrame):
-        """Rendu des onglets principaux avec métriques avancées et impact individuel"""
+        """Rendu des onglets principaux avec métriques avancées"""
         
         # Obtenir les données des autres ligues pour comparaison
         df_other_leagues = DataManager.get_other_leagues_data(df_full, player_competition)
         
-        # ONGLETS AVEC NOUVEAU TAB IMPACT INDIVIDUEL
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        # ONGLETS AVEC NOUVEAU TAB MÉTRIQUES AVANCÉES
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
             "🎯 Performance Offensive", 
             "🛡️ Performance Défensive", 
             "🎨 Performance Technique",
-            "🧠 Métriques Avancées",
-            "⭐ Impact Individuel",
+            "🧠 Métriques Avancées",  # NOUVEAU
             "👥 Profils Similaires", 
             "🔄 Comparaison"
         ])
@@ -4362,7 +4197,7 @@ class FootballDashboard:
             TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
         
         with tab4:
-            # ONGLET MÉTRIQUES AVANCÉES
+            # NOUVEAU ONGLET MÉTRIQUES AVANCÉES
             st.markdown("## 🧠 Analyse Avancée")
             
             # Métriques principales
@@ -4395,13 +4230,9 @@ class FootballDashboard:
             render_progression_analysis(player_data)
         
         with tab5:
-            # ONGLET IMPACT INDIVIDUEL (sans données équipe)
-            render_individual_impact_tab(player_data, selected_player)
-        
-        with tab6:
             TabManager.render_similar_players_tab(selected_player, df_full)
         
-        with tab7:
+        with tab6:
             TabManager.render_comparison_tab(df_full, selected_player)
     
     def _render_no_player_message(self):
@@ -4413,55 +4244,8 @@ class FootballDashboard:
             <p style='color: var(--text-primary); font-size: 1.2em; margin-bottom: 32px; line-height: 1.6;'>
                 Veuillez ajuster les filtres dans la sidebar pour sélectionner un joueur à analyser.
             </p>
-            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 32px;'>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--primary-color);'>🎯</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Offensive</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Buts, passes décisives, xG</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--accent-color);'>🛡️</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Défensive</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Tacles, interceptions, duels</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>🎨</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Analyse Technique</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Passes, dribbles, touches</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>🧠</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Métriques Avancées</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Impact, créativité, zones</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--accent-color);'>⭐</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Impact Individuel</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Performance personnelle</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--secondary-color);'>👥</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Profils Similaires</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Joueurs au style proche</p>
-                </div>
-                <div class='metric-card-enhanced' style='padding: 24px;'>
-                    <div style='font-size: 3em; margin-bottom: 12px; color: var(--warning);'>🔄</div>
-                    <h4 style='color: var(--text-primary); margin: 0 0 8px 0;'>Comparaison</h4>
-                    <p style='color: var(--text-secondary); margin: 0; font-size: 0.9em;'>Radars et benchmarks</p>
-                </div>
-            </div>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Historique des joueurs consultés
-        if st.session_state.selected_player_history:
-            st.markdown("<h3 class='subsection-title-enhanced'>📚 Joueurs récemment consultés</h3>", unsafe_allow_html=True)
-            
-            history_cols = st.columns(min(len(st.session_state.selected_player_history), 5))
-            for i, player in enumerate(st.session_state.selected_player_history):
-                with history_cols[i]:
-                    if st.button(f"🔄 {player}", key=f"history_{i}", use_container_width=True):
-                        st.rerun()
     
     def _render_error_page(self):
         """Affiche la page d'erreur"""
@@ -4472,30 +4256,6 @@ class FootballDashboard:
             <p style='color: var(--text-primary); font-size: 1.2em; margin-bottom: 32px; line-height: 1.6;'>
                 Impossible de charger les données. Veuillez vérifier que le fichier 'df_BIG2025.csv' est présent.
             </p>
-            <div style='background: var(--background-surface); max-width: 600px; margin: 32px auto 0 auto; 
-                        padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-color);'>
-                <h3 style='color: var(--secondary-color); margin-bottom: 16px; font-size: 1.3em;'>📋 Fichiers requis :</h3>
-                <div style='text-align: left; color: var(--text-primary);'>
-                    <div style='padding: 8px 0; border-bottom: 1px solid var(--border-color);'>
-                        <strong>df_BIG2025.csv</strong> - Données principales des joueurs
-                    </div>
-                    <div style='padding: 8px 0; border-bottom: 1px solid var(--border-color);'>
-                        <strong>images_joueurs/</strong> - Dossier des photos des joueurs
-                    </div>
-                    <div style='padding: 8px 0;'>
-                        <strong>*_Logos/</strong> - Dossiers des logos par compétition
-                    </div>
-                </div>
-            </div>
-            <div style='margin-top: 32px;'>
-                <button onclick='window.location.reload()' style='
-                    background: var(--primary-color); color: white; border: none; padding: 12px 24px;
-                    border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
-                ' onmouseover='this.style.background="var(--secondary-color)"' 
-                  onmouseout='this.style.background="var(--primary-color)"'>
-                    🔄 Réessayer
-                </button>
-            </div>
         </div>
         """, unsafe_allow_html=True)
 

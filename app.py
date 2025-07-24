@@ -820,8 +820,6 @@ class MetricsCalculator:
             'Ballons récupérés/90': player_data.get('Ballons récupérés', 0) / minutes_90,
             'Duels aériens/90': player_data.get('Duels aériens gagnés', 0) / minutes_90,
             'Dégagements/90': player_data.get('Dégagements', 0) / minutes_90,
-            '% Duels gagnés': player_data.get('Pourcentage de duels gagnés', 0),
-            '% Duels aériens': player_data.get('Pourcentage de duels aériens gagnés', 0),
             'Tirs bloqués/90': player_data.get('Tirs bloqués', 0) / minutes_90
         }
     

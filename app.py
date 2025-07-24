@@ -3501,7 +3501,7 @@ def render_zone_analysis(player_data: pd.Series) -> None:
             help="Pourcentage de touches dans le tiers offensif"
         )
     
-    #st.markdown("---")
+    st.markdown("---")
     
     # Surfaces avec st.columns
     st.markdown("**Activité dans les Surfaces**")
@@ -3559,6 +3559,8 @@ def render_strengths_analysis(player_data: pd.Series) -> None:
         for i in range(max(0, len(sorted_scores)-2), len(sorted_scores)):
             name, score = sorted_scores[i]
             st.warning(f"{len(sorted_scores)-i}. {name}: {score:.0f}/100")
+
+    st.markdown("---")
     
     # Jauges des scores avancés
     advanced_scores = {
@@ -3717,10 +3719,7 @@ class FootballDashboard:
         with tab3:
             TabManager.render_technical_tab(player_data, df_other_leagues, selected_player, player_competition)
         
-        with tab4:
-            # NOUVEAU ONGLET MÉTRIQUES AVANCÉES
-            st.markdown("## 🧠 Analyse Avancée")
-            
+        with tab4:            
             # Métriques principales
             render_advanced_metrics_card(player_data)
             

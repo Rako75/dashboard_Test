@@ -650,7 +650,7 @@ class DataManager:
     def load_data(file_path: str = 'df_BIG2025.csv') -> Optional[pd.DataFrame]:
         """Charge les données depuis le fichier CSV"""
         try:
-            df = pd.read_csv(file_path, encoding='utf-8', delimiter=';')
+            df = pd.read_csv(file_path, encoding='utf-8-BOM', delimiter=';')
             return df
         except FileNotFoundError:
             st.error(f"❌ Fichier '{file_path}' non trouvé.")

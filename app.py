@@ -1546,7 +1546,7 @@ class PerformanceAnalyzer:
         avg_metrics = {}
         minutes_90_comp = df_comparison['Minutes jouées'] / 90
         
-       for metric_key in metrics.keys():
+    for metric_key in metrics.keys():
     if metric_key.endswith('/90'):
         base_metric = metric_key.replace('/90', '')
         column_name = base_metric

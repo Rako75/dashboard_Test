@@ -1631,6 +1631,12 @@ class PerformanceAnalyzer:
                 avg_metrics[metric_key] = (df_comparison.get(column_name, pd.Series([0]*len(df_comparison))) / minutes_90_comp).mean()
             else:
                 column_name = metric_key.replace('% ', 'Pourcentage de ').replace(' réussies', ' réussies').replace(' réussis', ' réussis')
+                col_values = df_comparison.get(column_name, pd.Series([np.nan]*len(df_comparison)))
+                col_values = pd.to_numeric(col_values, errors='coerce')
+            if not col_values.empty:
+                avg_metrics[metric_key] = col_values.mean()
+            else:
+                avg_metrics[metric_key] = np.nan
                 avg_metrics[metric_key] = df_comparison.get(column_name, pd.Series([0]*len(df_comparison))).mean()
         
         # Calcul des percentiles

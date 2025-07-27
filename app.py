@@ -2119,16 +2119,6 @@ def render_strengths_analysis(player_data: pd.Series) -> None:
         for i in range(max(0, len(sorted_scores)-2), len(sorted_scores)):
             name, score = sorted_scores[i]
             st.warning(f"{len(sorted_scores)-i}. {name}: {score:.0f}/100")
-    
-    # Jauges des scores avancés
-    advanced_scores = {
-        'Impact': impact_score,
-        'Créativité': creativity_score,
-        'Efficacité': efficiency_index
-    }
-    
-    fig_gauge = ChartManager.create_gauge_chart(advanced_scores, "Scores Avancés")
-    st.plotly_chart(fig_gauge, use_container_width=True)
 
 # ================================================================================================
 # COMPOSANTS UI

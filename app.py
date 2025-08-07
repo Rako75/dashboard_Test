@@ -32,7 +32,7 @@ class Config:
     
     # Configuration de la page Streamlit
     PAGE_CONFIG = {
-        "page_title": "Dashboard Football Pro",
+        "page_title": "RakoStats",
         "page_icon": "⚽",
         "layout": "wide",
         "initial_sidebar_state": "expanded"
@@ -2794,7 +2794,7 @@ class TabManager:
             fig.text(0.515, 0.94, f"Analyse Radar Individuelle | Percentiles vs {competition} | Saison 2024-25", 
                     size=14, ha="center", fontproperties=font_bold.prop, color="#a6a6a6")
             
-            fig.text(0.99, 0.01, "Dashboard Football Pro | Données: FBRef", 
+            fig.text(0.99, 0.01, "RakoStats | Données: FBRef", 
                     size=9, ha="right", fontproperties=font_italic.prop, color="#a6a6a6")
             
             st.pyplot(fig, use_container_width=True)
@@ -2947,7 +2947,7 @@ class TabManager:
                          frameon=False, labelcolor='white')
                 
                 # Footer
-                fig.text(0.99, 0.01, "Dashboard Football Pro | Source: FBRef",
+                fig.text(0.99, 0.01, "RakoStats | Source: FBRef",
                          size=9, ha="right", fontproperties=font_italic.prop, color="#a6a6a6")
                 
                 st.pyplot(fig, use_container_width=True)

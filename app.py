@@ -303,7 +303,7 @@ with tab1:
         """, unsafe_allow_html=True)
     
     with col4:
-        total_value = players_df['market_value'].sum()
+        total_value = players_df['Valeur marchande'].sum()
         st.markdown(f"""
         <div class="metric-card">
             <div class="metric-label">Total Value</div>

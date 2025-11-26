@@ -297,7 +297,7 @@ with tab1:
         st.markdown(f"""
         <div class="metric-card">
             <div class="metric-label">Avg Age</div>
-            <div class="metric-value">{players_df['age'].mean():.1f}</div>
+            <div class="metric-value">{players_df['Âge'].mean():.1f}</div>
             <div class="badge badge-warning">Years</div>
         </div>
         """, unsafe_allow_html=True)
@@ -438,7 +438,7 @@ with tab2:
     if filter_position != 'All':
         filtered_df = filtered_df[filtered_df['position'] == filter_position]
     
-    filtered_df = filtered_df[(filtered_df['age'] >= age_range[0]) & (filtered_df['age'] <= age_range[1])]
+    filtered_df = filtered_df[(filtered_df['Âge'] >= age_range[0]) & (filtered_df['Âge'] <= age_range[1])]
     
     st.markdown(f'<div class="section-title">👥 Players ({len(filtered_df)} results)</div>', unsafe_allow_html=True)
     

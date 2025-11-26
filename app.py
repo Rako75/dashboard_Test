@@ -254,29 +254,7 @@ if 'view_mode' not in st.session_state:
 # Données de démonstration
 @st.cache_data
 def load_demo_data():
-    players = pd.DataFrame({
-        'name': ['Kylian Mbappé', 'Erling Haaland', 'Rodri', 'Virgil van Dijk', 
-                 'Kevin De Bruyne', 'Jude Bellingham', 'Bukayo Saka', 'Federico Valverde'],
-        'team': ['Real Madrid', 'Manchester City', 'Manchester City', 'Liverpool',
-                'Manchester City', 'Real Madrid', 'Arsenal', 'Real Madrid'],
-        'league': ['La Liga', 'Premier League', 'Premier League', 'Premier League',
-                  'Premier League', 'La Liga', 'Premier League', 'La Liga'],
-        'position': ['FW', 'FW', 'MF', 'DF', 'MF', 'MF', 'FW', 'MF'],
-        'age': [25, 24, 28, 33, 33, 21, 23, 26],
-        'market_value': [180, 200, 120, 45, 80, 150, 120, 100],
-        'goals': [28, 38, 8, 3, 6, 19, 16, 8],
-        'assists': [12, 5, 10, 2, 18, 11, 9, 7],
-        'xG': [24.5, 36.2, 6.2, 2.8, 5.1, 16.3, 14.2, 6.8],
-        'xA': [10.2, 4.8, 8.5, 1.5, 15.6, 9.2, 7.8, 6.1],
-        'passes': [1456, 987, 3245, 2145, 2876, 2234, 1678, 2567],
-        'pass_accuracy': [82, 76, 91, 89, 86, 83, 81, 88],
-        'dribbles': [156, 67, 45, 12, 78, 123, 145, 89],
-        'tackles': [12, 8, 78, 56, 34, 45, 28, 67],
-        'interceptions': [8, 5, 65, 82, 28, 38, 12, 56],
-        'rating': [94, 95, 89, 88, 87, 90, 85, 86]
-    })
-    return players
-
+    return pd.read_csv('df_BIG2025.csv', encoding='utf-8', delimiter=';')
 players_df = load_demo_data()
 
 # Header Principal

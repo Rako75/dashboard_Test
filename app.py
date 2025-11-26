@@ -254,7 +254,15 @@ if 'view_mode' not in st.session_state:
 # Données de démonstration
 @st.cache_data
 def load_demo_data():
-    return pd.read_csv('df_BIG2025.csv', encoding='utf-8', delimiter=';')
+    df = pd.read_csv('df_BIG2025.csv', encoding='utf-8', delimiter=';')
+    # Nettoyer les colonnes numériques
+    numeric_cols = ['Buts', 'Passes décisives', 'Buts attendus (xG)', 'Passes décisives attendues (xAG)', 
+                    'Minutes jouées', 'Âge', 'Valeur marchande']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+    return df
+
 players_df = load_demo_data()
 
 # Header Principal
@@ -303,11 +311,11 @@ with tab1:
         """, unsafe_allow_html=True)
     
     with col4:
-        total_value = players_df['Valeur marchande'].sum()
+        total_value = players_df['Valeur marchande'].sum() / 1000000  # Conversion en millions
         st.markdown(f"""
         <div class="metric-card">
             <div class="metric-label">Total Value</div>
-            <div class="metric-value">€{total_value}M</div>
+            <div class="metric-value">€{total_value:.0f}M</div>
             <div class="badge badge-success">Market</div>
         </div>
         """, unsafe_allow_html=True)
@@ -328,37 +336,37 @@ with tab1:
     
     with col1:
         st.markdown("### ⚽ Top Scorers")
-        top_scorers = players_df.nlargest(5, 'goals')[['name', 'team', 'goals']]
+        top_scorers = players_df.nlargest(5, 'Buts')[['Joueur', 'Équipe', 'Buts']]
         for idx, row in top_scorers.iterrows():
             st.markdown(f"""
             <div class="player-card">
-                <div class="player-name">{row['name']}</div>
-                <div class="player-team">{row['team']}</div>
-                <div class="metric-value" style="font-size: 1.5rem;">{row['goals']} goals</div>
+                <div class="player-name">{row['Joueur']}</div>
+                <div class="player-team">{row['Équipe']}</div>
+                <div class="metric-value" style="font-size: 1.5rem;">{int(row['Buts'])} goals</div>
             </div>
             """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("### 🎯 Top Assisters")
-        top_assists = players_df.nlargest(5, 'assists')[['name', 'team', 'assists']]
+        top_assists = players_df.nlargest(5, 'Passes décisives')[['Joueur', 'Équipe', 'Passes décisives']]
         for idx, row in top_assists.iterrows():
             st.markdown(f"""
             <div class="player-card">
-                <div class="player-name">{row['name']}</div>
-                <div class="player-team">{row['team']}</div>
-                <div class="metric-value" style="font-size: 1.5rem;">{row['assists']} assists</div>
+                <div class="player-name">{row['Joueur']}</div>
+                <div class="player-team">{row['Équipe']}</div>
+                <div class="metric-value" style="font-size: 1.5rem;">{int(row['Passes décisives'])} assists</div>
             </div>
             """, unsafe_allow_html=True)
     
     with col3:
-        st.markdown("### 💎 Highest Rated")
-        top_rated = players_df.nlargest(5, 'rating')[['name', 'team', 'rating']]
-        for idx, row in top_rated.iterrows():
+        st.markdown("### 💎 Highest Value")
+        top_valued = players_df.nlargest(5, 'Valeur marchande')[['Joueur', 'Équipe', 'Valeur marchande']]
+        for idx, row in top_valued.iterrows():
             st.markdown(f"""
             <div class="player-card">
-                <div class="player-name">{row['name']}</div>
-                <div class="player-team">{row['team']}</div>
-                <div class="metric-value" style="font-size: 1.5rem;">{row['rating']}/100</div>
+                <div class="player-name">{row['Joueur']}</div>
+                <div class="player-team">{row['Équipe']}</div>
+                <div class="metric-value" style="font-size: 1.5rem;">€{row['Valeur marchande']/1000000:.1f}M</div>
             </div>
             """, unsafe_allow_html=True)
     
@@ -370,14 +378,14 @@ with tab1:
     with col1:
         # Goals vs xG scatter
         fig_scatter = px.scatter(
-            players_df, 
-            x='xG', 
-            y='goals',
-            size='market_value',
-            color='position',
-            hover_data=['name', 'team'],
+            players_df[players_df['Minutes jouées'] > 900], 
+            x='Buts attendus (xG)', 
+            y='Buts',
+            size='Valeur marchande',
+            color='Position',
+            hover_data=['Joueur', 'Équipe'],
             title='Goals vs Expected Goals (xG)',
-            labels={'xG': 'Expected Goals', 'goals': 'Actual Goals'}
+            labels={'Buts attendus (xG)': 'Expected Goals', 'Buts': 'Actual Goals'}
         )
         fig_scatter.update_layout(
             template='plotly_dark',
@@ -390,11 +398,11 @@ with tab1:
     with col2:
         # Distribution par position
         fig_bar = px.bar(
-            players_df.groupby('position').size().reset_index(name='count'),
-            x='position',
+            players_df.groupby('Position').size().reset_index(name='count'),
+            x='Position',
             y='count',
             title='Players by Position',
-            color='position'
+            color='Position'
         )
         fig_bar.update_layout(
             template='plotly_dark',
@@ -418,25 +426,25 @@ with tab2:
         search_name = st.text_input("🔎 Search by name", placeholder="Enter player name...")
     
     with col2:
-        filter_Compétition = st.selectbox("🏆 Compétition", ['All'] + list(players_df['Compétition'].unique()))
+        filter_competition = st.selectbox("🏆 Compétition", ['All'] + sorted(players_df['Compétition'].unique().tolist()))
     
     with col3:
-        filter_position = st.selectbox("📍 Position", ['All'] + list(players_df['position'].unique()))
+        filter_position = st.selectbox("📍 Position", ['All'] + sorted(players_df['Position'].unique().tolist()))
     
     with col4:
-        age_range = st.slider("📅 Age Range", 18, 40, (18, 35))
+        age_range = st.slider("📅 Age Range", 16, 40, (18, 35))
     
     # Appliquer les filtres
     filtered_df = players_df.copy()
     
     if search_name:
-        filtered_df = filtered_df[filtered_df['name'].str.contains(search_name, case=False)]
+        filtered_df = filtered_df[filtered_df['Joueur'].str.contains(search_name, case=False, na=False)]
     
-    if filter_Compétition != 'All':
-        filtered_df = filtered_df[filtered_df['Compétition'] == filter_Compétition]
+    if filter_competition != 'All':
+        filtered_df = filtered_df[filtered_df['Compétition'] == filter_competition]
     
     if filter_position != 'All':
-        filtered_df = filtered_df[filtered_df['position'] == filter_position]
+        filtered_df = filtered_df[filtered_df['Position'] == filter_position]
     
     filtered_df = filtered_df[(filtered_df['Âge'] >= age_range[0]) & (filtered_df['Âge'] <= age_range[1])]
     
@@ -444,49 +452,52 @@ with tab2:
     
     # Affichage en grille
     cols_per_row = 3
-    for i in range(0, len(filtered_df), cols_per_row):
+    for i in range(0, min(len(filtered_df), 30), cols_per_row):  # Limiter à 30 joueurs pour la performance
         cols = st.columns(cols_per_row)
         for j, col in enumerate(cols):
             if i + j < len(filtered_df):
                 player = filtered_df.iloc[i + j]
                 with col:
                     # Bouton shortlist
-                    is_in_shortlist = player['name'] in st.session_state.shortlist
+                    is_in_shortlist = player['Joueur'] in st.session_state.shortlist
                     star_icon = "⭐" if is_in_shortlist else "☆"
+                    
+                    # Calculer un rating basé sur les performances
+                    rating = min(100, int((player['Buts'] * 5 + player['Passes décisives'] * 3 + player['Minutes jouées'] / 100) / 2))
                     
                     st.markdown(f"""
                     <div class="player-card">
                         <div style="display: flex; justify-content: space-between; align-items: start;">
                             <div>
-                                <div class="player-name">{player['name']}</div>
-                                <div class="player-team">{player['team']}</div>
+                                <div class="player-name">{player['Joueur']}</div>
+                                <div class="player-team">{player['Équipe']}</div>
                             </div>
                             <div style="font-size: 1.5rem; cursor: pointer;">{star_icon}</div>
                         </div>
                         <div style="margin: 1rem 0;">
-                            <span class="badge badge-primary">{player['position']}</span>
-                            <span class="badge badge-success">{player['age']} yrs</span>
+                            <span class="badge badge-primary">{player['Position']}</span>
+                            <span class="badge badge-success">{int(player['Âge'])} yrs</span>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
                             <div>
                                 <div class="metric-label">Goals</div>
-                                <div class="metric-value" style="font-size: 1.5rem;">{player['goals']}</div>
+                                <div class="metric-value" style="font-size: 1.5rem;">{int(player['Buts'])}</div>
                             </div>
                             <div>
                                 <div class="metric-label">Assists</div>
-                                <div class="metric-value" style="font-size: 1.5rem;">{player['assists']}</div>
+                                <div class="metric-value" style="font-size: 1.5rem;">{int(player['Passes décisives'])}</div>
                             </div>
                         </div>
                         <div style="margin-top: 1rem;">
                             <div class="metric-label">Market Value</div>
-                            <div class="metric-value" style="font-size: 1.25rem; color: #10b981;">€{player['market_value']}M</div>
+                            <div class="metric-value" style="font-size: 1.25rem; color: #10b981;">€{player['Valeur marchande']/1000000:.1f}M</div>
                         </div>
                         <div style="margin-top: 1rem;">
                             <div class="metric-label">Rating</div>
                             <div class="percentile-bar">
-                                <div class="percentile-fill" style="width: {player['rating']}%;"></div>
+                                <div class="percentile-fill" style="width: {rating}%;"></div>
                             </div>
-                            <div style="color: white; font-weight: 600; margin-top: 0.25rem;">{player['rating']}/100</div>
+                            <div style="color: white; font-weight: 600; margin-top: 0.25rem;">{rating}/100</div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -494,16 +505,16 @@ with tab2:
                     # Boutons d'action
                     col_a, col_b = st.columns(2)
                     with col_a:
-                        if st.button(star_icon, key=f"star_{player['name']}", use_container_width=True):
-                            if player['name'] in st.session_state.shortlist:
-                                st.session_state.shortlist.remove(player['name'])
+                        if st.button(star_icon, key=f"star_{i}_{j}", use_container_width=True):
+                            if player['Joueur'] in st.session_state.shortlist:
+                                st.session_state.shortlist.remove(player['Joueur'])
                             else:
-                                st.session_state.shortlist.append(player['name'])
+                                st.session_state.shortlist.append(player['Joueur'])
                             st.rerun()
                     
                     with col_b:
-                        if st.button("📊 View", key=f"view_{player['name']}", use_container_width=True):
-                            st.session_state.selected_player = player['name']
+                        if st.button("📊 View", key=f"view_{i}_{j}", use_container_width=True):
+                            st.session_state.selected_player = player['Joueur']
                             st.rerun()
 
 # ============================================================================
@@ -515,7 +526,7 @@ with tab3:
     if len(st.session_state.shortlist) == 0:
         st.info("📋 Your shortlist is empty. Add players from the Players Database!")
     else:
-        shortlist_df = players_df[players_df['name'].isin(st.session_state.shortlist)]
+        shortlist_df = players_df[players_df['Joueur'].isin(st.session_state.shortlist)]
         
         # Actions
         col1, col2, col3 = st.columns([1, 1, 2])
@@ -525,32 +536,38 @@ with tab3:
                 st.rerun()
         
         with col2:
-            if st.button("📥 Export PDF", use_container_width=True):
-                st.success("Export feature coming soon!")
+            if st.button("📥 Export CSV", use_container_width=True):
+                csv = shortlist_df.to_csv(index=False)
+                st.download_button(
+                    label="Download CSV",
+                    data=csv,
+                    file_name="shortlist.csv",
+                    mime="text/csv"
+                )
         
         # Afficher les joueurs
         for idx, player in shortlist_df.iterrows():
             col1, col2, col3, col4, col5, col6 = st.columns([2, 1, 1, 1, 1, 1])
             
             with col1:
-                st.markdown(f"### {player['name']}")
-                st.markdown(f"**{player['team']}** · {player['Compétition']}")
+                st.markdown(f"### {player['Joueur']}")
+                st.markdown(f"**{player['Équipe']}** · {player['Compétition']}")
             
             with col2:
-                st.metric("Goals", player['goals'])
+                st.metric("Goals", int(player['Buts']))
             
             with col3:
-                st.metric("Assists", player['assists'])
+                st.metric("Assists", int(player['Passes décisives']))
             
             with col4:
-                st.metric("Rating", f"{player['rating']}/100")
+                st.metric("Minutes", int(player['Minutes jouées']))
             
             with col5:
-                st.metric("Value", f"€{player['market_value']}M")
+                st.metric("Value", f"€{player['Valeur marchande']/1000000:.1f}M")
             
             with col6:
-                if st.button("❌", key=f"remove_{player['name']}"):
-                    st.session_state.shortlist.remove(player['name'])
+                if st.button("❌", key=f"remove_{player['Joueur']}_{idx}"):
+                    st.session_state.shortlist.remove(player['Joueur'])
                     st.rerun()
             
             st.divider()
@@ -564,24 +581,42 @@ with tab4:
     # Sélection de joueurs à comparer
     col1, col2 = st.columns(2)
     
+    player_list = players_df['Joueur'].tolist()
+    
     with col1:
-        player1 = st.selectbox("Select Player 1", players_df['name'].tolist())
+        player1 = st.selectbox("Select Player 1", player_list)
     
     with col2:
-        player2 = st.selectbox("Select Player 2", players_df['name'].tolist(), index=1)
+        player2 = st.selectbox("Select Player 2", player_list, index=min(1, len(player_list)-1))
     
     if player1 and player2:
-        p1_data = players_df[players_df['name'] == player1].iloc[0]
-        p2_data = players_df[players_df['name'] == player2].iloc[0]
+        p1_data = players_df[players_df['Joueur'] == player1].iloc[0]
+        p2_data = players_df[players_df['Joueur'] == player2].iloc[0]
         
         # Radar chart comparaison
-        categories = ['Goals', 'Assists', 'Pass Accuracy', 'Dribbles', 'Tackles']
+        categories = ['Goals', 'Assists', 'xG', 'xAG', 'Minutes/90']
         
         fig_radar = go.Figure()
         
+        # Normaliser les valeurs pour le radar
+        p1_values = [
+            min(100, p1_data['Buts'] * 10),
+            min(100, p1_data['Passes décisives'] * 10),
+            min(100, p1_data['Buts attendus (xG)'] * 10),
+            min(100, p1_data['Passes décisives attendues (xAG)'] * 10),
+            min(100, (p1_data['Minutes jouées'] / 90) * 2)
+        ]
+        
+        p2_values = [
+            min(100, p2_data['Buts'] * 10),
+            min(100, p2_data['Passes décisives'] * 10),
+            min(100, p2_data['Buts attendus (xG)'] * 10),
+            min(100, p2_data['Passes décisives attendues (xAG)'] * 10),
+            min(100, (p2_data['Minutes jouées'] / 90) * 2)
+        ]
+        
         fig_radar.add_trace(go.Scatterpolar(
-            r=[p1_data['goals'], p1_data['assists'], p1_data['pass_accuracy'], 
-               p1_data['dribbles']/2, p1_data['tackles']],
+            r=p1_values,
             theta=categories,
             fill='toself',
             name=player1,
@@ -590,8 +625,7 @@ with tab4:
         ))
         
         fig_radar.add_trace(go.Scatterpolar(
-            r=[p2_data['goals'], p2_data['assists'], p2_data['pass_accuracy'], 
-               p2_data['dribbles']/2, p2_data['tackles']],
+            r=p2_values,
             theta=categories,
             fill='toself',
             name=player2,
@@ -617,13 +651,27 @@ with tab4:
         st.markdown('<div class="section-title">📊 Detailed Comparison</div>', unsafe_allow_html=True)
         
         comparison_df = pd.DataFrame({
-            'Metric': ['Goals', 'Assists', 'xG', 'xA', 'Passes', 'Pass Accuracy', 'Dribbles', 'Tackles', 'Rating'],
-            player1: [p1_data['goals'], p1_data['assists'], p1_data['xG'], p1_data['xA'], 
-                     p1_data['passes'], p1_data['pass_accuracy'], p1_data['dribbles'], 
-                     p1_data['tackles'], p1_data['rating']],
-            player2: [p2_data['goals'], p2_data['assists'], p2_data['xG'], p2_data['xA'], 
-                     p2_data['passes'], p2_data['pass_accuracy'], p2_data['dribbles'], 
-                     p2_data['tackles'], p2_data['rating']]
+            'Metric': ['Goals', 'Assists', 'xG', 'xAG', 'Minutes', 'Matches', 'Yellow Cards', 'Red Cards'],
+            player1: [
+                int(p1_data['Buts']), 
+                int(p1_data['Passes décisives']), 
+                f"{p1_data['Buts attendus (xG)']:.2f}", 
+                f"{p1_data['Passes décisives attendues (xAG)']:.2f}",
+                int(p1_data['Minutes jouées']),
+                int(p1_data['Matchs joués']),
+                int(p1_data['Cartons jaunes']),
+                int(p1_data['Cartons rouges'])
+            ],
+            player2: [
+                int(p2_data['Buts']), 
+                int(p2_data['Passes décisives']), 
+                f"{p2_data['Buts attendus (xG)']:.2f}", 
+                f"{p2_data['Passes décisives attendues (xAG)']:.2f}",
+                int(p2_data['Minutes jouées']),
+                int(p2_data['Matchs joués']),
+                int(p2_data['Cartons jaunes']),
+                int(p2_data['Cartons rouges'])
+            ]
         })
         
         st.dataframe(comparison_df, use_container_width=True, hide_index=True)
@@ -632,6 +680,6 @@ with tab4:
 st.markdown("""
 <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.5); font-size: 0.875rem;">
     <p>RakoStats Pro © 2025 · Advanced Football Analytics · Powered by Streamlit</p>
-    <p>Data: FBRef · Season 2024/25</p>
+    <p>Data: Season 2024/25</p>
 </div>
 """, unsafe_allow_html=True)

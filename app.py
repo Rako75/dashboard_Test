@@ -287,8 +287,8 @@ with tab1:
     with col2:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">Leagues</div>
-            <div class="metric-value">{players_df['league'].nunique()}</div>
+            <div class="metric-label">Compétitions</div>
+            <div class="metric-value">{players_df['Compétition'].nunique()}</div>
             <div class="badge badge-success">Top 5</div>
         </div>
         """, unsafe_allow_html=True)
@@ -418,7 +418,7 @@ with tab2:
         search_name = st.text_input("🔎 Search by name", placeholder="Enter player name...")
     
     with col2:
-        filter_league = st.selectbox("🏆 League", ['All'] + list(players_df['league'].unique()))
+        filter_Compétition = st.selectbox("🏆 Compétition", ['All'] + list(players_df['Compétition'].unique()))
     
     with col3:
         filter_position = st.selectbox("📍 Position", ['All'] + list(players_df['position'].unique()))
@@ -432,8 +432,8 @@ with tab2:
     if search_name:
         filtered_df = filtered_df[filtered_df['name'].str.contains(search_name, case=False)]
     
-    if filter_league != 'All':
-        filtered_df = filtered_df[filtered_df['league'] == filter_league]
+    if filter_Compétition != 'All':
+        filtered_df = filtered_df[filtered_df['Compétition'] == filter_Compétition]
     
     if filter_position != 'All':
         filtered_df = filtered_df[filtered_df['position'] == filter_position]
@@ -534,7 +534,7 @@ with tab3:
             
             with col1:
                 st.markdown(f"### {player['name']}")
-                st.markdown(f"**{player['team']}** · {player['league']}")
+                st.markdown(f"**{player['team']}** · {player['Compétition']}")
             
             with col2:
                 st.metric("Goals", player['goals'])
